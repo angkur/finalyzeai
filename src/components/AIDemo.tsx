@@ -1,10 +1,12 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Brain, LineChart, FileText, Database, Shield, Sparkles, Send, Loader2, Upload, X, FileSpreadsheet } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Brain, LineChart, FileText, Database, Shield, Sparkles, Send, Loader2, Upload, X, FileSpreadsheet, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
+import ChartRenderer, { ChartData } from "./visualizations/ChartRenderer";
 
-type AnalysisType = 'data-analysis' | 'report-generation' | 'predictive-modeling' | 'rag-query' | 'credit-scoring';
+type AnalysisType = 'data-analysis' | 'report-generation' | 'predictive-modeling' | 'rag-query' | 'credit-scoring' | 'data-visualization';
 
 const analysisTypes = [
   { id: 'data-analysis' as AnalysisType, label: 'Data Analysis', icon: LineChart, description: 'Analyze financial data for insights' },
@@ -12,6 +14,7 @@ const analysisTypes = [
   { id: 'predictive-modeling' as AnalysisType, label: 'Predictive Modeling', icon: Brain, description: 'Forecast trends and patterns' },
   { id: 'rag-query' as AnalysisType, label: 'Knowledge Query', icon: Database, description: 'Query financial knowledge base' },
   { id: 'credit-scoring' as AnalysisType, label: 'Credit Scoring', icon: Shield, description: 'Assess creditworthiness' },
+  { id: 'data-visualization' as AnalysisType, label: 'Data Visualization', icon: BarChart3, description: 'Create interactive charts' },
 ];
 
 const samplePrompts: Record<AnalysisType, string> = {
@@ -20,6 +23,7 @@ const samplePrompts: Record<AnalysisType, string> = {
   'predictive-modeling': 'Based on this 3-year trend:\n2022: $8M revenue, 15% growth\n2023: $10M revenue, 25% growth\n2024: $12M revenue, 20% growth\nPredict 2025 performance.',
   'rag-query': 'Explain the key differences between Basel III and Basel IV regulations and their impact on bank capital requirements.',
   'credit-scoring': 'Assess credit risk for:\n- Business age: 5 years\n- Annual revenue: $500K\n- Debt-to-equity: 1.2\n- Payment history: 2 late payments in 3 years\n- Industry: SaaS',
+  'data-visualization': 'Visualize this sales data by region:\nNorth America: $4.5M, Europe: $3.2M, Asia Pacific: $2.8M, Latin America: $1.5M, Middle East: $0.9M\n\nAlso show quarterly trends:\nQ1: $2.5M, Q2: $3.1M, Q3: $3.8M, Q4: $3.5M',
 };
 
 const parseCSV = (text: string): string => {
@@ -35,7 +39,6 @@ const parseCSV = (text: string): string => {
     }, {} as Record<string, string>);
   });
 
-  // Create a formatted summary
   let summary = `Dataset with ${rows.length} rows and ${headers.length} columns.\n\n`;
   summary += `Columns: ${headers.join(', ')}\n\n`;
   summary += `Sample data (first 10 rows):\n`;
@@ -48,7 +51,6 @@ const parseCSV = (text: string): string => {
     summary += `\n... and ${rows.length - 10} more rows.`;
   }
 
-  // Add basic statistics for numeric columns
   const numericColumns = headers.filter(h => {
     return rows.every(r => !isNaN(parseFloat(r[h])) || r[h] === '');
   });
@@ -76,6 +78,8 @@ const AIDemo = () => {
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<{ name: string; content: string } | null>(null);
+  const [chartData, setChartData] = useState<ChartData | null>(null);
+  const [activeTab, setActiveTab] = useState<'analysis' | 'visualization'>('analysis');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleTypeChange = (type: AnalysisType) => {
@@ -83,13 +87,15 @@ const AIDemo = () => {
     setInput(samplePrompts[type]);
     setResponse('');
     setUploadedFile(null);
+    setChartData(null);
+    setActiveTab(type === 'data-visualization' ? 'visualization' : 'analysis');
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       toast.error("File too large. Maximum size is 5MB.");
       return;
@@ -128,7 +134,6 @@ const AIDemo = () => {
       console.error(error);
     }
 
-    // Reset input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -147,6 +152,7 @@ const AIDemo = () => {
 
     setIsLoading(true);
     setResponse('');
+    setChartData(null);
 
     try {
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/financial-analysis`, {
@@ -166,6 +172,20 @@ const AIDemo = () => {
         throw new Error(errorData.error || "Analysis failed");
       }
 
+      // Handle data-visualization differently (non-streaming JSON response)
+      if (selectedType === 'data-visualization') {
+        const data = await resp.json();
+        if (data.chartData) {
+          setChartData(data.chartData);
+          setResponse(data.chartData.insights || 'Visualization generated successfully.');
+          toast.success("Visualization created!");
+        } else {
+          throw new Error(data.message || "Failed to generate visualization");
+        }
+        return;
+      }
+
+      // Handle streaming response for other types
       const reader = resp.body?.getReader();
       if (!reader) throw new Error("No response body");
 
@@ -212,8 +232,10 @@ const AIDemo = () => {
     }
   };
 
+  const isVisualization = selectedType === 'data-visualization';
+
   return (
-    <section className="py-32 relative overflow-hidden bg-secondary/20">
+    <section id="ai-demo" className="py-32 relative overflow-hidden bg-secondary/20">
       {/* Background */}
       <div className="absolute inset-0 grid-pattern opacity-20" />
       <div className="absolute top-1/2 left-1/4 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
@@ -231,7 +253,7 @@ const AIDemo = () => {
             <span className="text-gradient-primary">AI in Action</span>
           </h2>
           <p className="text-muted-foreground text-lg">
-            Upload your dataset or enter data manually. Our AI will analyze and provide actionable insights.
+            Upload your dataset or enter data manually. Our AI will analyze and provide actionable insights with interactive visualizations.
           </p>
         </div>
 
@@ -254,137 +276,177 @@ const AIDemo = () => {
         </div>
 
         {/* Demo Interface */}
-        <div className="max-w-5xl mx-auto grid lg:grid-cols-2 gap-6">
-          {/* Input Panel */}
-          <div className="bg-gradient-card rounded-2xl border border-border/50 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Send className="w-4 h-4 text-primary" />
-                </div>
-                <h3 className="font-display font-semibold text-foreground">Input Data</h3>
-              </div>
-              
-              {/* File Upload Button */}
-              <div className="flex items-center gap-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv,.txt,.json"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="file-upload"
-                />
-                <label
-                  htmlFor="file-upload"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/30 text-accent text-sm font-medium cursor-pointer hover:bg-accent/20 transition-colors"
-                >
-                  <Upload className="w-4 h-4" />
-                  Upload File
-                </label>
-              </div>
-            </div>
-
-            {/* Uploaded File Indicator */}
-            {uploadedFile && (
-              <div className="flex items-center justify-between px-3 py-2 mb-4 rounded-lg bg-accent/10 border border-accent/30">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Input Panel */}
+            <div className="bg-gradient-card rounded-2xl border border-border/50 p-6">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <FileSpreadsheet className="w-4 h-4 text-accent" />
-                  <span className="text-sm text-foreground">{uploadedFile.name}</span>
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Send className="w-4 h-4 text-primary" />
+                  </div>
+                  <h3 className="font-display font-semibold text-foreground">Input Data</h3>
                 </div>
-                <button
-                  onClick={clearFile}
-                  className="p-1 rounded hover:bg-accent/20 transition-colors"
-                >
-                  <X className="w-4 h-4 text-muted-foreground" />
-                </button>
-              </div>
-            )}
-
-            <Textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Enter your financial data, paste CSV content, or upload a file..."
-              className="min-h-[200px] bg-secondary/50 border-border/50 resize-none mb-4 text-sm"
-            />
-            
-            <div className="flex flex-col gap-3">
-              <Button
-                variant="hero"
-                className="w-full"
-                onClick={handleAnalyze}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Analyzing...
-                  </>
-                ) : (
-                  <>
-                    <Brain className="w-4 h-4" />
-                    Run Analysis
-                  </>
-                )}
-              </Button>
-              
-              <p className="text-xs text-muted-foreground text-center">
-                Supports CSV, TXT, and JSON files up to 5MB
-              </p>
-            </div>
-          </div>
-
-          {/* Output Panel */}
-          <div className="bg-gradient-card rounded-2xl border border-border/50 p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 rounded-lg bg-accent/10">
-                <Sparkles className="w-4 h-4 text-accent" />
-              </div>
-              <h3 className="font-display font-semibold text-foreground">AI Analysis Results</h3>
-            </div>
-            <div className="min-h-[280px] max-h-[400px] bg-secondary/30 rounded-xl p-4 border border-border/30 overflow-auto">
-              {response ? (
-                <div className="prose prose-invert prose-sm max-w-none">
-                  <pre className="whitespace-pre-wrap text-sm text-foreground/90 font-sans leading-relaxed">
-                    {response}
-                  </pre>
+                
+                {/* File Upload Button */}
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv,.txt,.json"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <label
+                    htmlFor="file-upload"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/30 text-accent text-sm font-medium cursor-pointer hover:bg-accent/20 transition-colors"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Upload File
+                  </label>
                 </div>
-              ) : (
-                <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-                  {isLoading ? (
-                    <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                      <span>Analyzing your data...</span>
-                    </div>
-                  ) : (
-                    <div className="text-center">
-                      <Brain className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                      <span>Upload a file or enter data to see AI analysis</span>
-                    </div>
-                  )}
+              </div>
+
+              {/* Uploaded File Indicator */}
+              {uploadedFile && (
+                <div className="flex items-center justify-between px-3 py-2 mb-4 rounded-lg bg-accent/10 border border-accent/30">
+                  <div className="flex items-center gap-2">
+                    <FileSpreadsheet className="w-4 h-4 text-accent" />
+                    <span className="text-sm text-foreground">{uploadedFile.name}</span>
+                  </div>
+                  <button
+                    onClick={clearFile}
+                    className="p-1 rounded hover:bg-accent/20 transition-colors"
+                  >
+                    <X className="w-4 h-4 text-muted-foreground" />
+                  </button>
                 </div>
               )}
+
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Enter your financial data, paste CSV content, or upload a file..."
+                className="min-h-[200px] bg-secondary/50 border-border/50 resize-none mb-4 text-sm"
+              />
+              
+              <div className="flex flex-col gap-3">
+                <Button
+                  variant="hero"
+                  className="w-full"
+                  onClick={handleAnalyze}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      {isVisualization ? 'Generating Visualization...' : 'Analyzing...'}
+                    </>
+                  ) : (
+                    <>
+                      {isVisualization ? <BarChart3 className="w-4 h-4" /> : <Brain className="w-4 h-4" />}
+                      {isVisualization ? 'Generate Visualization' : 'Run Analysis'}
+                    </>
+                  )}
+                </Button>
+                
+                <p className="text-xs text-muted-foreground text-center">
+                  Supports CSV, TXT, and JSON files up to 5MB
+                </p>
+              </div>
+            </div>
+
+            {/* Output Panel */}
+            <div className="bg-gradient-card rounded-2xl border border-border/50 p-6">
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'analysis' | 'visualization')}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-accent/10">
+                      <Sparkles className="w-4 h-4 text-accent" />
+                    </div>
+                    <h3 className="font-display font-semibold text-foreground">Results</h3>
+                  </div>
+                  
+                  <TabsList className="bg-secondary/50">
+                    <TabsTrigger value="analysis" className="text-xs">Analysis</TabsTrigger>
+                    <TabsTrigger value="visualization" className="text-xs">Charts</TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <TabsContent value="analysis" className="mt-0">
+                  <div className="min-h-[280px] max-h-[400px] bg-secondary/30 rounded-xl p-4 border border-border/30 overflow-auto">
+                    {response ? (
+                      <div className="prose prose-invert prose-sm max-w-none">
+                        <pre className="whitespace-pre-wrap text-sm text-foreground/90 font-sans leading-relaxed">
+                          {response}
+                        </pre>
+                      </div>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+                        {isLoading ? (
+                          <div className="flex flex-col items-center gap-3">
+                            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                            <span>Analyzing your data...</span>
+                          </div>
+                        ) : (
+                          <div className="text-center">
+                            <Brain className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+                            <span>Upload a file or enter data to see AI analysis</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="visualization" className="mt-0">
+                  <ChartRenderer chartData={chartData} isLoading={isLoading && isVisualization} />
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
-        </div>
 
-        {/* Feature Cards */}
-        <div className="max-w-5xl mx-auto mt-12 grid md:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl bg-card/50 border border-border/30 text-center">
-            <Upload className="w-6 h-6 mx-auto mb-2 text-primary" />
-            <h4 className="font-medium text-sm text-foreground mb-1">Upload Datasets</h4>
-            <p className="text-xs text-muted-foreground">CSV, JSON, or TXT files</p>
-          </div>
-          <div className="p-4 rounded-xl bg-card/50 border border-border/30 text-center">
-            <Brain className="w-6 h-6 mx-auto mb-2 text-accent" />
-            <h4 className="font-medium text-sm text-foreground mb-1">AI Analysis</h4>
-            <p className="text-xs text-muted-foreground">Instant pattern detection</p>
-          </div>
-          <div className="p-4 rounded-xl bg-card/50 border border-border/30 text-center">
-            <FileText className="w-6 h-6 mx-auto mb-2 text-primary" />
-            <h4 className="font-medium text-sm text-foreground mb-1">Actionable Insights</h4>
-            <p className="text-xs text-muted-foreground">Get recommendations</p>
-          </div>
+          {/* Visualization Feature Cards */}
+          {isVisualization && (
+            <div className="mt-8 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+              {[
+                { icon: '📊', label: 'Bar Charts' },
+                { icon: '🥧', label: 'Pie Charts' },
+                { icon: '📈', label: 'Time Series' },
+                { icon: '🗺️', label: 'Heatmaps' },
+                { icon: '🌳', label: 'Treemaps' },
+                { icon: '📉', label: 'Dual Axis' },
+                { icon: '🎯', label: '3D Scatter' },
+              ].map((item, i) => (
+                <div key={i} className="p-3 rounded-xl bg-card/50 border border-border/30 text-center">
+                  <span className="text-2xl">{item.icon}</span>
+                  <p className="text-xs text-muted-foreground mt-1">{item.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Feature Cards */}
+          {!isVisualization && (
+            <div className="mt-12 grid md:grid-cols-3 gap-4">
+              <div className="p-4 rounded-xl bg-card/50 border border-border/30 text-center">
+                <Upload className="w-6 h-6 mx-auto mb-2 text-primary" />
+                <h4 className="font-medium text-sm text-foreground mb-1">Upload Datasets</h4>
+                <p className="text-xs text-muted-foreground">CSV, JSON, or TXT files</p>
+              </div>
+              <div className="p-4 rounded-xl bg-card/50 border border-border/30 text-center">
+                <Brain className="w-6 h-6 mx-auto mb-2 text-accent" />
+                <h4 className="font-medium text-sm text-foreground mb-1">AI Analysis</h4>
+                <p className="text-xs text-muted-foreground">Instant pattern detection</p>
+              </div>
+              <div className="p-4 rounded-xl bg-card/50 border border-border/30 text-center">
+                <FileText className="w-6 h-6 mx-auto mb-2 text-primary" />
+                <h4 className="font-medium text-sm text-foreground mb-1">Actionable Insights</h4>
+                <p className="text-xs text-muted-foreground">Get recommendations</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Disclaimer */}
