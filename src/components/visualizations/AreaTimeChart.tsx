@@ -16,6 +16,7 @@ interface AreaTimeChartProps {
   config?: {
     xAxis?: string;
     yAxis?: string;
+    valueKey?: string;
     title?: string;
   };
   zoom?: number;
@@ -32,7 +33,12 @@ const AreaTimeChart = ({ data, config, zoom = 1 }: AreaTimeChartProps) => {
   const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
 
   const { chartData, seriesKeys } = useMemo(() => {
-    if (!data || data.length === 0) {
+    // Check if data is empty or contains only empty objects
+    const hasValidData = data && data.length > 0 && data.some(item => 
+      Object.keys(item).length > 0 && Object.values(item).some(v => v !== null && v !== undefined)
+    );
+    
+    if (!hasValidData) {
       // Generate sample time series data
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const sampleData = months.map((month, i) => ({
@@ -47,14 +53,36 @@ const AreaTimeChart = ({ data, config, zoom = 1 }: AreaTimeChartProps) => {
       };
     }
 
-    const xKey = config?.xAxis || 'date' || 'month' || 'period';
+    // Find the x-axis key (usually a date/time/period string)
+    const xKey = config?.xAxis || Object.keys(data[0]).find(k => 
+      typeof data[0][k] === 'string' || k.toLowerCase().includes('date') || 
+      k.toLowerCase().includes('month') || k.toLowerCase().includes('year')
+    ) || 'month';
+    
+    const valueKey = config?.valueKey || 'value';
     const firstItem = data[0];
-    const keys = Object.keys(firstItem).filter(
-      k => k !== xKey && typeof firstItem[k] === 'number'
+    
+    // Get numeric keys for series
+    let keys = Object.keys(firstItem).filter(
+      k => k !== xKey && (typeof firstItem[k] === 'number' || !isNaN(parseFloat(firstItem[k])))
     );
+    
+    // If no numeric keys found but we have valueKey, use that
+    if (keys.length === 0 && firstItem[valueKey] !== undefined) {
+      keys = [valueKey];
+    }
+
+    // Convert string numbers to actual numbers
+    const processedData = data.map(item => {
+      const processed: any = { [xKey]: item[xKey] };
+      keys.forEach(k => {
+        processed[k] = typeof item[k] === 'number' ? item[k] : parseFloat(item[k]) || 0;
+      });
+      return processed;
+    });
 
     return {
-      chartData: data,
+      chartData: processedData,
       seriesKeys: keys.length > 0 ? keys : ['value'],
     };
   }, [data, config]);

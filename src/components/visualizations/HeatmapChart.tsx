@@ -17,7 +17,12 @@ const HeatmapChart = ({ data, config, zoom = 1 }: HeatmapChartProps) => {
   const [hoveredCell, setHoveredCell] = useState<{ row: number; col: number } | null>(null);
 
   const { matrix, rowLabels, colLabels, minValue, maxValue } = useMemo(() => {
-    if (!data || data.length === 0) {
+    // Check if data is empty or contains only empty objects
+    const hasValidData = data && data.length > 0 && data.some(item => 
+      Object.keys(item).length > 0 && Object.values(item).some(v => v !== null && v !== undefined)
+    );
+    
+    if (!hasValidData) {
       // Generate sample correlation matrix
       const sampleLabels = ['Revenue', 'Expenses', 'Profit', 'Growth', 'Risk'];
       const sampleMatrix = [
