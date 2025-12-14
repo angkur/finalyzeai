@@ -74,8 +74,13 @@ const PieBarChart = ({ data, config, zoom = 1, type }: PieBarChartProps) => {
   const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
 
   const chartData = useMemo(() => {
-    if (!data || data.length === 0) {
-      // Sample data
+    // Check if data is empty or contains only empty objects
+    const hasValidData = data && data.length > 0 && data.some(item => 
+      Object.keys(item).length > 0 && Object.values(item).some(v => v !== null && v !== undefined)
+    );
+    
+    if (!hasValidData) {
+      // Sample data for demo
       return [
         { name: 'Revenue', value: 4500000 },
         { name: 'Expenses', value: 2800000 },
@@ -88,11 +93,11 @@ const PieBarChart = ({ data, config, zoom = 1, type }: PieBarChartProps) => {
     const labelKey = config?.labelKey || 'name';
     const valueKey = config?.valueKey || 'value';
 
-    return data.map((item, idx) => ({
-      name: item[labelKey] || item.name || item.label || `Item ${idx + 1}`,
-      value: parseFloat(item[valueKey] || item.value || item.amount || 0),
-      ...item,
-    }));
+    return data.map((item, idx) => {
+      const name = item[labelKey] || item.name || item.label || item.category || `Item ${idx + 1}`;
+      const value = parseFloat(item[valueKey] || item.value || item.amount || item.total || 0);
+      return { name, value, ...item };
+    }).filter(item => !isNaN(item.value) && item.value !== 0);
   }, [data, config]);
 
   const filteredData = chartData.filter(item => !hiddenSeries.has(item.name));

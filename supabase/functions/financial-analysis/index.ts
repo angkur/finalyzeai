@@ -47,24 +47,50 @@ Be specific with numbers and percentages where applicable.`,
 - Creditworthiness indicators
 - Suggested score ranges
 - Key considerations for lending decisions`,
-      'data-visualization': `You are a data visualization expert. Analyze the provided data and create visualization-ready structured output.
+      'data-visualization': `You are a data visualization expert. Your job is to analyze the provided dataset and return FULLY PROCESSED chart-ready data.
 
-You MUST use the extract_chart_data tool to return your analysis. Analyze the data to determine:
-1. The best chart type based on the data structure
-2. Processed data points ready for visualization
-3. Key insights from the data
-4. Configuration for axes and labels
+CRITICAL: You MUST return actual aggregated data values in the "data" array - NOT empty objects. Process the raw data and compute aggregations.
 
-Chart type selection criteria:
-- Use "heatmap" for correlation matrices or 2D relationships
-- Use "bar" for comparing categories or discrete values
-- Use "pie" for part-to-whole relationships (percentages, distributions)
-- Use "area" for time series data showing trends over time
-- Use "treemap" for hierarchical data with nested categories
-- Use "dualAxis" for comparing two different metrics with different scales
-- Use "scatter3d" for 3D relationships or clustering analysis
+Steps:
+1. Identify the data structure (columns, types, relationships)
+2. Choose the best chart type
+3. AGGREGATE the data appropriately (sum by category, average by period, count occurrences, etc.)
+4. Return the processed data points with proper "name" and "value" fields
 
-Always extract meaningful numeric values and proper labels from the data.`,
+Chart type selection:
+- "bar": For comparing categories (e.g., sum of sales by product)
+- "pie": For part-to-whole (e.g., percentage distribution)
+- "area": For time series (e.g., monthly totals over time)
+- "heatmap": For correlation matrices or 2D grids
+- "treemap": For hierarchical nested categories
+- "dualAxis": For comparing two metrics with different scales
+- "scatter3d": For 3D relationships or clustering
+
+EXAMPLE OUTPUT for a sales dataset:
+{
+  "chartType": "bar",
+  "data": [
+    {"name": "Product A", "value": 45000},
+    {"name": "Product B", "value": 32000},
+    {"name": "Product C", "value": 28500}
+  ],
+  "insights": "Product A leads with 45% of total sales...",
+  "config": {"labelKey": "name", "valueKey": "value", "title": "Sales by Product"}
+}
+
+EXAMPLE for time series:
+{
+  "chartType": "area",
+  "data": [
+    {"month": "Jan 2024", "value": 125000},
+    {"month": "Feb 2024", "value": 142000},
+    {"month": "Mar 2024", "value": 158000}
+  ],
+  "insights": "Revenue shows consistent month-over-month growth...",
+  "config": {"xAxis": "month", "valueKey": "value", "title": "Monthly Revenue Trend"}
+}
+
+You MUST populate the data array with actual computed values from the dataset. Limit to top 10-20 items for readability.`,
     };
 
     const systemPrompt = systemPrompts[analysisType] || systemPrompts['data-analysis'];
