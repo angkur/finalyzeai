@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Brain, LineChart, FileText, Database, Shield, Sparkles, Send, Loader2, Upload, X, FileSpreadsheet, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import ChartRenderer, { ChartData } from "./visualizations/ChartRenderer";
+import DocumentUpload from "./DocumentUpload";
 
 type AnalysisType = 'data-analysis' | 'report-generation' | 'predictive-modeling' | 'rag-query' | 'credit-scoring' | 'data-visualization';
 
@@ -155,16 +156,22 @@ const AIDemo = () => {
     setChartData(null);
 
     try {
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/financial-analysis`, {
+      // Use RAG endpoint for knowledge queries
+      const endpoint = selectedType === 'rag-query' 
+        ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/rag-query`
+        : `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/financial-analysis`;
+
+      const body = selectedType === 'rag-query'
+        ? { query: input }
+        : { messages: [{ role: "user", content: input }], analysisType: selectedType };
+
+      const resp = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({
-          messages: [{ role: "user", content: input }],
-          analysisType: selectedType,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!resp.ok) {
@@ -427,8 +434,15 @@ const AIDemo = () => {
             </div>
           )}
 
+          {/* Knowledge Base for RAG Queries */}
+          {selectedType === 'rag-query' && (
+            <div className="mt-8 p-6 rounded-2xl bg-gradient-card border border-border/50">
+              <DocumentUpload />
+            </div>
+          )}
+
           {/* Feature Cards */}
-          {!isVisualization && (
+          {!isVisualization && selectedType !== 'rag-query' && (
             <div className="mt-12 grid md:grid-cols-3 gap-4">
               <div className="p-4 rounded-xl bg-card/50 border border-border/30 text-center">
                 <Upload className="w-6 h-6 mx-auto mb-2 text-primary" />
