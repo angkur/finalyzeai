@@ -6,6 +6,7 @@ import { Brain, LineChart, FileText, Database, Shield, Sparkles, Send, Loader2, 
 import { toast } from "sonner";
 import ChartRenderer, { ChartData } from "./visualizations/ChartRenderer";
 import DocumentUpload from "./DocumentUpload";
+import FeedbackRating from "./FeedbackRating";
 
 type AnalysisType = 'data-analysis' | 'report-generation' | 'predictive-modeling' | 'rag-query' | 'credit-scoring' | 'data-visualization';
 
@@ -81,6 +82,7 @@ const AIDemo = () => {
   const [uploadedFile, setUploadedFile] = useState<{ name: string; content: string } | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [activeTab, setActiveTab] = useState<'analysis' | 'visualization'>('analysis');
+  const [interactionId, setInteractionId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleTypeChange = (type: AnalysisType) => {
@@ -89,6 +91,7 @@ const AIDemo = () => {
     setResponse('');
     setUploadedFile(null);
     setChartData(null);
+    setInteractionId(null);
     setActiveTab(type === 'data-visualization' ? 'visualization' : 'analysis');
   };
 
@@ -154,6 +157,7 @@ const AIDemo = () => {
     setIsLoading(true);
     setResponse('');
     setChartData(null);
+    setInteractionId(null);
 
     try {
       // Use RAG endpoint for knowledge queries
@@ -184,8 +188,11 @@ const AIDemo = () => {
         const data = await resp.json();
         if (data.chartData) {
           setChartData(data.chartData);
-          setResponse(data.chartData.insights || 'Visualization generated successfully.');
+          const vizResponse = data.chartData.insights || 'Visualization generated successfully.';
+          setResponse(vizResponse);
           toast.success("Visualization created!");
+          // Log interaction for visualization
+          logInteraction(input, vizResponse, selectedType);
         } else {
           throw new Error(data.message || "Failed to generate visualization");
         }
@@ -231,11 +238,45 @@ const AIDemo = () => {
           }
         }
       }
+
+      // Log the completed interaction
+      if (fullResponse) {
+        logInteraction(input, fullResponse, selectedType);
+      }
     } catch (error) {
       console.error("Analysis error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to analyze data");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const logInteraction = async (query: string, responseText: string, analysisType: string) => {
+    try {
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/log-interaction`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            query,
+            response: responseText,
+            analysisType,
+          }),
+        }
+      );
+
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.interactionId) {
+          setInteractionId(data.interactionId);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to log interaction:", error);
     }
   };
 
@@ -384,10 +425,22 @@ const AIDemo = () => {
                 <TabsContent value="analysis" className="mt-0">
                   <div className="min-h-[280px] max-h-[400px] bg-secondary/30 rounded-xl p-4 border border-border/30 overflow-auto">
                     {response ? (
-                      <div className="prose prose-invert prose-sm max-w-none">
-                        <pre className="whitespace-pre-wrap text-sm text-foreground/90 font-sans leading-relaxed">
-                          {response}
-                        </pre>
+                      <div className="space-y-4">
+                        <div className="prose prose-invert prose-sm max-w-none">
+                          <pre className="whitespace-pre-wrap text-sm text-foreground/90 font-sans leading-relaxed">
+                            {response}
+                          </pre>
+                        </div>
+                        {!isLoading && response && (
+                          <div className="pt-3 border-t border-border/30">
+                            <FeedbackRating 
+                              interactionId={interactionId} 
+                              onRatingSubmit={(rating) => {
+                                console.log(`User rated ${rating} stars`);
+                              }}
+                            />
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
