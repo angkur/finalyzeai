@@ -6,29 +6,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Generate embedding using OpenAI API
-async function generateEmbedding(text: string, apiKey: string): Promise<number[]> {
-  const response = await fetch("https://api.openai.com/v1/embeddings", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "text-embedding-3-small",
-      input: text,
-      dimensions: 768,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    console.error("OpenAI Embedding error:", response.status, error);
-    throw new Error(`Embedding failed: ${response.status}`);
-  }
-
-  const result = await response.json();
-  return result.data[0].embedding;
+// Extract keywords from query for search
+function extractKeywords(query: string): string[] {
+  const stopWords = new Set(['the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'what', 'which', 'who', 'when', 'where', 'why', 'how', 'all', 'each', 'every', 'both', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 'just', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'any', 'my', 'your', 'his', 'her', 'its', 'our', 'their', 'tell', 'me', 'show', 'give', 'find', 'get']);
+  
+  return query
+    .toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .split(/\s+/)
+    .filter(word => word.length > 2 && !stopWords.has(word));
 }
 
 serve(async (req) => {
@@ -39,62 +25,54 @@ serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
-  const openaiApiKey = Deno.env.get("OPENAI_API_KEY")!;
-  
-  if (!openaiApiKey) {
-    return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
   
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
-    const { query, matchCount = 5, matchThreshold = 0.5 } = await req.json();
+    const { query, matchCount = 5 } = await req.json();
     
     console.log(`RAG query: "${query.substring(0, 100)}..."`);
 
-    // Generate embedding for the query using OpenAI
-    const queryEmbedding = await generateEmbedding(query, openaiApiKey);
-    console.log("Generated query embedding");
+    // Extract keywords for search
+    const keywords = extractKeywords(query);
+    console.log("Search keywords:", keywords);
 
-    // Search for matching few-shot examples first
-    const { data: fewShotExamples } = await supabase.rpc('match_few_shot_examples', {
-      query_embedding: queryEmbedding,
-      match_threshold: 0.6,
-      match_count: 3,
-    });
-
-    // Build few-shot examples section
-    let fewShotSection = '';
-    if (fewShotExamples && fewShotExamples.length > 0) {
-      console.log(`Found ${fewShotExamples.length} relevant few-shot examples`);
-      fewShotSection = `\n\nRELEVANT EXAMPLES FROM PREVIOUS HIGH-QUALITY RESPONSES:\n`;
-      fewShotExamples.forEach((ex: any, i: number) => {
-        fewShotSection += `\nExample ${i + 1} (Quality Score: ${ex.quality_score}/5):\nQ: ${ex.question}\nA: ${ex.answer}\n`;
-      });
-      fewShotSection += `\nUse these examples as guidance for style and depth of response.\n`;
+    // Search using keyword matching (ILIKE)
+    let matches: any[] = [];
+    
+    if (keywords.length > 0) {
+      // Build search pattern
+      const searchPattern = keywords.map(k => `%${k}%`);
+      
+      // Search for chunks containing any of the keywords
+      const { data, error } = await supabase
+        .from('document_chunks')
+        .select('id, content, document_id, metadata')
+        .or(keywords.map(k => `content.ilike.%${k}%`).join(','))
+        .limit(matchCount * 2);
+      
+      if (error) {
+        console.error("Search error:", error);
+      } else if (data) {
+        // Score matches by keyword count
+        matches = data.map(chunk => {
+          const contentLower = chunk.content.toLowerCase();
+          const score = keywords.reduce((acc, kw) => {
+            return acc + (contentLower.includes(kw) ? 1 : 0);
+          }, 0);
+          return { ...chunk, score };
+        })
+        .sort((a, b) => b.score - a.score)
+        .slice(0, matchCount);
+      }
     }
 
-    // Search for matching document chunks using vector similarity
-    const { data: matches, error: matchError } = await supabase.rpc('match_documents', {
-      query_embedding: queryEmbedding,
-      match_threshold: matchThreshold,
-      match_count: matchCount,
-    });
-
-    if (matchError) {
-      console.error("Match error:", matchError);
-      throw matchError;
-    }
-
-    console.log(`Found ${matches?.length || 0} matching chunks`);
+    console.log(`Found ${matches.length} matching chunks`);
 
     // If no matches, generate a response without context
-    if (!matches || matches.length === 0) {
-      const systemPrompt = `You are a financial knowledge assistant. The user asked a question but no relevant documents were found in the knowledge base. 
-${fewShotSection}
+    if (matches.length === 0) {
+      const systemPrompt = `You are a financial knowledge assistant. The user asked a question but no relevant documents were found in the knowledge base.
+
 Provide a helpful response based on your general knowledge, but clearly mention that:
 1. No specific documents were found matching this query in the knowledge base
 2. The answer is based on general knowledge, not uploaded documents
@@ -134,9 +112,9 @@ Provide a helpful response based on your general knowledge, but clearly mention 
     // Get document names for citation
     const sources = matches.map((m: any) => m.metadata?.file_name || 'Unknown').filter((v: string, i: number, a: string[]) => a.indexOf(v) === i);
 
-    // Generate response with RAG context and few-shot examples
+    // Generate response with RAG context
     const systemPrompt = `You are a financial knowledge assistant with access to a document knowledge base. Answer questions based on the provided context from uploaded documents.
-${fewShotSection}
+
 IMPORTANT GUIDELINES:
 1. Base your answer primarily on the provided context
 2. If the context doesn't fully answer the question, clearly state what parts are from the documents vs general knowledge
