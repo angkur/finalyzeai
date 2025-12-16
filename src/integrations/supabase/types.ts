@@ -88,6 +88,105 @@ export type Database = {
         }
         Relationships: []
       }
+      few_shot_examples: {
+        Row: {
+          answer: string
+          created_at: string
+          embedding: string | null
+          id: string
+          quality_score: number | null
+          question: string
+          topic: string
+          updated_at: string
+          usage_count: number | null
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          quality_score?: number | null
+          question: string
+          topic: string
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          quality_score?: number | null
+          question?: string
+          topic?: string
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
+      interactions: {
+        Row: {
+          analysis_type: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          query: string
+          rating: number | null
+          response: string
+        }
+        Insert: {
+          analysis_type: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          query: string
+          rating?: number | null
+          response: string
+        }
+        Update: {
+          analysis_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          query?: string
+          rating?: number | null
+          response?: string
+        }
+        Relationships: []
+      }
+      prompt_templates: {
+        Row: {
+          analysis_type: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          performance_score: number | null
+          template: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          analysis_type: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          performance_score?: number | null
+          template: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          analysis_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          performance_score?: number | null
+          template?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -105,6 +204,21 @@ export type Database = {
           id: string
           metadata: Json
           similarity: number
+        }[]
+      }
+      match_few_shot_examples: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+        }
+        Returns: {
+          answer: string
+          id: string
+          quality_score: number
+          question: string
+          similarity: number
+          topic: string
         }[]
       }
     }

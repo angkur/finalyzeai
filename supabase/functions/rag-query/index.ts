@@ -51,6 +51,24 @@ serve(async (req) => {
     const queryEmbedding = await generateEmbedding(query, lovableApiKey);
     console.log("Generated query embedding");
 
+    // Search for matching few-shot examples first
+    const { data: fewShotExamples } = await supabase.rpc('match_few_shot_examples', {
+      query_embedding: queryEmbedding,
+      match_threshold: 0.6,
+      match_count: 3,
+    });
+
+    // Build few-shot examples section
+    let fewShotSection = '';
+    if (fewShotExamples && fewShotExamples.length > 0) {
+      console.log(`Found ${fewShotExamples.length} relevant few-shot examples`);
+      fewShotSection = `\n\nRELEVANT EXAMPLES FROM PREVIOUS HIGH-QUALITY RESPONSES:\n`;
+      fewShotExamples.forEach((ex: any, i: number) => {
+        fewShotSection += `\nExample ${i + 1} (Quality Score: ${ex.quality_score}/5):\nQ: ${ex.question}\nA: ${ex.answer}\n`;
+      });
+      fewShotSection += `\nUse these examples as guidance for style and depth of response.\n`;
+    }
+
     // Search for matching document chunks using vector similarity
     const { data: matches, error: matchError } = await supabase.rpc('match_documents', {
       query_embedding: queryEmbedding,
@@ -67,6 +85,13 @@ serve(async (req) => {
 
     // If no matches, generate a response without context
     if (!matches || matches.length === 0) {
+      const systemPrompt = `You are a financial knowledge assistant. The user asked a question but no relevant documents were found in the knowledge base. 
+${fewShotSection}
+Provide a helpful response based on your general knowledge, but clearly mention that:
+1. No specific documents were found matching this query in the knowledge base
+2. The answer is based on general knowledge, not uploaded documents
+3. Suggest the user upload relevant documents for more specific answers`;
+
       const noContextResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -76,15 +101,7 @@ serve(async (req) => {
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           messages: [
-            {
-              role: "system",
-              content: `You are a financial knowledge assistant. The user asked a question but no relevant documents were found in the knowledge base. 
-              
-Provide a helpful response based on your general knowledge, but clearly mention that:
-1. No specific documents were found matching this query in the knowledge base
-2. The answer is based on general knowledge, not uploaded documents
-3. Suggest the user upload relevant documents for more specific answers`
-            },
+            { role: "system", content: systemPrompt },
             { role: "user", content: query }
           ],
           stream: true,
@@ -109,20 +126,9 @@ Provide a helpful response based on your general knowledge, but clearly mention 
     // Get document names for citation
     const sources = matches.map((m: any) => m.metadata?.file_name || 'Unknown').filter((v: string, i: number, a: string[]) => a.indexOf(v) === i);
 
-    // Generate response with RAG context
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: `You are a financial knowledge assistant with access to a document knowledge base. Answer questions based on the provided context from uploaded documents.
-
+    // Generate response with RAG context and few-shot examples
+    const systemPrompt = `You are a financial knowledge assistant with access to a document knowledge base. Answer questions based on the provided context from uploaded documents.
+${fewShotSection}
 IMPORTANT GUIDELINES:
 1. Base your answer primarily on the provided context
 2. If the context doesn't fully answer the question, clearly state what parts are from the documents vs general knowledge
@@ -133,8 +139,18 @@ IMPORTANT GUIDELINES:
 Available sources: ${sources.join(', ')}
 
 CONTEXT FROM KNOWLEDGE BASE:
-${context}`
-          },
+${context}`;
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemPrompt },
           { role: "user", content: query }
         ],
         stream: true,
