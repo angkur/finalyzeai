@@ -21,87 +21,6 @@ function chunkText(text: string, chunkSize = 1000, overlap = 200): string[] {
   return chunks;
 }
 
-// Sleep helper
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-// Generate embedding with retry logic for rate limits
-async function generateEmbedding(text: string, apiKey: string, maxRetries = 3): Promise<number[]> {
-  let lastError: Error | null = null;
-  
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const response = await fetch("https://api.openai.com/v1/embeddings", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "text-embedding-3-small",
-          input: text,
-          dimensions: 768,
-        }),
-      });
-
-      if (response.status === 429) {
-        // Rate limited - wait with exponential backoff
-        const waitTime = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
-        console.log(`Rate limited, waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
-        await sleep(waitTime);
-        continue;
-      }
-
-      if (!response.ok) {
-        const error = await response.text();
-        console.error("OpenAI Embedding error:", response.status, error);
-        throw new Error(`Embedding failed: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return result.data[0].embedding;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      if (attempt < maxRetries - 1) {
-        const waitTime = Math.pow(2, attempt) * 500;
-        console.log(`Embedding error, retrying in ${waitTime}ms...`);
-        await sleep(waitTime);
-      }
-    }
-  }
-  
-  throw lastError || new Error("Embedding failed after retries");
-}
-
-// Process chunks in batches with rate limiting
-async function processChunksInBatches(
-  chunks: string[], 
-  apiKey: string, 
-  batchSize = 5,
-  delayBetweenBatches = 1000
-): Promise<number[][]> {
-  const embeddings: number[][] = [];
-  
-  for (let i = 0; i < chunks.length; i += batchSize) {
-    const batch = chunks.slice(i, i + batchSize);
-    console.log(`Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(chunks.length / batchSize)} (chunks ${i + 1}-${Math.min(i + batchSize, chunks.length)})`);
-    
-    // Process batch sequentially to avoid rate limits
-    for (const chunk of batch) {
-      const embedding = await generateEmbedding(chunk, apiKey);
-      embeddings.push(embedding);
-      // Small delay between individual requests
-      await sleep(100);
-    }
-    
-    // Longer delay between batches
-    if (i + batchSize < chunks.length) {
-      await sleep(delayBetweenBatches);
-    }
-  }
-  
-  return embeddings;
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -109,14 +28,6 @@ serve(async (req) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const openaiApiKey = Deno.env.get("OPENAI_API_KEY")!;
-  
-  if (!openaiApiKey) {
-    return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
   
   const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -131,26 +42,23 @@ serve(async (req) => {
       .update({ status: 'processing' })
       .eq('id', documentId);
 
-    // Chunk the document content - use larger chunks to reduce API calls
-    const chunks = chunkText(content, 2000, 200);
+    // Chunk the document content
+    const chunks = chunkText(content, 1500, 150);
     console.log(`Created ${chunks.length} chunks`);
 
     // Limit chunks for very large documents
-    const maxChunks = 100;
+    const maxChunks = 200;
     const chunksToProcess = chunks.slice(0, maxChunks);
     if (chunks.length > maxChunks) {
       console.log(`Document too large, processing first ${maxChunks} chunks out of ${chunks.length}`);
     }
 
-    // Process chunks with rate limiting
-    const embeddings = await processChunksInBatches(chunksToProcess, openaiApiKey, 5, 1500);
-
-    // Prepare chunk inserts
+    // Prepare chunk inserts - NO embeddings needed
     const chunkInserts = chunksToProcess.map((chunk, i) => ({
       document_id: documentId,
       chunk_index: i,
       content: chunk,
-      embedding: embeddings[i],
+      embedding: null, // No embeddings - using keyword search
       metadata: {
         file_name: fileName,
         chunk_index: i,
