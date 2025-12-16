@@ -6,6 +6,31 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Generate embedding using OpenAI API
+async function generateEmbedding(text: string, apiKey: string): Promise<number[]> {
+  const response = await fetch("https://api.openai.com/v1/embeddings", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "text-embedding-3-small",
+      input: text,
+      dimensions: 768,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error("OpenAI Embedding error:", response.status, error);
+    throw new Error(`Embedding failed: ${response.status}`);
+  }
+
+  const result = await response.json();
+  return result.data[0].embedding;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -13,8 +38,15 @@ serve(async (req) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
+  const openaiApiKey = Deno.env.get("OPENAI_API_KEY")!;
   const supabase = createClient(supabaseUrl, supabaseKey);
+
+  if (!openaiApiKey) {
+    return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   try {
     const { query, topic, matchCount = 3, matchThreshold = 0.5 } = await req.json();
@@ -29,25 +61,7 @@ serve(async (req) => {
     console.log(`Finding few-shot examples for: "${query.substring(0, 50)}..."`);
 
     // Generate embedding for the query
-    const embeddingResponse = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "text-embedding-3-small",
-        input: query,
-        dimensions: 768,
-      }),
-    });
-
-    if (!embeddingResponse.ok) {
-      throw new Error("Failed to generate embedding");
-    }
-
-    const embResult = await embeddingResponse.json();
-    const queryEmbedding = embResult.data[0].embedding;
+    const queryEmbedding = await generateEmbedding(query, openaiApiKey);
 
     // Search for matching few-shot examples using vector similarity
     const { data: examples, error: matchError } = await supabase.rpc('match_few_shot_examples', {
@@ -79,15 +93,6 @@ serve(async (req) => {
     const uniqueExamples = allExamples.filter((example, index, self) =>
       index === self.findIndex(e => e.id === example.id)
     ).slice(0, matchCount);
-
-    // Increment usage count for retrieved examples
-    if (uniqueExamples.length > 0) {
-      const ids = uniqueExamples.map(e => e.id);
-      await supabase
-        .from('few_shot_examples')
-        .update({ usage_count: supabase.rpc('increment_usage') })
-        .in('id', ids);
-    }
 
     console.log(`Found ${uniqueExamples.length} few-shot examples`);
 

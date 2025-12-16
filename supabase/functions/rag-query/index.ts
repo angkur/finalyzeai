@@ -6,9 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Generate embedding using Lovable AI gateway
+// Generate embedding using OpenAI API
 async function generateEmbedding(text: string, apiKey: string): Promise<number[]> {
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
+  const response = await fetch("https://api.openai.com/v1/embeddings", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -23,7 +23,7 @@ async function generateEmbedding(text: string, apiKey: string): Promise<number[]
 
   if (!response.ok) {
     const error = await response.text();
-    console.error("Embedding error:", response.status, error);
+    console.error("OpenAI Embedding error:", response.status, error);
     throw new Error(`Embedding failed: ${response.status}`);
   }
 
@@ -39,6 +39,14 @@ serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
+  const openaiApiKey = Deno.env.get("OPENAI_API_KEY")!;
+  
+  if (!openaiApiKey) {
+    return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
   
   const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -47,8 +55,8 @@ serve(async (req) => {
     
     console.log(`RAG query: "${query.substring(0, 100)}..."`);
 
-    // Generate embedding for the query
-    const queryEmbedding = await generateEmbedding(query, lovableApiKey);
+    // Generate embedding for the query using OpenAI
+    const queryEmbedding = await generateEmbedding(query, openaiApiKey);
     console.log("Generated query embedding");
 
     // Search for matching few-shot examples first
