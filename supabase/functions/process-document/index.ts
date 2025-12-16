@@ -21,9 +21,9 @@ function chunkText(text: string, chunkSize = 1000, overlap = 200): string[] {
   return chunks;
 }
 
-// Generate embedding using Lovable AI gateway
+// Generate embedding using OpenAI API
 async function generateEmbedding(text: string, apiKey: string): Promise<number[]> {
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
+  const response = await fetch("https://api.openai.com/v1/embeddings", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -38,7 +38,7 @@ async function generateEmbedding(text: string, apiKey: string): Promise<number[]
 
   if (!response.ok) {
     const error = await response.text();
-    console.error("Embedding error:", response.status, error);
+    console.error("OpenAI Embedding error:", response.status, error);
     throw new Error(`Embedding failed: ${response.status}`);
   }
 
@@ -53,7 +53,14 @@ serve(async (req) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
+  const openaiApiKey = Deno.env.get("OPENAI_API_KEY")!;
+  
+  if (!openaiApiKey) {
+    return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
   
   const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -78,7 +85,7 @@ serve(async (req) => {
     for (let i = 0; i < chunks.length; i++) {
       try {
         console.log(`Generating embedding for chunk ${i + 1}/${chunks.length}`);
-        const embedding = await generateEmbedding(chunks[i], lovableApiKey);
+        const embedding = await generateEmbedding(chunks[i], openaiApiKey);
         
         chunkInserts.push({
           document_id: documentId,
@@ -94,7 +101,7 @@ serve(async (req) => {
         
         // Small delay to avoid rate limiting
         if (i < chunks.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 50));
         }
       } catch (embeddingError) {
         console.error(`Error embedding chunk ${i}:`, embeddingError);

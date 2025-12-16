@@ -6,6 +6,31 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Generate embedding using OpenAI API
+async function generateEmbedding(text: string, apiKey: string): Promise<number[]> {
+  const response = await fetch("https://api.openai.com/v1/embeddings", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "text-embedding-3-small",
+      input: text,
+      dimensions: 768,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error("OpenAI Embedding error:", response.status, error);
+    throw new Error(`Embedding failed: ${response.status}`);
+  }
+
+  const result = await response.json();
+  return result.data[0].embedding;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -13,6 +38,7 @@ serve(async (req) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
@@ -29,8 +55,8 @@ serve(async (req) => {
 
       if (updateError) throw updateError;
 
-      // If rating is 4 or 5, consider promoting to few-shot example
-      if (rating >= 4) {
+      // If rating is 4 or 5 and we have OpenAI key, consider promoting to few-shot example
+      if (rating >= 4 && openaiApiKey) {
         console.log(`High rating (${rating}), checking for few-shot promotion`);
         
         // Get the interaction
@@ -49,24 +75,9 @@ serve(async (req) => {
             .limit(1);
 
           if (!existing || existing.length === 0) {
-            // Generate embedding for the question
-            const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
-            const embeddingResponse = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${lovableApiKey}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                model: "text-embedding-3-small",
-                input: interaction.query,
-                dimensions: 768,
-              }),
-            });
-
-            if (embeddingResponse.ok) {
-              const embResult = await embeddingResponse.json();
-              const embedding = embResult.data[0].embedding;
+            try {
+              // Generate embedding for the question
+              const embedding = await generateEmbedding(interaction.query, openaiApiKey);
 
               // Insert as few-shot example
               const { error: insertError } = await supabase
@@ -82,6 +93,9 @@ serve(async (req) => {
               if (!insertError) {
                 console.log(`Created new few-shot example from interaction ${interactionId}`);
               }
+            } catch (embError) {
+              console.error("Failed to generate embedding for few-shot:", embError);
+              // Still succeed the rating update even if few-shot promotion fails
             }
           }
         }
