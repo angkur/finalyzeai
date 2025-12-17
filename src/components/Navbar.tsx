@@ -1,7 +1,22 @@
 import { Button } from "@/components/ui/button";
-import { Brain } from "lucide-react";
+import { Brain, User, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
+  const { user, signOut, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 py-6">
       <div className="container px-6">
@@ -33,10 +48,33 @@ const Navbar = () => {
             </a>
           </div>
 
-          {/* CTA */}
-          <Button variant="hero" size="sm">
-            Get Started
-          </Button>
+          {/* Auth Buttons */}
+          {!isLoading && (
+            user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <User className="w-4 h-4" />
+                    <span className="hidden sm:inline">Account</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer">
+                    <User className="w-4 h-4 mr-2" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button variant="hero" size="sm" onClick={() => navigate("/auth")}>
+                Get Started
+              </Button>
+            )
+          )}
         </div>
       </div>
     </nav>
