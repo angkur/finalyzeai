@@ -8,6 +8,7 @@ import ChartRenderer, { ChartData } from "./visualizations/ChartRenderer";
 import DocumentUpload from "./DocumentUpload";
 import FeedbackRating from "./FeedbackRating";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 type AnalysisType = 'data-analysis' | 'report-generation' | 'predictive-modeling' | 'rag-query' | 'credit-scoring' | 'data-visualization';
 
@@ -76,6 +77,8 @@ const parseCSV = (text: string): string => {
 };
 
 const AIDemo = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState<AnalysisType>('data-analysis');
   const [input, setInput] = useState(samplePrompts['data-analysis']);
   const [response, setResponse] = useState('');
@@ -97,6 +100,12 @@ const AIDemo = () => {
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user) {
+      toast.error("Please sign in to upload files");
+      navigate("/auth");
+      return;
+    }
+    
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -150,6 +159,12 @@ const AIDemo = () => {
   };
 
   const handleAnalyze = async () => {
+    if (!user) {
+      toast.error("Please sign in to use AI analysis");
+      navigate("/auth");
+      return;
+    }
+
     if (!input.trim()) {
       toast.error("Please enter some data to analyze");
       return;
@@ -266,6 +281,7 @@ const AIDemo = () => {
             query,
             response: responseText,
             analysisType,
+            userId: user?.id,
           }),
         }
       );
