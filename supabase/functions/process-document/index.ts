@@ -32,9 +32,9 @@ serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
-    const { documentId, content, fileName } = await req.json();
+    const { documentId, content, fileName, userId } = await req.json();
     
-    console.log(`Processing document: ${documentId}, file: ${fileName}`);
+    console.log(`Processing document: ${documentId}, file: ${fileName}, user: ${userId || 'anonymous'}`);
 
     // Update document status to processing
     await supabase
@@ -58,7 +58,8 @@ serve(async (req) => {
       document_id: documentId,
       chunk_index: i,
       content: chunk,
-      embedding: null, // No embeddings - using keyword search
+      embedding: null,
+      user_id: userId || null,
       metadata: {
         file_name: fileName,
         chunk_index: i,

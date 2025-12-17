@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Upload, FileText, Trash2, CheckCircle, XCircle, Loader2, Database } from "lucide-react";
+import { Upload, FileText, Trash2, CheckCircle, XCircle, Loader2, Database, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface Document {
   id: string;
@@ -18,6 +20,8 @@ interface Document {
 }
 
 const DocumentUpload = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -25,13 +29,18 @@ const DocumentUpload = () => {
 
   // Fetch documents on mount
   useEffect(() => {
-    fetchDocuments();
-  }, []);
+    if (user) {
+      fetchDocuments();
+    }
+  }, [user]);
 
   const fetchDocuments = async () => {
+    if (!user) return;
+    
     const { data, error } = await supabase
       .from('documents')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -43,6 +52,11 @@ const DocumentUpload = () => {
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user) {
+      toast.error("Please sign in to upload documents");
+      return;
+    }
+
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -70,8 +84,8 @@ const DocumentUpload = () => {
       const content = await file.text();
       setUploadProgress(30);
 
-      // Upload to storage
-      const filePath = `${Date.now()}-${file.name}`;
+      // Upload to storage with user folder
+      const filePath = `${user.id}/${Date.now()}-${file.name}`;
       const { error: storageError } = await supabase.storage
         .from('documents')
         .upload(filePath, file);
@@ -81,7 +95,7 @@ const DocumentUpload = () => {
       }
       setUploadProgress(50);
 
-      // Create document record
+      // Create document record with user_id
       const { data: docData, error: docError } = await supabase
         .from('documents')
         .insert({
@@ -90,6 +104,7 @@ const DocumentUpload = () => {
           file_type: extension,
           file_size: file.size,
           status: 'pending',
+          user_id: user.id,
         })
         .select()
         .single();
@@ -99,12 +114,13 @@ const DocumentUpload = () => {
       }
       setUploadProgress(70);
 
-      // Trigger processing
+      // Trigger processing with user_id
       const { error: processError } = await supabase.functions.invoke('process-document', {
         body: {
           documentId: docData.id,
           content: content,
           fileName: file.name,
+          userId: user.id,
         },
       });
 
@@ -210,6 +226,32 @@ const DocumentUpload = () => {
     }
   };
 
+  // Show login prompt if not authenticated
+  if (!user) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Database className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-display font-semibold text-foreground">Knowledge Base</h3>
+            <p className="text-sm text-muted-foreground">Upload documents to enhance RAG queries</p>
+          </div>
+        </div>
+        
+        <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl border-border/50">
+          <LogIn className="w-10 h-10 text-muted-foreground mb-3" />
+          <span className="text-sm font-medium text-foreground mb-1">Sign in required</span>
+          <span className="text-xs text-muted-foreground mb-4">Please sign in to upload and manage your documents</span>
+          <Button variant="hero" size="sm" onClick={() => navigate('/auth')}>
+            Sign In
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -263,7 +305,7 @@ const DocumentUpload = () => {
       {/* Documents List */}
       {documents.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium text-muted-foreground">Uploaded Documents ({documents.length})</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">Your Documents ({documents.length})</h4>
           <div className="space-y-2 max-h-[300px] overflow-y-auto">
             {documents.map((doc) => (
               <div 

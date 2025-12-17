@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import ChartRenderer, { ChartData } from "./visualizations/ChartRenderer";
 import DocumentUpload from "./DocumentUpload";
 import FeedbackRating from "./FeedbackRating";
+import { useAuth } from "@/contexts/AuthContext";
 
 type AnalysisType = 'data-analysis' | 'report-generation' | 'predictive-modeling' | 'rag-query' | 'credit-scoring' | 'data-visualization';
 

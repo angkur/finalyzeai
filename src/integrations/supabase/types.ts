@@ -23,6 +23,7 @@ export type Database = {
           embedding: string | null
           id: string
           metadata: Json | null
+          user_id: string | null
         }
         Insert: {
           chunk_index: number
@@ -32,6 +33,7 @@ export type Database = {
           embedding?: string | null
           id?: string
           metadata?: Json | null
+          user_id?: string | null
         }
         Update: {
           chunk_index?: number
@@ -41,6 +43,7 @@ export type Database = {
           embedding?: string | null
           id?: string
           metadata?: Json | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -63,6 +66,7 @@ export type Database = {
           name: string
           status: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -74,6 +78,7 @@ export type Database = {
           name: string
           status?: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -85,6 +90,7 @@ export type Database = {
           name?: string
           status?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -133,6 +139,7 @@ export type Database = {
           query: string
           rating: number | null
           response: string
+          user_id: string | null
         }
         Insert: {
           analysis_type: string
@@ -142,6 +149,7 @@ export type Database = {
           query: string
           rating?: number | null
           response: string
+          user_id?: string | null
         }
         Update: {
           analysis_type?: string
@@ -151,6 +159,34 @@ export type Database = {
           query?: string
           rating?: number | null
           response?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

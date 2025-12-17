@@ -42,7 +42,7 @@ serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
-    const { query, response, rating, analysisType, interactionId, metadata = {} } = await req.json();
+    const { query, response, rating, analysisType, interactionId, metadata = {}, userId } = await req.json();
 
     // If interactionId provided, update existing interaction with rating
     if (interactionId && rating) {
@@ -114,16 +114,23 @@ serve(async (req) => {
       });
     }
 
-    console.log(`Logging new interaction for ${analysisType}`);
+    console.log(`Logging new interaction for ${analysisType}${userId ? ` by user ${userId}` : ''}`);
+
+    const insertData: Record<string, unknown> = {
+      query,
+      response,
+      analysis_type: analysisType,
+      metadata,
+    };
+
+    // Only include user_id if provided
+    if (userId) {
+      insertData.user_id = userId;
+    }
 
     const { data, error } = await supabase
       .from('interactions')
-      .insert({
-        query,
-        response,
-        analysis_type: analysisType,
-        metadata,
-      })
+      .insert(insertData)
       .select('id')
       .single();
 
