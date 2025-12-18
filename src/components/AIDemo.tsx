@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,6 +9,7 @@ import DocumentUpload from "./DocumentUpload";
 import FeedbackRating from "./FeedbackRating";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 type AnalysisType = 'data-analysis' | 'report-generation' | 'predictive-modeling' | 'rag-query' | 'credit-scoring' | 'data-visualization';
 
@@ -87,7 +88,32 @@ const AIDemo = () => {
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [activeTab, setActiveTab] = useState<'analysis' | 'visualization'>('analysis');
   const [interactionId, setInteractionId] = useState<string | null>(null);
+  const [isBlocked, setIsBlocked] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Check if user is blocked from AI usage
+  useEffect(() => {
+    if (!user) return;
+
+    const checkUsageLimit = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('ai_usage_limits')
+          .select('is_blocked')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!error && data) {
+          setIsBlocked(data.is_blocked);
+        }
+      } catch {
+        // No limits set, user is not blocked
+        setIsBlocked(false);
+      }
+    };
+
+    checkUsageLimit();
+  }, [user]);
 
   const handleTypeChange = (type: AnalysisType) => {
     setSelectedType(type);
@@ -167,6 +193,11 @@ const AIDemo = () => {
 
     if (!input.trim()) {
       toast.error("Please enter some data to analyze");
+      return;
+    }
+
+    if (isBlocked) {
+      toast.error("Your AI access has been restricted. Please contact support.");
       return;
     }
 
@@ -401,7 +432,7 @@ const AIDemo = () => {
                   variant="hero"
                   className="w-full"
                   onClick={handleAnalyze}
-                  disabled={isLoading}
+                  disabled={isLoading || isBlocked}
                 >
                   {isLoading ? (
                     <>
