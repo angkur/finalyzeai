@@ -1,17 +1,41 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Brain, User, LogOut } from "lucide-react";
+import { Brain, User, LogOut, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const { user, signOut, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [hasAdminAccess, setHasAdminAccess] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      setHasAdminAccess(false);
+      return;
+    }
+
+    const checkAdminAccess = async () => {
+      try {
+        const { data } = await supabase.functions.invoke('admin', {
+          body: { action: 'check-access' }
+        });
+        setHasAdminAccess(data?.hasAccess || false);
+      } catch {
+        setHasAdminAccess(false);
+      }
+    };
+
+    checkAdminAccess();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -63,6 +87,16 @@ const Navbar = () => {
                     <User className="w-4 h-4 mr-2" />
                     Profile
                   </DropdownMenuItem>
+                  {hasAdminAccess && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => navigate("/admin")} className="cursor-pointer text-primary">
+                        <Shield className="w-4 h-4 mr-2" />
+                        Admin Panel
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
