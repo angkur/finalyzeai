@@ -223,13 +223,13 @@ serve(async (req) => {
           });
         }
 
-        // Upsert role
-        if (role === 'user') {
-          await supabase.from('user_roles').delete().eq('user_id', targetUserId);
-        } else {
+        // Delete existing role first, then insert new one if not 'user'
+        await supabase.from('user_roles').delete().eq('user_id', targetUserId);
+        
+        if (role !== 'user') {
           const { error } = await supabase
             .from('user_roles')
-            .upsert({ user_id: targetUserId, role }, { onConflict: 'user_id' });
+            .insert({ user_id: targetUserId, role });
           
           if (error) throw error;
         }
