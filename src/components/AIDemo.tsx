@@ -89,31 +89,67 @@ const AIDemo = () => {
   const [activeTab, setActiveTab] = useState<'analysis' | 'visualization'>('analysis');
   const [interactionId, setInteractionId] = useState<string | null>(null);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [usageLimitMessage, setUsageLimitMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Check if user is blocked from AI usage
+  // Check if user is blocked or has exceeded usage limits
   useEffect(() => {
     if (!user) return;
 
     const checkUsageLimit = async () => {
       try {
-        const { data, error } = await supabase
+        // Get user's limits
+        const { data: limits } = await supabase
           .from('ai_usage_limits')
-          .select('is_blocked')
+          .select('is_blocked, daily_limit, monthly_limit')
           .eq('user_id', user.id)
           .single();
 
-        if (!error && data) {
-          setIsBlocked(data.is_blocked);
+        if (limits?.is_blocked) {
+          setIsBlocked(true);
+          setUsageLimitMessage("Your AI access has been blocked by an administrator.");
+          return;
+        }
+
+        // Get today's interaction count
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const { count: todayCount } = await supabase
+          .from('interactions')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .gte('created_at', today.toISOString());
+
+        // Get this month's interaction count
+        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+        const { count: monthCount } = await supabase
+          .from('interactions')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .gte('created_at', monthStart.toISOString());
+
+        const dailyLimit = limits?.daily_limit ?? 50;
+        const monthlyLimit = limits?.monthly_limit ?? 500;
+
+        if ((todayCount ?? 0) >= dailyLimit) {
+          setIsBlocked(true);
+          setUsageLimitMessage(`You've reached your daily limit of ${dailyLimit} AI analyses. Please try again tomorrow.`);
+        } else if ((monthCount ?? 0) >= monthlyLimit) {
+          setIsBlocked(true);
+          setUsageLimitMessage(`You've reached your monthly limit of ${monthlyLimit} AI analyses. Please try again next month.`);
+        } else {
+          setIsBlocked(false);
+          setUsageLimitMessage(null);
         }
       } catch {
         // No limits set, user is not blocked
         setIsBlocked(false);
+        setUsageLimitMessage(null);
       }
     };
 
     checkUsageLimit();
-  }, [user]);
+  }, [user, response]); // Re-check after each analysis
 
   const handleTypeChange = (type: AnalysisType) => {
     setSelectedType(type);
@@ -197,7 +233,7 @@ const AIDemo = () => {
     }
 
     if (isBlocked) {
-      toast.error("Your AI access has been restricted. Please contact support.");
+      toast.error(usageLimitMessage || "Your AI access has been restricted. Please contact support.");
       return;
     }
 

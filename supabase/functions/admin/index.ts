@@ -37,7 +37,8 @@ serve(async (req) => {
       });
     }
 
-    const { action, targetUserId, role } = await req.json();
+    const body = await req.json();
+    const { action, targetUserId, role, dailyLimit, monthlyLimit, isBlocked: isBlockedFlag } = body;
 
     // Check if user is admin (by email check for initial setup, then by role)
     const isAdminByEmail = user.email === ADMIN_EMAIL;
@@ -246,15 +247,13 @@ serve(async (req) => {
           });
         }
 
-        const { dailyLimit, monthlyLimit, isBlocked } = await req.json();
-
         const { error } = await supabase
           .from('ai_usage_limits')
           .upsert({
             user_id: targetUserId,
             daily_limit: dailyLimit,
             monthly_limit: monthlyLimit,
-            is_blocked: isBlocked
+            is_blocked: isBlockedFlag
           }, { onConflict: 'user_id' });
 
         if (error) throw error;
