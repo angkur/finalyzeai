@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AnalysisDetailDialog from "@/components/AnalysisDetailDialog";
 
 interface Document {
   id: string;
@@ -35,6 +36,7 @@ interface Document {
 interface Interaction {
   id: string;
   query: string;
+  response: string;
   analysis_type: string;
   rating: number | null;
   created_at: string;
@@ -61,6 +63,8 @@ const Profile = () => {
     averageRating: null,
   });
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [selectedAnalysis, setSelectedAnalysis] = useState<Interaction | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -97,10 +101,10 @@ const Profile = () => {
         setDocuments(docs);
       }
 
-      // Fetch interactions
+      // Fetch interactions with full response
       const { data: ints, error: intsError } = await supabase
         .from("interactions")
-        .select("id, query, analysis_type, rating, created_at")
+        .select("id, query, response, analysis_type, rating, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(10);
@@ -320,7 +324,11 @@ const Profile = () => {
                     {interactions.map((interaction) => (
                       <div
                         key={interaction.id}
-                        className="flex items-start gap-3 p-3 rounded-lg bg-secondary/30 border border-border/30"
+                        onClick={() => {
+                          setSelectedAnalysis(interaction);
+                          setIsDialogOpen(true);
+                        }}
+                        className="flex items-start gap-3 p-3 rounded-lg bg-secondary/30 border border-border/30 cursor-pointer hover:bg-secondary/50 hover:border-primary/30 transition-colors"
                       >
                         {getAnalysisIcon(interaction.analysis_type)}
                         <div className="flex-1 min-w-0">
@@ -441,6 +449,12 @@ const Profile = () => {
           </Tabs>
         </div>
       </div>
+
+      <AnalysisDetailDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        analysis={selectedAnalysis}
+      />
     </div>
   );
 };
