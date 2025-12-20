@@ -23,46 +23,46 @@ interface AnalysisDetailDialogProps {
 // Simple markdown-like renderer for common formatting
 const renderResponse = (text: string) => {
   if (!text) return <p className="text-muted-foreground italic">No response available</p>;
-  
+
   // Split by double newlines for paragraphs
   const sections = text.split(/\n\n+/);
-  
+
   return sections.map((section, idx) => {
     // Check for headers
-    if (section.startsWith('## ')) {
+    if (section.startsWith("## ")) {
       return (
-        <h3 key={idx} className="text-base font-semibold text-foreground mt-4 mb-2">
-          {section.replace('## ', '')}
+        <h3 key={idx} className="text-base font-semibold text-foreground mt-4 mb-2 break-words">
+          {section.replace("## ", "")}
         </h3>
       );
     }
-    if (section.startsWith('### ')) {
+    if (section.startsWith("### ")) {
       return (
-        <h4 key={idx} className="text-sm font-semibold text-foreground mt-3 mb-1">
-          {section.replace('### ', '')}
+        <h4 key={idx} className="text-sm font-semibold text-foreground mt-3 mb-1 break-words">
+          {section.replace("### ", "")}
         </h4>
       );
     }
-    if (section.startsWith('# ')) {
+    if (section.startsWith("# ")) {
       return (
-        <h2 key={idx} className="text-lg font-bold text-foreground mt-4 mb-2">
-          {section.replace('# ', '')}
+        <h2 key={idx} className="text-lg font-bold text-foreground mt-4 mb-2 break-words">
+          {section.replace("# ", "")}
         </h2>
       );
     }
-    
+
     // Check for bullet points
-    if (section.includes('\n*   ') || section.includes('\n- ')) {
-      const lines = section.split('\n');
+    if (section.includes("\n*   ") || section.includes("\n- ")) {
+      const lines = section.split("\n");
       return (
         <ul key={idx} className="list-disc list-inside space-y-1 my-2">
           {lines.map((line, lineIdx) => {
-            const cleanLine = line.replace(/^[\*\-]\s+/, '').trim();
+            const cleanLine = line.replace(/^[\*\-]\s+/, "").trim();
             if (!cleanLine) return null;
             // Handle bold text
-            const formattedLine = cleanLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            const formattedLine = cleanLine.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
             return (
-              <li key={lineIdx} className="text-sm text-foreground">
+              <li key={lineIdx} className="text-sm text-foreground break-words">
                 <span dangerouslySetInnerHTML={{ __html: formattedLine }} />
               </li>
             );
@@ -70,11 +70,15 @@ const renderResponse = (text: string) => {
         </ul>
       );
     }
-    
+
     // Regular paragraph with bold support
-    const formattedText = section.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    const formattedText = section.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
     return (
-      <p key={idx} className="text-sm text-foreground mb-2" dangerouslySetInnerHTML={{ __html: formattedText }} />
+      <p
+        key={idx}
+        className="text-sm text-foreground mb-2 break-words"
+        dangerouslySetInnerHTML={{ __html: formattedText }}
+      />
     );
   });
 };
@@ -124,7 +128,7 @@ const AnalysisDetailDialog = ({ open, onOpenChange, analysis }: AnalysisDetailDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-3xl h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <div className="flex items-center gap-3">
             {getAnalysisIcon(analysis.analysis_type)}
@@ -136,7 +140,7 @@ const AnalysisDetailDialog = ({ open, onOpenChange, analysis }: AnalysisDetailDi
                 </span>
                 {analysis.rating && (
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
+                    <Star className="w-3 h-3 text-accent fill-current" />
                     {analysis.rating}/5
                   </span>
                 )}
@@ -149,7 +153,7 @@ const AnalysisDetailDialog = ({ open, onOpenChange, analysis }: AnalysisDetailDi
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4 max-h-[calc(90vh-120px)]">
+        <ScrollArea className="flex-1 pr-4">
           <div className="space-y-4">
             {/* Query Section */}
             <div>
@@ -157,8 +161,8 @@ const AnalysisDetailDialog = ({ open, onOpenChange, analysis }: AnalysisDetailDi
                 <ExternalLink className="w-4 h-4 text-muted-foreground" />
                 Your Query
               </h4>
-              <div className="p-3 rounded-lg bg-secondary/50 border border-border/30 max-h-40 overflow-y-auto">
-                <p className="text-sm text-foreground whitespace-pre-wrap">{analysis.query}</p>
+              <div className="p-3 rounded-lg bg-secondary/50 border border-border/30 max-h-40 overflow-y-auto overflow-x-hidden">
+                <p className="text-sm text-foreground whitespace-pre-wrap break-all">{analysis.query}</p>
               </div>
             </div>
 
