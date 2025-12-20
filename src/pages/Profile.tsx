@@ -49,6 +49,8 @@ interface Stats {
   averageRating: number | null;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 const Profile = () => {
   const navigate = useNavigate();
   const { user, profile, isLoading: authLoading, updateProfile, signOut } = useAuth();
@@ -65,6 +67,9 @@ const Profile = () => {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [selectedAnalysis, setSelectedAnalysis] = useState<Interaction | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMoreInteractions, setHasMoreInteractions] = useState(true);
+  const [hasMoreDocuments, setHasMoreDocuments] = useState(true);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -95,10 +100,11 @@ const Profile = () => {
         .select("id, name, file_type, file_size, status, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(10);
+        .limit(ITEMS_PER_PAGE);
 
       if (!docsError && docs) {
         setDocuments(docs);
+        setHasMoreDocuments(docs.length === ITEMS_PER_PAGE);
       }
 
       // Fetch interactions with full response
@@ -107,10 +113,11 @@ const Profile = () => {
         .select("id, query, response, analysis_type, rating, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(10);
+        .limit(ITEMS_PER_PAGE);
 
       if (!intsError && ints) {
         setInteractions(ints);
+        setHasMoreInteractions(ints.length === ITEMS_PER_PAGE);
       }
 
       // Calculate stats
@@ -152,6 +159,52 @@ const Profile = () => {
       console.error("Error fetching user data:", error);
     } finally {
       setIsLoadingData(false);
+    }
+  };
+
+  const loadMoreInteractions = async () => {
+    if (!user || isLoadingMore) return;
+    setIsLoadingMore(true);
+
+    try {
+      const { data: ints, error } = await supabase
+        .from("interactions")
+        .select("id, query, response, analysis_type, rating, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .range(interactions.length, interactions.length + ITEMS_PER_PAGE - 1);
+
+      if (!error && ints) {
+        setInteractions((prev) => [...prev, ...ints]);
+        setHasMoreInteractions(ints.length === ITEMS_PER_PAGE);
+      }
+    } catch (error) {
+      console.error("Error loading more interactions:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  const loadMoreDocuments = async () => {
+    if (!user || isLoadingMore) return;
+    setIsLoadingMore(true);
+
+    try {
+      const { data: docs, error } = await supabase
+        .from("documents")
+        .select("id, name, file_type, file_size, status, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .range(documents.length, documents.length + ITEMS_PER_PAGE - 1);
+
+      if (!error && docs) {
+        setDocuments((prev) => [...prev, ...docs]);
+        setHasMoreDocuments(docs.length === ITEMS_PER_PAGE);
+      }
+    } catch (error) {
+      console.error("Error loading more documents:", error);
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -314,6 +367,11 @@ const Profile = () => {
                 <h3 className="font-display font-semibold text-lg mb-4 text-foreground flex items-center gap-2">
                   <Activity className="w-5 h-5 text-primary" />
                   Recent Analyses
+                  {stats.totalInteractions > 0 && (
+                    <span className="text-xs text-muted-foreground font-normal ml-2">
+                      ({interactions.length} of {stats.totalInteractions})
+                    </span>
+                  )}
                 </h3>
                 {isLoadingData ? (
                   <div className="flex items-center justify-center py-8">
@@ -352,6 +410,26 @@ const Profile = () => {
                         </div>
                       </div>
                     ))}
+                    
+                    {hasMoreInteractions && (
+                      <div className="pt-4 flex justify-center">
+                        <Button
+                          variant="outline"
+                          onClick={loadMoreInteractions}
+                          disabled={isLoadingMore}
+                          className="gap-2"
+                        >
+                          {isLoadingMore ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Loading...
+                            </>
+                          ) : (
+                            "Load More"
+                          )}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <p className="text-center text-muted-foreground py-8">
@@ -366,6 +444,11 @@ const Profile = () => {
                 <h3 className="font-display font-semibold text-lg mb-4 text-foreground flex items-center gap-2">
                   <FileText className="w-5 h-5 text-primary" />
                   Your Documents
+                  {stats.totalDocuments > 0 && (
+                    <span className="text-xs text-muted-foreground font-normal ml-2">
+                      ({documents.length} of {stats.totalDocuments})
+                    </span>
+                  )}
                 </h3>
                 {isLoadingData ? (
                   <div className="flex items-center justify-center py-8">
@@ -393,6 +476,26 @@ const Profile = () => {
                         {getStatusIcon(doc.status)}
                       </div>
                     ))}
+                    
+                    {hasMoreDocuments && (
+                      <div className="pt-4 flex justify-center">
+                        <Button
+                          variant="outline"
+                          onClick={loadMoreDocuments}
+                          disabled={isLoadingMore}
+                          className="gap-2"
+                        >
+                          {isLoadingMore ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Loading...
+                            </>
+                          ) : (
+                            "Load More"
+                          )}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <p className="text-center text-muted-foreground py-8">
