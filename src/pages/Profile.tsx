@@ -16,8 +16,16 @@ import {
   Clock,
   Brain,
   BarChart3,
-  Database
+  Database,
+  Filter
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,6 +78,8 @@ const Profile = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMoreInteractions, setHasMoreInteractions] = useState(true);
   const [hasMoreDocuments, setHasMoreDocuments] = useState(true);
+  const [analysisTypeFilter, setAnalysisTypeFilter] = useState<string>("all");
+  const [availableAnalysisTypes, setAvailableAnalysisTypes] = useState<string[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -118,6 +128,17 @@ const Profile = () => {
       if (!intsError && ints) {
         setInteractions(ints);
         setHasMoreInteractions(ints.length === ITEMS_PER_PAGE);
+        
+        // Get unique analysis types for filter
+        const { data: allTypes } = await supabase
+          .from("interactions")
+          .select("analysis_type")
+          .eq("user_id", user.id);
+        
+        if (allTypes) {
+          const uniqueTypes = [...new Set(allTypes.map(t => t.analysis_type))];
+          setAvailableAnalysisTypes(uniqueTypes);
+        }
       }
 
       // Calculate stats
@@ -264,6 +285,11 @@ const Profile = () => {
     }
   };
 
+  // Filter interactions based on selected type
+  const filteredInteractions = analysisTypeFilter === "all" 
+    ? interactions 
+    : interactions.filter(i => i.analysis_type === analysisTypeFilter);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -364,22 +390,43 @@ const Profile = () => {
 
             <TabsContent value="activity">
               <div className="bg-gradient-card rounded-2xl border border-border/50 p-6">
-                <h3 className="font-display font-semibold text-lg mb-4 text-foreground flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-primary" />
-                  Recent Analyses
-                  {stats.totalInteractions > 0 && (
-                    <span className="text-xs text-muted-foreground font-normal ml-2">
-                      ({interactions.length} of {stats.totalInteractions})
-                    </span>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                  <h3 className="font-display font-semibold text-lg text-foreground flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-primary" />
+                    Recent Analyses
+                    {stats.totalInteractions > 0 && (
+                      <span className="text-xs text-muted-foreground font-normal ml-2">
+                        ({filteredInteractions.length} of {stats.totalInteractions})
+                      </span>
+                    )}
+                  </h3>
+                  
+                  {availableAnalysisTypes.length > 1 && (
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-4 h-4 text-muted-foreground" />
+                      <Select value={analysisTypeFilter} onValueChange={setAnalysisTypeFilter}>
+                        <SelectTrigger className="w-[180px] h-9 text-sm">
+                          <SelectValue placeholder="Filter by type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Types</SelectItem>
+                          {availableAnalysisTypes.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   )}
-                </h3>
+                </div>
                 {isLoadingData ? (
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="w-6 h-6 animate-spin text-primary" />
                   </div>
-                ) : interactions.length > 0 ? (
+                ) : filteredInteractions.length > 0 ? (
                   <div className="space-y-3">
-                    {interactions.map((interaction) => (
+                    {filteredInteractions.map((interaction) => (
                       <div
                         key={interaction.id}
                         onClick={() => {
