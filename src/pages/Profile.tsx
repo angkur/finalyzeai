@@ -17,7 +17,8 @@ import {
   Brain,
   BarChart3,
   Database,
-  Filter
+  Filter,
+  Trash2
 } from "lucide-react";
 import {
   Select,
@@ -245,6 +246,33 @@ const Profile = () => {
     navigate("/");
   };
 
+  const handleDeleteAnalysis = async (e: React.MouseEvent, analysisId: string) => {
+    e.stopPropagation(); // Prevent opening the dialog
+    
+    if (!confirm("Are you sure you want to delete this analysis?")) return;
+    
+    try {
+      const { error } = await supabase
+        .from("interactions")
+        .delete()
+        .eq("id", analysisId);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setInteractions((prev) => prev.filter((i) => i.id !== analysisId));
+      setStats((prev) => ({
+        ...prev,
+        totalInteractions: prev.totalInteractions - 1,
+      }));
+      
+      toast.success("Analysis deleted");
+    } catch (error) {
+      console.error("Error deleting analysis:", error);
+      toast.error("Failed to delete analysis");
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("en-US", {
       month: "short",
@@ -433,7 +461,7 @@ const Profile = () => {
                           setSelectedAnalysis(interaction);
                           setIsDialogOpen(true);
                         }}
-                        className="flex items-start gap-3 p-3 rounded-lg bg-secondary/30 border border-border/30 cursor-pointer hover:bg-secondary/50 hover:border-primary/30 transition-colors"
+                        className="flex items-start gap-3 p-3 rounded-lg bg-secondary/30 border border-border/30 cursor-pointer hover:bg-secondary/50 hover:border-primary/30 transition-colors group"
                       >
                         {getAnalysisIcon(interaction.analysis_type)}
                         <div className="flex-1 min-w-0">
@@ -455,6 +483,14 @@ const Profile = () => {
                             </span>
                           </div>
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          onClick={(e) => handleDeleteAnalysis(e, interaction.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     ))}
                     
