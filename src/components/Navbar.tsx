@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Brain, User, LogOut, Shield } from "lucide-react";
+import { Brain, User, LogOut, Shield, BookOpen, FileText, ChevronDown } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
@@ -56,19 +56,42 @@ const Navbar = () => {
 
           {/* Nav Links */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="#services" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <a href="/#services" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Services
             </a>
-            <a href="#demo" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <a href="/#demo" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               AI Demo
             </a>
-            <a href="#process" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <a href="/#process" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Process
             </a>
-            <a href="#tech" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <a href="/#tech" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Technology
             </a>
-            <a href="#contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            
+            {/* Resources Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors outline-none">
+                Resources
+                <ChevronDown className="w-4 h-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="w-40">
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link to="/blog" className="flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Blog
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link to="/user-guide" className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4" />
+                    User Guide
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            <a href="/#contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Contact
             </a>
           </div>
