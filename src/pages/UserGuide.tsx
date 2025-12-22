@@ -266,7 +266,7 @@ const UserGuide = () => {
                 href="/#demo" 
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
               >
-                Try AI Demo
+                Try AI Predict
                 <ArrowRight className="w-4 h-4" />
               </a>
             </Card>
