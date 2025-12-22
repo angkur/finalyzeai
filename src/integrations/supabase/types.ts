@@ -47,33 +47,51 @@ export type Database = {
       document_chunks: {
         Row: {
           chunk_index: number
+          chunk_position: string | null
+          confidence_score: number | null
           content: string
           created_at: string
           document_id: string
+          document_type: string | null
           embedding: string | null
+          entities: Json | null
           id: string
           metadata: Json | null
+          sentence_count: number | null
           user_id: string | null
+          word_count: number | null
         }
         Insert: {
           chunk_index: number
+          chunk_position?: string | null
+          confidence_score?: number | null
           content: string
           created_at?: string
           document_id: string
+          document_type?: string | null
           embedding?: string | null
+          entities?: Json | null
           id?: string
           metadata?: Json | null
+          sentence_count?: number | null
           user_id?: string | null
+          word_count?: number | null
         }
         Update: {
           chunk_index?: number
+          chunk_position?: string | null
+          confidence_score?: number | null
           content?: string
           created_at?: string
           document_id?: string
+          document_type?: string | null
           embedding?: string | null
+          entities?: Json | null
           id?: string
           metadata?: Json | null
+          sentence_count?: number | null
           user_id?: string | null
+          word_count?: number | null
         }
         Relationships: [
           {
@@ -285,6 +303,27 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      hybrid_search_documents: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          p_user_id?: string
+          query_embedding: string
+          search_keywords: string[]
+        }
+        Returns: {
+          chunk_position: string
+          combined_score: number
+          confidence_score: number
+          content: string
+          document_id: string
+          document_type: string
+          id: string
+          keyword_score: number
+          metadata: Json
+          similarity: number
+        }[]
       }
       is_admin_or_moderator: { Args: { _user_id: string }; Returns: boolean }
       match_documents: {

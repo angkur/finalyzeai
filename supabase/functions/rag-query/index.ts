@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
@@ -17,6 +18,41 @@ function extractKeywords(query: string): string[] {
     .filter(word => word.length > 2 && !stopWords.has(word));
 }
 
+// Generate embedding using OpenAI
+async function generateEmbedding(text: string, openaiApiKey: string): Promise<number[] | null> {
+  try {
+    const response = await fetch('https://api.openai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'text-embedding-3-small',
+        input: text.slice(0, 8000), // Limit input
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Embedding API error:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.data[0].embedding;
+  } catch (error) {
+    console.error('Error generating embedding:', error);
+    return null;
+  }
+}
+
+// Get confidence label based on score
+function getConfidenceLabel(score: number): { label: string; level: 'high' | 'medium' | 'low' } {
+  if (score >= 0.8) return { label: 'High Confidence', level: 'high' };
+  if (score >= 0.5) return { label: 'Medium Confidence', level: 'medium' };
+  return { label: 'Low Confidence', level: 'low' };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -25,11 +61,12 @@ serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
+  const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
   
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
-    const { query, matchCount = 5 } = await req.json();
+    const { query, matchCount = 8, userId } = await req.json();
     
     console.log(`RAG query: "${query.substring(0, 100)}..."`);
 
@@ -37,17 +74,45 @@ serve(async (req) => {
     const keywords = extractKeywords(query);
     console.log("Search keywords:", keywords);
 
-    // Search using keyword matching (ILIKE)
     let matches: any[] = [];
-    
-    if (keywords.length > 0) {
-      // Build search pattern
-      const searchPattern = keywords.map(k => `%${k}%`);
+    let searchMethod = 'keyword';
+
+    // Try hybrid search if we have OpenAI key for embeddings
+    if (openaiApiKey) {
+      const queryEmbedding = await generateEmbedding(query, openaiApiKey);
       
-      // Search for chunks containing any of the keywords
+      if (queryEmbedding) {
+        searchMethod = 'hybrid';
+        
+        // Use hybrid search function
+        const { data, error } = await supabase.rpc('hybrid_search_documents', {
+          query_embedding: queryEmbedding,
+          search_keywords: keywords,
+          match_threshold: 0.3,
+          match_count: matchCount,
+          p_user_id: userId || null
+        });
+
+        if (error) {
+          console.error("Hybrid search error:", error);
+        } else if (data && data.length > 0) {
+          matches = data.map((chunk: any) => ({
+            ...chunk,
+            combined_score: chunk.combined_score || 0,
+            similarity: chunk.similarity || 0,
+            keyword_score: chunk.keyword_score || 0,
+          }));
+        }
+      }
+    }
+
+    // Fallback to keyword search if hybrid search fails or no results
+    if (matches.length === 0 && keywords.length > 0) {
+      searchMethod = 'keyword';
+      
       const { data, error } = await supabase
         .from('document_chunks')
-        .select('id, content, document_id, metadata')
+        .select('id, content, document_id, metadata, document_type, chunk_position, confidence_score')
         .or(keywords.map(k => `content.ilike.%${k}%`).join(','))
         .limit(matchCount * 2);
       
@@ -57,17 +122,24 @@ serve(async (req) => {
         // Score matches by keyword count
         matches = data.map(chunk => {
           const contentLower = chunk.content.toLowerCase();
-          const score = keywords.reduce((acc, kw) => {
+          const keywordScore = keywords.reduce((acc, kw) => {
             return acc + (contentLower.includes(kw) ? 1 : 0);
           }, 0);
-          return { ...chunk, score };
+          const normalizedScore = keywords.length > 0 ? keywordScore / keywords.length : 0;
+          
+          return { 
+            ...chunk, 
+            combined_score: normalizedScore,
+            similarity: 0,
+            keyword_score: keywordScore,
+          };
         })
-        .sort((a, b) => b.score - a.score)
+        .sort((a, b) => b.combined_score - a.combined_score)
         .slice(0, matchCount);
       }
     }
 
-    console.log(`Found ${matches.length} matching chunks`);
+    console.log(`Found ${matches.length} matching chunks using ${searchMethod} search`);
 
     // If no matches, generate a response without context
     if (matches.length === 0) {
@@ -103,26 +175,39 @@ Provide a helpful response based on your general knowledge, but clearly mention 
       });
     }
 
-    // Build context from matched chunks
+    // Build context from matched chunks with confidence indicators
     const context = matches.map((match: any, i: number) => {
       const fileName = match.metadata?.file_name || 'Unknown document';
-      return `[Source ${i + 1}: ${fileName}]\n${match.content}`;
+      const confidence = getConfidenceLabel(match.combined_score);
+      const docType = match.document_type || 'text';
+      const position = match.chunk_position || 'unknown';
+      
+      return `[Source ${i + 1}: ${fileName}]
+[Type: ${docType} | Position: ${position} | ${confidence.label} (${Math.round(match.combined_score * 100)}%)]
+${match.content}`;
     }).join('\n\n---\n\n');
 
-    // Get document names for citation
-    const sources = matches.map((m: any) => m.metadata?.file_name || 'Unknown').filter((v: string, i: number, a: string[]) => a.indexOf(v) === i);
+    // Get document names for citation with confidence
+    const sourcesWithConfidence = matches.map((m: any) => {
+      const name = m.metadata?.file_name || 'Unknown';
+      const confidence = getConfidenceLabel(m.combined_score);
+      return `${name} (${confidence.label})`;
+    });
+    const uniqueSources = [...new Set(sourcesWithConfidence)];
 
     // Generate response with RAG context
     const systemPrompt = `You are a financial knowledge assistant with access to a document knowledge base. Answer questions based on the provided context from uploaded documents.
 
 IMPORTANT GUIDELINES:
 1. Base your answer primarily on the provided context
-2. If the context doesn't fully answer the question, clearly state what parts are from the documents vs general knowledge
-3. Cite sources when relevant (e.g., "According to [document name]...")
-4. Be specific and provide actionable insights when possible
-5. If the context is insufficient, acknowledge this and provide general guidance
+2. Pay attention to confidence levels - prioritize HIGH CONFIDENCE sources
+3. If using LOW CONFIDENCE sources, mention the uncertainty
+4. Cite sources when relevant (e.g., "According to [document name]...")
+5. Be specific and provide actionable insights when possible
+6. If the context is insufficient, acknowledge this and provide general guidance
 
-Available sources: ${sources.join(', ')}
+SEARCH METHOD USED: ${searchMethod}
+Available sources: ${uniqueSources.join(', ')}
 
 CONTEXT FROM KNOWLEDGE BASE:
 ${context}`;
