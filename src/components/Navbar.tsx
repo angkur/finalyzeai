@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Brain, User, LogOut, Shield, BookOpen, FileText, ChevronDown } from "lucide-react";
+import { Brain, User, LogOut, Shield, BookOpen, FileText, ChevronDown, CreditCard } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
@@ -91,6 +91,9 @@ const Navbar = () => {
               </DropdownMenuContent>
             </DropdownMenu>
             
+            <Link to="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Pricing
+            </Link>
             <a href="/#contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Contact
             </a>
