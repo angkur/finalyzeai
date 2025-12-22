@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Upload, FileText, Trash2, CheckCircle, XCircle, Loader2, Database, LogIn } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Upload, FileText, Trash2, CheckCircle, XCircle, Loader2, Database, LogIn, FileSpreadsheet, FileJson, FileType } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +19,39 @@ interface Document {
   created_at: string;
   updated_at: string;
 }
+
+// Get file type icon
+const getFileIcon = (fileType: string) => {
+  switch (fileType.toLowerCase()) {
+    case '.csv':
+      return <FileSpreadsheet className="w-4 h-4 text-green-500 flex-shrink-0" />;
+    case '.json':
+      return <FileJson className="w-4 h-4 text-yellow-500 flex-shrink-0" />;
+    case '.pdf':
+      return <FileType className="w-4 h-4 text-red-500 flex-shrink-0" />;
+    case '.md':
+      return <FileText className="w-4 h-4 text-blue-500 flex-shrink-0" />;
+    default:
+      return <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />;
+  }
+};
+
+// Get file type badge
+const getFileTypeBadge = (fileType: string) => {
+  const type = fileType.replace('.', '').toUpperCase();
+  const variants: Record<string, string> = {
+    'CSV': 'bg-green-500/10 text-green-600 border-green-500/20',
+    'JSON': 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
+    'PDF': 'bg-red-500/10 text-red-600 border-red-500/20',
+    'MD': 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+    'TXT': 'bg-gray-500/10 text-gray-600 border-gray-500/20',
+  };
+  return (
+    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${variants[type] || variants['TXT']}`}>
+      {type}
+    </Badge>
+  );
+};
 
 const DocumentUpload = () => {
   const { user } = useAuth();
@@ -312,10 +346,13 @@ const DocumentUpload = () => {
                 key={doc.id}
                 className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border/30"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              <div className="flex items-center gap-3 min-w-0">
+                  {getFileIcon(doc.file_type)}
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{doc.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-foreground truncate">{doc.name}</p>
+                      {getFileTypeBadge(doc.file_type)}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       {formatFileSize(doc.file_size)} • {doc.status}
                       {doc.error_message && ` • ${doc.error_message}`}
