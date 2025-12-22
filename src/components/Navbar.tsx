@@ -60,7 +60,7 @@ const Navbar = () => {
               Services
             </a>
             <a href="/#demo" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              AI Demo
+              AI Predict
             </a>
             <a href="/#process" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Process
