@@ -6,6 +6,7 @@ import { Brain, LineChart, FileText, Database, Shield, Sparkles, Send, Loader2, 
 import { toast } from "sonner";
 import ChartRenderer, { ChartData } from "./visualizations/ChartRenderer";
 import DocumentUpload from "./DocumentUpload";
+import RAGChat from "./RAGChat";
 import FeedbackRating from "./FeedbackRating";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -573,8 +574,16 @@ const AIDemo = () => {
 
           {/* Knowledge Base for RAG Queries */}
           {selectedType === 'rag-query' && (
-            <div className="mt-8 p-6 rounded-2xl bg-gradient-card border border-border/50">
-              <DocumentUpload />
+            <div className="mt-8 grid lg:grid-cols-2 gap-6">
+              {/* Document Upload */}
+              <div className="p-6 rounded-2xl bg-gradient-card border border-border/50">
+                <DocumentUpload />
+              </div>
+              
+              {/* RAG Chat with Memory */}
+              <div className="rounded-2xl bg-gradient-card border border-border/50 min-h-[500px] relative overflow-hidden">
+                <RAGChat />
+              </div>
             </div>
           )}
 

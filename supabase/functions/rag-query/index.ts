@@ -29,7 +29,7 @@ async function generateEmbedding(text: string, openaiApiKey: string): Promise<nu
       },
       body: JSON.stringify({
         model: 'text-embedding-3-small',
-        input: text.slice(0, 8000), // Limit input
+        input: text.slice(0, 8000),
       }),
     });
 
@@ -53,6 +53,26 @@ function getConfidenceLabel(score: number): { label: string; level: 'high' | 'me
   return { label: 'Low Confidence', level: 'low' };
 }
 
+// Refine query based on conversation history
+function refineQueryWithContext(query: string, conversationHistory: { role: string; content: string }[]): string {
+  if (conversationHistory.length === 0) return query;
+  
+  // Check if query references previous context (pronouns, "it", "that", etc.)
+  const referencePatterns = /\b(it|that|this|those|these|the same|above|previous|mentioned|earlier)\b/i;
+  
+  if (referencePatterns.test(query)) {
+    // Get last few messages for context
+    const recentHistory = conversationHistory.slice(-4);
+    const contextSummary = recentHistory
+      .map(m => `${m.role}: ${m.content.slice(0, 200)}`)
+      .join(' | ');
+    
+    return `[Context from conversation: ${contextSummary}] Current question: ${query}`;
+  }
+  
+  return query;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -66,12 +86,18 @@ serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
-    const { query, matchCount = 8, userId } = await req.json();
+    const { query, matchCount = 8, userId, conversationHistory = [] } = await req.json();
     
-    console.log(`RAG query: "${query.substring(0, 100)}..."`);
+    console.log(`RAG query: "${query.substring(0, 100)}..." with ${conversationHistory.length} history messages`);
 
-    // Extract keywords for search
-    const keywords = extractKeywords(query);
+    // Refine query with conversation context
+    const refinedQuery = refineQueryWithContext(query, conversationHistory);
+    console.log(`Refined query: "${refinedQuery.substring(0, 150)}..."`);
+
+    // Extract keywords from both original and refined query
+    const originalKeywords = extractKeywords(query);
+    const refinedKeywords = extractKeywords(refinedQuery);
+    const keywords = [...new Set([...originalKeywords, ...refinedKeywords])];
     console.log("Search keywords:", keywords);
 
     let matches: any[] = [];
@@ -79,12 +105,11 @@ serve(async (req) => {
 
     // Try hybrid search if we have OpenAI key for embeddings
     if (openaiApiKey) {
-      const queryEmbedding = await generateEmbedding(query, openaiApiKey);
+      const queryEmbedding = await generateEmbedding(refinedQuery, openaiApiKey);
       
       if (queryEmbedding) {
         searchMethod = 'hybrid';
         
-        // Use hybrid search function
         const { data, error } = await supabase.rpc('hybrid_search_documents', {
           query_embedding: queryEmbedding,
           search_keywords: keywords,
@@ -106,7 +131,7 @@ serve(async (req) => {
       }
     }
 
-    // Fallback to keyword search if hybrid search fails or no results
+    // Fallback to keyword search
     if (matches.length === 0 && keywords.length > 0) {
       searchMethod = 'keyword';
       
@@ -119,7 +144,6 @@ serve(async (req) => {
       if (error) {
         console.error("Search error:", error);
       } else if (data) {
-        // Score matches by keyword count
         matches = data.map(chunk => {
           const contentLower = chunk.content.toLowerCase();
           const keywordScore = keywords.reduce((acc, kw) => {
@@ -141,14 +165,28 @@ serve(async (req) => {
 
     console.log(`Found ${matches.length} matching chunks using ${searchMethod} search`);
 
-    // If no matches, generate a response without context
-    if (matches.length === 0) {
-      const systemPrompt = `You are a financial knowledge assistant. The user asked a question but no relevant documents were found in the knowledge base.
+    // Build conversation context for AI
+    const formattedHistory = conversationHistory.slice(-6).map((m: { role: string; content: string }) => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content
+    }));
 
-Provide a helpful response based on your general knowledge, but clearly mention that:
+    // If no matches, generate response without document context
+    if (matches.length === 0) {
+      const systemPrompt = `You are a financial knowledge assistant with conversation memory. The user asked a question but no relevant documents were found in the knowledge base.
+
+Provide a helpful response based on your general knowledge and the conversation context, but clearly mention that:
 1. No specific documents were found matching this query in the knowledge base
 2. The answer is based on general knowledge, not uploaded documents
-3. Suggest the user upload relevant documents for more specific answers`;
+3. Suggest the user upload relevant documents for more specific answers
+
+Use the conversation history to understand context for follow-up questions.`;
+
+      const messages = [
+        { role: "system", content: systemPrompt },
+        ...formattedHistory,
+        { role: "user", content: query }
+      ];
 
       const noContextResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -158,10 +196,7 @@ Provide a helpful response based on your general knowledge, but clearly mention 
         },
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: query }
-          ],
+          messages,
           stream: true,
         }),
       });
@@ -175,7 +210,7 @@ Provide a helpful response based on your general knowledge, but clearly mention 
       });
     }
 
-    // Build context from matched chunks with confidence indicators
+    // Build context from matched chunks
     const context = matches.map((match: any, i: number) => {
       const fileName = match.metadata?.file_name || 'Unknown document';
       const confidence = getConfidenceLabel(match.combined_score);
@@ -187,7 +222,6 @@ Provide a helpful response based on your general knowledge, but clearly mention 
 ${match.content}`;
     }).join('\n\n---\n\n');
 
-    // Get document names for citation with confidence
     const sourcesWithConfidence = matches.map((m: any) => {
       const name = m.metadata?.file_name || 'Unknown';
       const confidence = getConfidenceLabel(m.combined_score);
@@ -195,22 +229,28 @@ ${match.content}`;
     });
     const uniqueSources = [...new Set(sourcesWithConfidence)];
 
-    // Generate response with RAG context
-    const systemPrompt = `You are a financial knowledge assistant with access to a document knowledge base. Answer questions based on the provided context from uploaded documents.
+    const systemPrompt = `You are a financial knowledge assistant with access to a document knowledge base and conversation memory. Answer questions based on the provided context from uploaded documents and previous conversation.
 
 IMPORTANT GUIDELINES:
-1. Base your answer primarily on the provided context
-2. Pay attention to confidence levels - prioritize HIGH CONFIDENCE sources
-3. If using LOW CONFIDENCE sources, mention the uncertainty
-4. Cite sources when relevant (e.g., "According to [document name]...")
-5. Be specific and provide actionable insights when possible
-6. If the context is insufficient, acknowledge this and provide general guidance
+1. Base your answer primarily on the provided document context
+2. Use conversation history to understand follow-up questions and maintain context
+3. Pay attention to confidence levels - prioritize HIGH CONFIDENCE sources
+4. If using LOW CONFIDENCE sources, mention the uncertainty
+5. Cite sources when relevant (e.g., "According to [document name]...")
+6. Be specific and provide actionable insights when possible
+7. If the user refers to something from earlier in the conversation, address it appropriately
 
 SEARCH METHOD USED: ${searchMethod}
 Available sources: ${uniqueSources.join(', ')}
 
 CONTEXT FROM KNOWLEDGE BASE:
 ${context}`;
+
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...formattedHistory,
+      { role: "user", content: query }
+    ];
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -220,10 +260,7 @@ ${context}`;
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: query }
-        ],
+        messages,
         stream: true,
       }),
     });
