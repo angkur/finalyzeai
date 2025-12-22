@@ -194,7 +194,7 @@ const BlogPost = () => {
                   Experience AI-powered financial analysis for yourself.
                 </p>
                 <Button onClick={() => navigate("/#demo")}>
-                  Try AI Demo
+                  Try AI Predict
                 </Button>
               </CardContent>
             </Card>

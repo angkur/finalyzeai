@@ -516,7 +516,7 @@ const Profile = () => {
                   </div>
                 ) : (
                   <p className="text-center text-muted-foreground py-8">
-                    No analyses yet. Try the AI Demo to get started!
+                    No analyses yet. Try AI Predict to get started!
                   </p>
                 )}
               </div>

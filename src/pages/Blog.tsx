@@ -248,7 +248,7 @@ Keep your analysis current:
 
 Speed up your workflow with these shortcuts:
 - Quick upload: Drag & drop
-- New analysis: Navigate to AI Demo
+- New analysis: Navigate to AI Predict
 - Export results: Use the export button on any visualization
 
 Implement these tips and watch your analysis efficiency soar.`,
