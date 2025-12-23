@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Check, Sparkles, Zap, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +7,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-
 const plans = [
   {
     name: "Free",
@@ -73,6 +73,10 @@ const plans = [
 const Pricing = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleGetStarted = () => {
     if (user) {
