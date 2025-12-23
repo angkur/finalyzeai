@@ -1,4 +1,4 @@
-import { forwardRef, useState } from "react";
+import { forwardRef, useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import HeatmapChart from "./HeatmapChart";
 import PieBarChart from "./PieBarChart";
@@ -10,6 +10,7 @@ import NetworkGraph from "./NetworkGraph";
 import SankeyChart from "./SankeyChart";
 import WordCloud from "./WordCloud";
 import ChartControls from "./ChartControls";
+import ChartAnnotations, { Annotation } from "./ChartAnnotations";
 import { BarChart3, PieChart, TrendingUp, Grid3X3, Layers, Box, Network, GitBranch, Cloud } from "lucide-react";
 
 export interface ChartData {
@@ -62,6 +63,32 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
   const [selectedChart, setSelectedChart] = useState<ChartData['chartType'] | null>(null);
   const [zoom, setZoom] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
+
+  // Extract data points for annotation linking
+  const dataPoints = useMemo(() => {
+    if (!chartData?.data || chartData.data.length === 0) return [];
+    
+    const labelKey = chartData.config?.labelKey || chartData.config?.xAxis || 'name';
+    return chartData.data
+      .map(item => item[labelKey] || item.name || item.label)
+      .filter((v, i, a) => v && a.indexOf(v) === i)
+      .slice(0, 20)
+      .map(String);
+  }, [chartData]);
+
+  const handleAddAnnotation = (annotation: Omit<Annotation, 'id' | 'createdAt'>) => {
+    const newAnnotation: Annotation = {
+      ...annotation,
+      id: crypto.randomUUID(),
+      createdAt: new Date(),
+    };
+    setAnnotations(prev => [...prev, newAnnotation]);
+  };
+
+  const handleRemoveAnnotation = (id: string) => {
+    setAnnotations(prev => prev.filter(a => a.id !== id));
+  };
 
   if (isLoading) {
     return (
@@ -139,23 +166,67 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
             })}
           </TabsList>
           
-          <ChartControls
-            zoom={zoom}
-            onZoomChange={setZoom}
-            isFullscreen={isFullscreen}
-            onFullscreenToggle={() => setIsFullscreen(!isFullscreen)}
-            chartType={activeChart}
-          />
+          <div className="flex items-center gap-2 flex-wrap">
+            <ChartAnnotations
+              annotations={annotations}
+              onAddAnnotation={handleAddAnnotation}
+              onRemoveAnnotation={handleRemoveAnnotation}
+              dataPoints={dataPoints}
+            />
+            <div className="w-px h-6 bg-border hidden sm:block" />
+            <ChartControls
+              zoom={zoom}
+              onZoomChange={setZoom}
+              isFullscreen={isFullscreen}
+              onFullscreenToggle={() => setIsFullscreen(!isFullscreen)}
+              chartType={activeChart}
+              chartData={chartData.data}
+            />
+          </div>
         </div>
 
-        <div className="bg-secondary/30 rounded-xl border border-border/30 p-4 min-h-[400px]">
+        <div className="bg-secondary/30 rounded-xl border border-border/30 p-4 min-h-[400px] relative">
           {availableCharts.map((type) => (
             <TabsContent key={type} value={type} className="mt-0 h-full">
               {renderChart(type)}
             </TabsContent>
           ))}
+          
+          {/* Render annotation badges on the chart */}
+          {annotations.length > 0 && (
+            <div className="absolute top-2 right-2 flex flex-wrap gap-1 max-w-[200px] pointer-events-none">
+              {annotations.filter(a => a.type === 'label').slice(0, 5).map((annotation) => (
+                <div
+                  key={annotation.id}
+                  className="px-2 py-1 rounded-md text-xs font-medium text-white shadow-lg"
+                  style={{ backgroundColor: annotation.color }}
+                >
+                  {annotation.text}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </Tabs>
+
+      {/* Notes section */}
+      {annotations.filter(a => a.type === 'note').length > 0 && (
+        <div className="mt-4 space-y-2">
+          {annotations.filter(a => a.type === 'note').map((note) => (
+            <div 
+              key={note.id}
+              className="p-3 rounded-lg border text-sm"
+              style={{ borderColor: note.color, backgroundColor: `${note.color}10` }}
+            >
+              <span className="font-medium" style={{ color: note.color }}>Note:</span>{' '}
+              {note.text}
+              {note.dataPoint && (
+                <span className="text-muted-foreground"> (Re: {note.dataPoint})</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {chartData.insights && (
         <div className="mt-4 p-4 rounded-xl bg-accent/10 border border-accent/30">
