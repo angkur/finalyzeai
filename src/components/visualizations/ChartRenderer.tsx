@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { forwardRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import HeatmapChart from "./HeatmapChart";
 import PieBarChart from "./PieBarChart";
@@ -6,11 +6,14 @@ import AreaTimeChart from "./AreaTimeChart";
 import TreemapChart from "./TreemapChart";
 import DualAxisChart from "./DualAxisChart";
 import Scatter3DChart from "./Scatter3DChart";
+import NetworkGraph from "./NetworkGraph";
+import SankeyChart from "./SankeyChart";
+import WordCloud from "./WordCloud";
 import ChartControls from "./ChartControls";
-import { BarChart3, PieChart, TrendingUp, Grid3X3, Layers, Box } from "lucide-react";
+import { BarChart3, PieChart, TrendingUp, Grid3X3, Layers, Box, Network, GitBranch, Cloud } from "lucide-react";
 
 export interface ChartData {
-  chartType: 'heatmap' | 'bar' | 'pie' | 'area' | 'treemap' | 'dualAxis' | 'scatter3d';
+  chartType: 'heatmap' | 'bar' | 'pie' | 'area' | 'treemap' | 'dualAxis' | 'scatter3d' | 'network' | 'sankey' | 'wordcloud';
   data: any[];
   config?: {
     xAxis?: string;
@@ -37,6 +40,9 @@ const chartTypeIcons = {
   treemap: Layers,
   dualAxis: BarChart3,
   scatter3d: Box,
+  network: Network,
+  sankey: GitBranch,
+  wordcloud: Cloud,
 };
 
 const chartTypeLabels = {
@@ -47,16 +53,19 @@ const chartTypeLabels = {
   treemap: "Treemap",
   dualAxis: "Dual Axis",
   scatter3d: "3D Scatter",
+  network: "Network",
+  sankey: "Sankey",
+  wordcloud: "Word Cloud",
 };
 
-const ChartRenderer = ({ chartData, isLoading }: ChartRendererProps) => {
+const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartData, isLoading }, ref) => {
   const [selectedChart, setSelectedChart] = useState<ChartData['chartType'] | null>(null);
   const [zoom, setZoom] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-[400px] bg-secondary/30 rounded-xl border border-border/30">
+      <div ref={ref} className="flex items-center justify-center h-[400px] bg-secondary/30 rounded-xl border border-border/30">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
           <span className="text-sm text-muted-foreground">Generating visualization...</span>
@@ -67,7 +76,7 @@ const ChartRenderer = ({ chartData, isLoading }: ChartRendererProps) => {
 
   if (!chartData) {
     return (
-      <div className="flex items-center justify-center h-[400px] bg-secondary/30 rounded-xl border border-border/30">
+      <div ref={ref} className="flex items-center justify-center h-[400px] bg-secondary/30 rounded-xl border border-border/30">
         <div className="text-center">
           <BarChart3 className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
           <span className="text-sm text-muted-foreground">
@@ -97,16 +106,21 @@ const ChartRenderer = ({ chartData, isLoading }: ChartRendererProps) => {
         return <DualAxisChart {...commonProps} />;
       case 'scatter3d':
         return <Scatter3DChart {...commonProps} />;
+      case 'network':
+        return <NetworkGraph {...commonProps} />;
+      case 'sankey':
+        return <SankeyChart {...commonProps} />;
+      case 'wordcloud':
+        return <WordCloud {...commonProps} />;
       default:
         return <PieBarChart {...commonProps} type="bar" />;
     }
   };
 
-  const availableCharts: ChartData['chartType'][] = ['bar', 'pie', 'area', 'heatmap', 'treemap', 'dualAxis', 'scatter3d'];
+  const availableCharts: ChartData['chartType'][] = ['bar', 'pie', 'area', 'heatmap', 'treemap', 'dualAxis', 'scatter3d', 'network', 'sankey', 'wordcloud'];
 
   return (
-    <div className={`flex flex-col ${isFullscreen ? 'fixed inset-0 z-50 bg-background p-6' : ''}`}>
-      {/* Chart Type Selector */}
+    <div ref={ref} className={`flex flex-col ${isFullscreen ? 'fixed inset-0 z-50 bg-background p-6' : ''}`}>
       <Tabs value={activeChart} onValueChange={(v) => setSelectedChart(v as ChartData['chartType'])} className="w-full">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
           <TabsList className="bg-secondary/50 p-1 h-auto flex-wrap">
@@ -134,7 +148,6 @@ const ChartRenderer = ({ chartData, isLoading }: ChartRendererProps) => {
           />
         </div>
 
-        {/* Chart Container */}
         <div className="bg-secondary/30 rounded-xl border border-border/30 p-4 min-h-[400px]">
           {availableCharts.map((type) => (
             <TabsContent key={type} value={type} className="mt-0 h-full">
@@ -144,7 +157,6 @@ const ChartRenderer = ({ chartData, isLoading }: ChartRendererProps) => {
         </div>
       </Tabs>
 
-      {/* Insights */}
       {chartData.insights && (
         <div className="mt-4 p-4 rounded-xl bg-accent/10 border border-accent/30">
           <h4 className="text-sm font-medium text-accent mb-2">AI Insights</h4>
@@ -153,6 +165,8 @@ const ChartRenderer = ({ chartData, isLoading }: ChartRendererProps) => {
       )}
     </div>
   );
-};
+});
+
+ChartRenderer.displayName = "ChartRenderer";
 
 export default ChartRenderer;
