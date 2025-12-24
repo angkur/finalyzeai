@@ -1,4 +1,4 @@
-import { forwardRef, useState, useMemo, useCallback } from "react";
+import { forwardRef, useState, useMemo, useCallback, useEffect, useRef, useImperativeHandle } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import HeatmapChart from "./HeatmapChart";
 import PieBarChart from "./PieBarChart";
@@ -72,6 +72,63 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
   const [maxDataPoints, setMaxDataPoints] = useState(50);
   const [isCompareMode, setIsCompareMode] = useState(false);
   const [comparisonDatasets, setComparisonDatasets] = useState<ComparisonDataset[]>([]);
+  
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Forward the ref to the container
+  useImperativeHandle(ref, () => containerRef.current as HTMLDivElement);
+
+  // Handle fullscreen toggle using browser API
+  const toggleFullscreen = useCallback(async () => {
+    try {
+      if (!isFullscreen) {
+        const element = containerRef.current;
+        if (element) {
+          if (element.requestFullscreen) {
+            await element.requestFullscreen();
+          } else if ((element as any).webkitRequestFullscreen) {
+            await (element as any).webkitRequestFullscreen();
+          } else if ((element as any).msRequestFullscreen) {
+            await (element as any).msRequestFullscreen();
+          }
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen();
+        } else if ((document as any).msExitFullscreen) {
+          await (document as any).msExitFullscreen();
+        }
+      }
+    } catch (error) {
+      console.error('Fullscreen error:', error);
+      // Fallback to CSS fullscreen if browser API fails
+      setIsFullscreen(!isFullscreen);
+    }
+  }, [isFullscreen]);
+
+  // Listen for fullscreen change events
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).msFullscreenElement
+      );
+      setIsFullscreen(isCurrentlyFullscreen);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   // Real-time streaming hook
   const {
@@ -153,7 +210,7 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
 
   if (isLoading) {
     return (
-      <div ref={ref} className="flex items-center justify-center h-[400px] bg-secondary/30 rounded-xl border border-border/30">
+      <div ref={containerRef} className="flex items-center justify-center h-[400px] bg-secondary/30 rounded-xl border border-border/30">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
           <span className="text-sm text-muted-foreground">Generating visualization...</span>
@@ -164,7 +221,7 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
 
   if (!chartData) {
     return (
-      <div ref={ref} className="flex items-center justify-center h-[400px] bg-secondary/30 rounded-xl border border-border/30">
+      <div ref={containerRef} className="flex items-center justify-center h-[400px] bg-secondary/30 rounded-xl border border-border/30">
         <div className="text-center">
           <BarChart3 className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
           <span className="text-sm text-muted-foreground">
@@ -208,7 +265,10 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
   const availableCharts: ChartData['chartType'][] = ['bar', 'pie', 'area', 'heatmap', 'treemap', 'dualAxis', 'scatter3d', 'network', 'sankey', 'wordcloud'];
 
   return (
-    <div ref={ref} className={`flex flex-col ${isFullscreen ? 'fixed inset-0 z-50 bg-background p-6' : ''}`}>
+    <div 
+      ref={containerRef}
+      className={`flex flex-col ${isFullscreen ? 'bg-background p-6 h-full overflow-auto' : ''}`}
+    >
       <Tabs value={activeChart} onValueChange={(v) => setSelectedChart(v as ChartData['chartType'])} className="w-full">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
           <TabsList className="bg-secondary/50 p-1 h-auto flex-wrap">
@@ -265,7 +325,7 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
               zoom={zoom}
               onZoomChange={setZoom}
               isFullscreen={isFullscreen}
-              onFullscreenToggle={() => setIsFullscreen(!isFullscreen)}
+              onFullscreenToggle={toggleFullscreen}
               chartType={activeChart}
               chartData={chartData.data}
             />
