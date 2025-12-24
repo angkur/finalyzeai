@@ -1,4 +1,4 @@
-import { forwardRef, useState, useMemo } from "react";
+import { forwardRef, useState, useMemo, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import HeatmapChart from "./HeatmapChart";
 import PieBarChart from "./PieBarChart";
@@ -11,6 +11,8 @@ import SankeyChart from "./SankeyChart";
 import WordCloud from "./WordCloud";
 import ChartControls from "./ChartControls";
 import ChartAnnotations, { Annotation } from "./ChartAnnotations";
+import RealtimeControls from "./RealtimeControls";
+import useRealtimeChart from "@/hooks/useRealtimeChart";
 import { BarChart3, PieChart, TrendingUp, Grid3X3, Layers, Box, Network, GitBranch, Cloud } from "lucide-react";
 
 export interface ChartData {
@@ -31,6 +33,7 @@ export interface ChartData {
 interface ChartRendererProps {
   chartData: ChartData | null;
   isLoading?: boolean;
+  enableRealtime?: boolean;
 }
 
 const chartTypeIcons = {
@@ -59,11 +62,26 @@ const chartTypeLabels = {
   wordcloud: "Word Cloud",
 };
 
-const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartData, isLoading }, ref) => {
+const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartData: initialChartData, isLoading, enableRealtime = true }, ref) => {
   const [selectedChart, setSelectedChart] = useState<ChartData['chartType'] | null>(null);
   const [zoom, setZoom] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [intervalMs, setIntervalMs] = useState(1000);
+  const [maxDataPoints, setMaxDataPoints] = useState(50);
+
+  // Real-time streaming hook
+  const {
+    chartData,
+    isStreaming,
+    streamStats,
+    toggleStream,
+    clearData,
+    resetData,
+  } = useRealtimeChart(initialChartData, {
+    intervalMs,
+    maxDataPoints,
+  });
 
   // Extract data points for annotation linking
   const dataPoints = useMemo(() => {
@@ -77,18 +95,18 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
       .map(String);
   }, [chartData]);
 
-  const handleAddAnnotation = (annotation: Omit<Annotation, 'id' | 'createdAt'>) => {
+  const handleAddAnnotation = useCallback((annotation: Omit<Annotation, 'id' | 'createdAt'>) => {
     const newAnnotation: Annotation = {
       ...annotation,
       id: crypto.randomUUID(),
       createdAt: new Date(),
     };
     setAnnotations(prev => [...prev, newAnnotation]);
-  };
+  }, []);
 
-  const handleRemoveAnnotation = (id: string) => {
+  const handleRemoveAnnotation = useCallback((id: string) => {
     setAnnotations(prev => prev.filter(a => a.id !== id));
-  };
+  }, []);
 
   if (isLoading) {
     return (
@@ -167,6 +185,22 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
           </TabsList>
           
           <div className="flex items-center gap-2 flex-wrap">
+            {enableRealtime && (
+              <>
+                <RealtimeControls
+                  isStreaming={isStreaming}
+                  onToggleStream={toggleStream}
+                  onReset={resetData}
+                  onClear={clearData}
+                  streamStats={streamStats}
+                  intervalMs={intervalMs}
+                  onIntervalChange={setIntervalMs}
+                  maxDataPoints={maxDataPoints}
+                  onMaxDataPointsChange={setMaxDataPoints}
+                />
+                <div className="w-px h-6 bg-border hidden sm:block" />
+              </>
+            )}
             <ChartAnnotations
               annotations={annotations}
               onAddAnnotation={handleAddAnnotation}
