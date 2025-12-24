@@ -12,6 +12,7 @@ import WordCloud from "./WordCloud";
 import ChartControls from "./ChartControls";
 import ChartAnnotations, { Annotation } from "./ChartAnnotations";
 import RealtimeControls from "./RealtimeControls";
+import ChartComparison, { ComparisonDataset } from "./ChartComparison";
 import useRealtimeChart from "@/hooks/useRealtimeChart";
 import { BarChart3, PieChart, TrendingUp, Grid3X3, Layers, Box, Network, GitBranch, Cloud } from "lucide-react";
 
@@ -69,6 +70,8 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [intervalMs, setIntervalMs] = useState(1000);
   const [maxDataPoints, setMaxDataPoints] = useState(50);
+  const [isCompareMode, setIsCompareMode] = useState(false);
+  const [comparisonDatasets, setComparisonDatasets] = useState<ComparisonDataset[]>([]);
 
   // Real-time streaming hook
   const {
@@ -108,6 +111,46 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
     setAnnotations(prev => prev.filter(a => a.id !== id));
   }, []);
 
+  const handleAddComparisonDataset = useCallback((dataset: Omit<ComparisonDataset, 'id' | 'createdAt'>) => {
+    const newDataset: ComparisonDataset = {
+      ...dataset,
+      id: crypto.randomUUID(),
+      createdAt: new Date(),
+    };
+    setComparisonDatasets(prev => [...prev, newDataset]);
+  }, []);
+
+  const handleRemoveComparisonDataset = useCallback((id: string) => {
+    setComparisonDatasets(prev => prev.filter(d => d.id !== id));
+  }, []);
+
+  const handleToggleDatasetVisibility = useCallback((id: string) => {
+    setComparisonDatasets(prev => prev.map(d => 
+      d.id === id ? { ...d, visible: !d.visible } : d
+    ));
+  }, []);
+
+  // Merge datasets for comparison rendering
+  const mergedChartData = useMemo(() => {
+    if (!isCompareMode || comparisonDatasets.length === 0 || !chartData) {
+      return chartData;
+    }
+    
+    const visibleDatasets = comparisonDatasets.filter(d => d.visible);
+    if (visibleDatasets.length === 0) return chartData;
+
+    // Create merged data with dataset identifiers
+    const mergedData = [...chartData.data.map(item => ({ ...item, _dataset: 'primary' }))];
+    
+    visibleDatasets.forEach(dataset => {
+      dataset.data.forEach(item => {
+        mergedData.push({ ...item, _dataset: dataset.name, _color: dataset.color });
+      });
+    });
+
+    return { ...chartData, data: mergedData };
+  }, [chartData, comparisonDatasets, isCompareMode]);
+
   if (isLoading) {
     return (
       <div ref={ref} className="flex items-center justify-center h-[400px] bg-secondary/30 rounded-xl border border-border/30">
@@ -134,8 +177,8 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
 
   const activeChart = selectedChart || chartData.chartType;
 
-  const renderChart = (type: ChartData['chartType']) => {
-    const commonProps = { data: chartData.data, config: chartData.config, zoom };
+  const renderChart = (type: ChartData['chartType'], data: any[] = mergedChartData?.data || []) => {
+    const commonProps = { data, config: chartData.config, zoom };
 
     switch (type) {
       case 'heatmap':
@@ -201,6 +244,16 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
                 <div className="w-px h-6 bg-border hidden sm:block" />
               </>
             )}
+            <ChartComparison
+              datasets={comparisonDatasets}
+              onAddDataset={handleAddComparisonDataset}
+              onRemoveDataset={handleRemoveComparisonDataset}
+              onToggleVisibility={handleToggleDatasetVisibility}
+              isCompareMode={isCompareMode}
+              onToggleCompareMode={() => setIsCompareMode(!isCompareMode)}
+              currentChartData={chartData}
+            />
+            <div className="w-px h-6 bg-border hidden sm:block" />
             <ChartAnnotations
               annotations={annotations}
               onAddAnnotation={handleAddAnnotation}
@@ -219,12 +272,41 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
           </div>
         </div>
 
-        <div className="bg-secondary/30 rounded-xl border border-border/30 p-4 min-h-[400px] relative">
-          {availableCharts.map((type) => (
-            <TabsContent key={type} value={type} className="mt-0 h-full">
-              {renderChart(type)}
-            </TabsContent>
-          ))}
+        <div className={`bg-secondary/30 rounded-xl border border-border/30 p-4 min-h-[400px] relative ${isCompareMode && comparisonDatasets.filter(d => d.visible).length > 0 ? 'grid grid-cols-1 lg:grid-cols-2 gap-4' : ''}`}>
+          {isCompareMode && comparisonDatasets.filter(d => d.visible).length > 0 ? (
+            <>
+              {/* Primary dataset */}
+              <div className="relative border border-border/50 rounded-lg p-3">
+                <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-primary/20 text-primary text-xs font-medium rounded">
+                  Primary
+                </div>
+                <TabsContent value={activeChart} className="mt-0 h-full pt-6">
+                  {renderChart(activeChart, chartData.data)}
+                </TabsContent>
+              </div>
+              
+              {/* Comparison datasets */}
+              {comparisonDatasets.filter(d => d.visible).map((dataset) => (
+                <div key={dataset.id} className="relative border border-border/50 rounded-lg p-3">
+                  <div 
+                    className="absolute top-2 left-2 z-10 px-2 py-1 text-xs font-medium rounded text-white"
+                    style={{ backgroundColor: dataset.color }}
+                  >
+                    {dataset.name}
+                  </div>
+                  <TabsContent value={activeChart} className="mt-0 h-full pt-6">
+                    {renderChart(activeChart, dataset.data)}
+                  </TabsContent>
+                </div>
+              ))}
+            </>
+          ) : (
+            availableCharts.map((type) => (
+              <TabsContent key={type} value={type} className="mt-0 h-full">
+                {renderChart(type)}
+              </TabsContent>
+            ))
+          )}
           
           {/* Render annotation badges on the chart */}
           {annotations.length > 0 && (
