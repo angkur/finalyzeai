@@ -172,19 +172,6 @@ const Contact = () => {
                       <p className="font-medium group-hover:text-primary transition-colors">+880 1405 236457</p>
                     </div>
                   </a>
-
-                  <a
-                    href="mailto:mazharulhuqankur007@gmail.com"
-                    className="flex items-center gap-4 p-4 rounded-xl bg-secondary/50 border border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-glow group"
-                  >
-                    <div className="p-3 rounded-lg bg-primary/10">
-                      <Mail className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Email</p>
-                      <p className="font-medium group-hover:text-primary transition-colors">mazharulhuqankur007@gmail.com</p>
-                    </div>
-                  </a>
                 </div>
               </div>
 
