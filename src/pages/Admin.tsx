@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { 
   Shield, Users, BarChart3, FileText, Brain, 
   ArrowLeft, Settings, Activity, Ban, Check,
-  Eye, Loader2
+  Eye, Loader2, MessageSquare, Trash2, Mail, CheckCheck
 } from "lucide-react";
 
 interface AdminStats {
@@ -46,6 +46,15 @@ interface Interaction {
   response: string;
   analysis_type: string;
   rating: number | null;
+  created_at: string;
+}
+
+interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  is_read: boolean;
   created_at: string;
 }
 
@@ -207,7 +216,7 @@ const Admin = () => {
 
       <main className="container mx-auto px-6 py-8">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex">
             <TabsTrigger value="dashboard" className="gap-2">
               <BarChart3 className="w-4 h-4" />
               Dashboard
@@ -215,6 +224,10 @@ const Admin = () => {
             <TabsTrigger value="users" className="gap-2">
               <Users className="w-4 h-4" />
               Users
+            </TabsTrigger>
+            <TabsTrigger value="messages" className="gap-2">
+              <MessageSquare className="w-4 h-4" />
+              Messages
             </TabsTrigger>
             <TabsTrigger value="activity" className="gap-2">
               <Activity className="w-4 h-4" />
@@ -449,6 +462,21 @@ const Admin = () => {
             </Card>
           </TabsContent>
 
+          {/* Messages Tab */}
+          <TabsContent value="messages">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-primary" />
+                  Contact Messages (Real-time)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ContactMessagesList />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Activity Tab */}
           <TabsContent value="activity">
             <Card>
@@ -508,6 +536,192 @@ const LimitsForm = ({ user, onSave }: { user: UserData; onSave: (userId: string,
         {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
         Save Changes
       </Button>
+    </div>
+  );
+};
+
+// Contact Messages Component with Real-time updates
+const ContactMessagesList = () => {
+  const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("contact_messages")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        setMessages(data || []);
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+        toast.error("Failed to load messages");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMessages();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel("contact_messages_realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "contact_messages"
+        },
+        (payload) => {
+          const newMessage = payload.new as ContactMessage;
+          setMessages((prev) => [newMessage, ...prev]);
+          toast.info(`New message from ${newMessage.name}`, {
+            description: newMessage.message.substring(0, 50) + "..."
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "contact_messages"
+        },
+        (payload) => {
+          const updatedMessage = payload.new as ContactMessage;
+          setMessages((prev) =>
+            prev.map((m) => (m.id === updatedMessage.id ? updatedMessage : m))
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "contact_messages"
+        },
+        (payload) => {
+          const deletedId = payload.old.id;
+          setMessages((prev) => prev.filter((m) => m.id !== deletedId));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const handleMarkAsRead = async (id: string, isRead: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("contact_messages")
+        .update({ is_read: !isRead })
+        .eq("id", id);
+
+      if (error) throw error;
+    } catch (error) {
+      toast.error("Failed to update message status");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("contact_messages")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+      toast.success("Message deleted");
+    } catch (error) {
+      toast.error("Failed to delete message");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  const unreadCount = messages.filter((m) => !m.is_read).length;
+
+  return (
+    <div className="space-y-4">
+      {unreadCount > 0 && (
+        <div className="flex items-center gap-2 text-sm text-primary">
+          <Badge variant="default">{unreadCount}</Badge>
+          <span>unread messages</span>
+        </div>
+      )}
+
+      {messages.map((msg) => (
+        <div
+          key={msg.id}
+          className={`border rounded-lg p-4 space-y-3 transition-colors ${
+            !msg.is_read
+              ? "bg-primary/5 border-primary/30"
+              : "bg-muted/30 border-border/50"
+          }`}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-medium">{msg.name}</span>
+                {!msg.is_read && (
+                  <Badge variant="default" className="text-xs">New</Badge>
+                )}
+              </div>
+              <a
+                href={`mailto:${msg.email}`}
+                className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
+              >
+                <Mail className="w-3 h-3" />
+                {msg.email}
+              </a>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleMarkAsRead(msg.id, msg.is_read)}
+                title={msg.is_read ? "Mark as unread" : "Mark as read"}
+              >
+                {msg.is_read ? (
+                  <CheckCheck className="w-4 h-4 text-green-500" />
+                ) : (
+                  <Check className="w-4 h-4" />
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDelete(msg.id)}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+          <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+          <p className="text-xs text-muted-foreground">
+            {new Date(msg.created_at).toLocaleString()}
+          </p>
+        </div>
+      ))}
+
+      {messages.length === 0 && (
+        <p className="text-center text-muted-foreground py-8">
+          No contact messages yet
+        </p>
+      )}
     </div>
   );
 };
