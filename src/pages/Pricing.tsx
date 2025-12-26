@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Check, Sparkles, Zap, Crown } from "lucide-react";
+import { Check, Sparkles, Star, Zap, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,25 @@ const plans = [
       "Document upload (up to 5MB)",
       "Standard response time",
       "Community support",
+    ],
+    cta: "Get Started",
+    variant: "outline" as const,
+    popular: false,
+  },
+  {
+    name: "Mini",
+    price: "$3",
+    period: "/month",
+    description: "Great for occasional users",
+    analyses: "25 analyses/month",
+    icon: Star,
+    features: [
+      "25 AI-powered analyses per month",
+      "Basic financial insights",
+      "Document upload (up to 10MB)",
+      "Standard response time",
+      "Email support",
+      "Analysis history (30 days)",
     ],
     cta: "Get Started",
     variant: "outline" as const,
@@ -110,7 +129,7 @@ const Pricing = () => {
           </div>
 
           {/* Pricing Cards */}
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {plans.map((plan) => {
               const Icon = plan.icon;
               return (
