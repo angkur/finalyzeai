@@ -32,6 +32,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AnalysisDetailDialog from "@/components/AnalysisDetailDialog";
+import UsageTracker from "@/components/UsageTracker";
 
 interface Document {
   id: string;
@@ -407,6 +408,11 @@ const Profile = () => {
                 {stats.averageRating !== null ? stats.averageRating : "-"}
               </p>
             </div>
+          </div>
+
+          {/* Usage Tracker */}
+          <div className="mb-6">
+            <UsageTracker />
           </div>
 
           <Tabs defaultValue="activity" className="space-y-6">
