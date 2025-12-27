@@ -9,7 +9,6 @@ const corsHeaders = {
 
 // Sentence-aware text splitting with semantic boundaries
 function splitIntoSentences(text: string): string[] {
-  // Split on sentence boundaries while preserving the delimiter
   const sentencePattern = /[^.!?]+[.!?]+[\s]*/g;
   const sentences = text.match(sentencePattern) || [text];
   return sentences.map(s => s.trim()).filter(s => s.length > 0);
@@ -43,7 +42,6 @@ function createSemanticChunks(
     currentChunkSentences.push(sentence);
     currentWordCount += sentenceWordCount;
     
-    // Check if we should create a chunk
     if (currentWordCount >= targetWordsPerChunk || i === sentences.length - 1) {
       const chunkContent = currentChunkSentences.join(' ');
       const position = chunks.length === 0 ? 'beginning' : 
@@ -56,14 +54,12 @@ function createSemanticChunks(
         position
       });
       
-      // Keep overlap sentences for next chunk
       const overlapStart = Math.max(0, currentChunkSentences.length - overlapSentences);
       currentChunkSentences = currentChunkSentences.slice(overlapStart);
       currentWordCount = currentChunkSentences.reduce((acc, s) => acc + s.split(/\s+/).length, 0);
     }
   }
   
-  // Update first chunk position if only one chunk
   if (chunks.length === 1) {
     chunks[0].position = 'only';
   }
@@ -80,7 +76,6 @@ function parseCSVContent(content: string): { content: string; wordCount: number;
   const dataLines = lines.slice(1);
   const chunks: { content: string; wordCount: number; sentenceCount: number; position: string }[] = [];
   
-  // Create chunks of ~20 rows each, always including header
   const rowsPerChunk = 20;
   for (let i = 0; i < dataLines.length; i += rowsPerChunk) {
     const chunkRows = dataLines.slice(i, i + rowsPerChunk);
@@ -114,7 +109,6 @@ function detectDocumentType(fileName: string, content: string): string {
   if (ext === 'json') return 'json';
   if (ext === 'md' || ext === 'markdown') return 'markdown';
   
-  // Content-based detection
   const lowerContent = content.toLowerCase();
   if (lowerContent.includes('balance sheet') || lowerContent.includes('income statement') || 
       lowerContent.includes('cash flow') || lowerContent.includes('revenue')) {
@@ -127,21 +121,18 @@ function detectDocumentType(fileName: string, content: string): string {
   return 'text';
 }
 
-// Extract key entities from content (simple extraction)
+// Extract key entities from content
 function extractEntities(content: string): string[] {
   const entities: Set<string> = new Set();
   
-  // Extract monetary values
   const moneyPattern = /\$[\d,]+\.?\d*|\d+\.?\d*\s*(million|billion|USD|EUR|GBP)/gi;
   const moneyMatches = content.match(moneyPattern) || [];
   moneyMatches.slice(0, 5).forEach(m => entities.add(m.trim()));
   
-  // Extract percentages
   const percentPattern = /\d+\.?\d*\s*%/g;
   const percentMatches = content.match(percentPattern) || [];
   percentMatches.slice(0, 5).forEach(m => entities.add(m.trim()));
   
-  // Extract dates
   const datePattern = /\b(Q[1-4]\s*\d{4}|\d{4}|January|February|March|April|May|June|July|August|September|October|November|December)\b/gi;
   const dateMatches = content.match(datePattern) || [];
   dateMatches.slice(0, 5).forEach(m => entities.add(m.trim()));
@@ -149,35 +140,85 @@ function extractEntities(content: string): string[] {
   return Array.from(entities).slice(0, 10);
 }
 
-// Generate embedding using OpenAI
-async function generateEmbedding(text: string, openaiApiKey: string): Promise<number[] | null> {
-  try {
-    // Truncate text to ~8000 tokens (roughly 32000 chars)
-    const truncatedText = text.slice(0, 32000);
-    
-    const response = await fetch('https://api.openai.com/v1/embeddings', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'text-embedding-3-small',
-        input: truncatedText,
-      }),
-    });
+// Generate embedding with exponential backoff retry
+async function generateEmbedding(text: string, openaiApiKey: string, maxRetries = 3): Promise<number[] | null> {
+  const truncatedText = text.slice(0, 32000);
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch('https://api.openai.com/v1/embeddings', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'text-embedding-3-small',
+          input: truncatedText,
+        }),
+      });
 
-    if (!response.ok) {
-      console.error('Embedding API error:', response.status);
-      return null;
+      if (response.status === 429) {
+        // Rate limited - exponential backoff
+        const waitTime = Math.pow(2, attempt + 1) * 1000; // 2s, 4s, 8s
+        console.log(`Rate limited, waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        continue;
+      }
+
+      if (!response.ok) {
+        console.error('Embedding API error:', response.status);
+        return null;
+      }
+
+      const data = await response.json();
+      return data.data[0].embedding;
+    } catch (error) {
+      console.error('Error generating embedding:', error);
+      if (attempt < maxRetries - 1) {
+        const waitTime = Math.pow(2, attempt + 1) * 1000;
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
     }
-
-    const data = await response.json();
-    return data.data[0].embedding;
-  } catch (error) {
-    console.error('Error generating embedding:', error);
-    return null;
   }
+  
+  return null;
+}
+
+// Process embeddings in batches with rate limiting
+async function processEmbeddingsInBatches(
+  chunks: { content: string; index: number }[],
+  openaiApiKey: string,
+  batchSize = 5,
+  delayBetweenBatches = 2000
+): Promise<Map<number, number[]>> {
+  const embeddings = new Map<number, number[]>();
+  
+  for (let i = 0; i < chunks.length; i += batchSize) {
+    const batch = chunks.slice(i, i + batchSize);
+    console.log(`Processing embedding batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(chunks.length / batchSize)}`);
+    
+    // Process batch in parallel
+    const batchResults = await Promise.all(
+      batch.map(async (chunk) => {
+        const embedding = await generateEmbedding(chunk.content, openaiApiKey);
+        return { index: chunk.index, embedding };
+      })
+    );
+    
+    for (const result of batchResults) {
+      if (result.embedding) {
+        embeddings.set(result.index, result.embedding);
+      }
+    }
+    
+    // Delay between batches to avoid rate limiting
+    if (i + batchSize < chunks.length) {
+      await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
+    }
+  }
+  
+  return embeddings;
 }
 
 serve(async (req) => {
@@ -192,9 +233,9 @@ serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
-    const { documentId, content, fileName, userId } = await req.json();
+    const { documentId, content, fileName, userId, skipEmbeddings } = await req.json();
     
-    console.log(`Processing document: ${documentId}, file: ${fileName}, user: ${userId || 'anonymous'}`);
+    console.log(`Processing document: ${documentId}, file: ${fileName}, user: ${userId || 'anonymous'}, skipEmbeddings: ${skipEmbeddings}`);
 
     // Update document status to processing
     await supabase
@@ -218,30 +259,30 @@ serve(async (req) => {
     console.log(`Created ${chunks.length} semantic chunks`);
 
     // Limit chunks for very large documents
-    const maxChunks = 200;
+    const maxChunks = 100; // Reduced from 200 to prevent timeout
     const chunksToProcess = chunks.slice(0, maxChunks);
     if (chunks.length > maxChunks) {
       console.log(`Document too large, processing first ${maxChunks} chunks out of ${chunks.length}`);
     }
 
-    // Process chunks with embeddings
-    const chunkInserts = [];
-    
-    for (let i = 0; i < chunksToProcess.length; i++) {
-      const chunk = chunksToProcess[i];
-      const entities = extractEntities(chunk.content);
+    // Generate embeddings if API key is available and not skipped
+    let embeddingsMap = new Map<number, number[]>();
+    if (openaiApiKey && !skipEmbeddings) {
+      const chunksForEmbedding = chunksToProcess.map((chunk, index) => ({
+        content: chunk.content,
+        index
+      }));
       
-      // Generate embedding if OpenAI key is available
-      let embedding = null;
-      if (openaiApiKey) {
-        embedding = await generateEmbedding(chunk.content, openaiApiKey);
-        // Small delay to avoid rate limiting
-        if (i < chunksToProcess.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-      }
+      // Process embeddings in batches of 3 with 2.5s delay to avoid rate limits
+      embeddingsMap = await processEmbeddingsInBatches(chunksForEmbedding, openaiApiKey, 3, 2500);
+    }
 
-      chunkInserts.push({
+    // Prepare chunk inserts
+    const chunkInserts = chunksToProcess.map((chunk, i) => {
+      const entities = extractEntities(chunk.content);
+      const embedding = embeddingsMap.get(i) || null;
+      
+      return {
         document_id: documentId,
         chunk_index: i,
         content: chunk.content,
@@ -252,7 +293,7 @@ serve(async (req) => {
         word_count: chunk.wordCount,
         sentence_count: chunk.sentenceCount,
         entities: entities,
-        confidence_score: embedding ? 1.0 : 0.5, // Higher confidence if we have embeddings
+        confidence_score: embedding ? 1.0 : 0.5,
         metadata: {
           file_name: fileName,
           chunk_index: i,
@@ -261,8 +302,8 @@ serve(async (req) => {
           document_type: documentType,
           has_embedding: !!embedding,
         },
-      });
-    }
+      };
+    });
 
     // Insert all chunks
     const { error: insertError } = await supabase
@@ -298,15 +339,15 @@ serve(async (req) => {
     
     // Try to update document status to failed
     try {
-      const { documentId } = await req.json().catch(() => ({}));
-      if (documentId) {
+      const body = await req.clone().json().catch(() => ({}));
+      if (body.documentId) {
         await supabase
           .from('documents')
           .update({ 
             status: 'failed',
             error_message: error instanceof Error ? error.message : 'Unknown error'
           })
-          .eq('id', documentId);
+          .eq('id', body.documentId);
       }
     } catch {}
 
