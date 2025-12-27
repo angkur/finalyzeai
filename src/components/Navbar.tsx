@@ -59,9 +59,9 @@ const Navbar = () => {
             <a href="/#services" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Services
             </a>
-            <a href="/#demo" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/ai-predict" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               AI Predict
-            </a>
+            </Link>
             <a href="/#process" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Process
             </a>
