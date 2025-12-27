@@ -16,7 +16,10 @@ import {
   Brain,
   X,
   User,
-  Bot
+  Bot,
+  Paperclip,
+  File,
+  CheckCircle
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,6 +27,13 @@ import { useNavigate, Link } from "react-router-dom";
 import { useConversation, Message } from "@/hooks/useConversation";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { supabase } from "@/integrations/supabase/client";
+
+interface AttachedFile {
+  id: string;
+  name: string;
+  status: 'uploading' | 'processing' | 'ready' | 'error';
+}
 
 const suggestionChips = [
   { icon: TrendingUp, label: "Market Analysis", query: "Analyze current market trends and provide investment insights" },
@@ -54,8 +64,11 @@ const AiPredict = () => {
 
   const [input, setInput] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -203,6 +216,151 @@ const AiPredict = () => {
 
   const handleSuggestionClick = (query: string) => {
     handleSend(query);
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user) {
+      toast.error("Please sign in to upload documents");
+      return;
+    }
+
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    
+    if (file.size > maxSize) {
+      toast.error("File too large. Maximum size is 10MB.");
+      return;
+    }
+
+    const allowedTypes = ['.pdf', '.txt', '.csv', '.json', '.md'];
+    const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+    
+    if (!allowedTypes.includes(extension)) {
+      toast.error("Unsupported file type. Please upload PDF, TXT, CSV, JSON, or MD files.");
+      return;
+    }
+
+    const fileId = `file-${Date.now()}`;
+    setAttachedFiles(prev => [...prev, { id: fileId, name: file.name, status: 'uploading' }]);
+    setIsUploadingFile(true);
+
+    try {
+      // Read file content
+      const content = await file.text();
+
+      // Upload to storage with user folder
+      const filePath = `${user.id}/${Date.now()}-${file.name}`;
+      const { error: storageError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file);
+
+      if (storageError) {
+        throw new Error(`Storage upload failed: ${storageError.message}`);
+      }
+
+      // Create document record with user_id
+      const { data: docData, error: docError } = await supabase
+        .from('documents')
+        .insert({
+          name: file.name,
+          file_path: filePath,
+          file_type: extension,
+          file_size: file.size,
+          status: 'pending',
+          user_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (docError) {
+        throw new Error(`Document record creation failed: ${docError.message}`);
+      }
+
+      // Update status to processing
+      setAttachedFiles(prev => 
+        prev.map(f => f.id === fileId ? { ...f, status: 'processing' } : f)
+      );
+
+      // Trigger processing with user_id
+      const { error: processError } = await supabase.functions.invoke('process-document', {
+        body: {
+          documentId: docData.id,
+          content: content,
+          fileName: file.name,
+          userId: user.id,
+        },
+      });
+
+      if (processError) {
+        console.error('Processing error:', processError);
+        await supabase
+          .from('documents')
+          .update({ status: 'failed', error_message: processError.message })
+          .eq('id', docData.id);
+        setAttachedFiles(prev => 
+          prev.map(f => f.id === fileId ? { ...f, status: 'error' } : f)
+        );
+        toast.error("Document processing failed");
+      } else {
+        // Poll for completion
+        pollDocumentStatus(docData.id, fileId);
+        toast.success(`"${file.name}" uploaded and processing!`);
+      }
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(error instanceof Error ? error.message : "Upload failed");
+      setAttachedFiles(prev => 
+        prev.map(f => f.id === fileId ? { ...f, status: 'error' } : f)
+      );
+    } finally {
+      setIsUploadingFile(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const pollDocumentStatus = async (documentId: string, fileId: string) => {
+    const maxAttempts = 60;
+    let attempts = 0;
+
+    const poll = async () => {
+      const { data } = await supabase
+        .from('documents')
+        .select('status')
+        .eq('id', documentId)
+        .single();
+
+      if (data?.status === 'completed') {
+        setAttachedFiles(prev => 
+          prev.map(f => f.id === fileId ? { ...f, status: 'ready' } : f)
+        );
+        toast.success("Document ready for analysis!");
+        return;
+      }
+
+      if (data?.status === 'failed') {
+        setAttachedFiles(prev => 
+          prev.map(f => f.id === fileId ? { ...f, status: 'error' } : f)
+        );
+        return;
+      }
+
+      attempts++;
+      if (attempts < maxAttempts && data?.status === 'processing') {
+        setTimeout(poll, 5000);
+      }
+    };
+
+    setTimeout(poll, 3000);
+  };
+
+  const removeAttachedFile = (fileId: string) => {
+    setAttachedFiles(prev => prev.filter(f => f.id !== fileId));
   };
 
   // Show empty state (welcome screen) when no messages
@@ -420,7 +578,64 @@ const AiPredict = () => {
         {/* Input Area */}
         <div className="border-t border-border/50 bg-background/80 backdrop-blur-sm">
           <div className="max-w-3xl mx-auto px-4 py-4">
+            {/* Attached Files Preview */}
+            {attachedFiles.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {attachedFiles.map((file) => (
+                  <div
+                    key={file.id}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border",
+                      file.status === 'ready' && "bg-green-500/10 border-green-500/30 text-green-600",
+                      file.status === 'uploading' && "bg-primary/10 border-primary/30 text-primary",
+                      file.status === 'processing' && "bg-yellow-500/10 border-yellow-500/30 text-yellow-600",
+                      file.status === 'error' && "bg-destructive/10 border-destructive/30 text-destructive"
+                    )}
+                  >
+                    {file.status === 'uploading' || file.status === 'processing' ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : file.status === 'ready' ? (
+                      <CheckCircle className="w-3 h-3" />
+                    ) : (
+                      <File className="w-3 h-3" />
+                    )}
+                    <span className="truncate max-w-[150px]">{file.name}</span>
+                    <button
+                      onClick={() => removeAttachedFile(file.id)}
+                      className="hover:opacity-70"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="relative flex items-end gap-2 p-2 rounded-2xl border border-border bg-card shadow-sm">
+              {/* File Upload Button */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.txt,.csv,.json,.md"
+                onChange={handleFileSelect}
+                className="hidden"
+                disabled={isUploadingFile || !user}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingFile || !user}
+                className="h-10 w-10 shrink-0 rounded-xl text-muted-foreground hover:text-foreground"
+                title="Attach document"
+              >
+                {isUploadingFile ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Paperclip className="w-5 h-5" />
+                )}
+              </Button>
+
               <Textarea
                 ref={textareaRef}
                 value={input}
@@ -446,7 +661,7 @@ const AiPredict = () => {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground text-center mt-3">
-              AI Predict can make mistakes. Verify important financial decisions.
+              Attach documents (PDF, TXT, CSV, JSON, MD) • AI Predict can make mistakes
             </p>
           </div>
         </div>
