@@ -13,6 +13,7 @@ import BlogPost from "./pages/BlogPost";
 import UserGuide from "./pages/UserGuide";
 import Pricing from "./pages/Pricing";
 import AiPredict from "./pages/AiPredict";
+import FinPredict from "./pages/FinPredict";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/user-guide" element={<UserGuide />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/ai-predict" element={<AiPredict />} />
+            <Route path="/fin-predict" element={<FinPredict />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
