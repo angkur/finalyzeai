@@ -38,6 +38,70 @@ const COLORS = [
   'hsl(120, 60%, 45%)',
 ];
 
+// Helper function to detect and remove circular links
+const removeCircularLinks = (links: SLink[]): SLink[] => {
+  const graph = new Map<number, Set<number>>();
+  
+  // Build adjacency list
+  links.forEach(link => {
+    if (!graph.has(link.source)) graph.set(link.source, new Set());
+    graph.get(link.source)!.add(link.target);
+  });
+
+  // Check if adding a link would create a cycle using DFS
+  const wouldCreateCycle = (source: number, target: number): boolean => {
+    const visited = new Set<number>();
+    const stack = [target];
+    
+    while (stack.length > 0) {
+      const node = stack.pop()!;
+      if (node === source) return true;
+      if (visited.has(node)) continue;
+      visited.add(node);
+      
+      const neighbors = graph.get(node);
+      if (neighbors) {
+        neighbors.forEach(n => stack.push(n));
+      }
+    }
+    return false;
+  };
+
+  // Filter out links that would create cycles
+  const validLinks: SLink[] = [];
+  const tempGraph = new Map<number, Set<number>>();
+
+  links.forEach(link => {
+    // Check if this link creates a cycle
+    const visited = new Set<number>();
+    const stack = [link.target];
+    let createsCycle = false;
+    
+    while (stack.length > 0) {
+      const node = stack.pop()!;
+      if (node === link.source) {
+        createsCycle = true;
+        break;
+      }
+      if (visited.has(node)) continue;
+      visited.add(node);
+      
+      const neighbors = tempGraph.get(node);
+      if (neighbors) {
+        neighbors.forEach(n => stack.push(n));
+      }
+    }
+
+    if (!createsCycle) {
+      validLinks.push(link);
+      if (!tempGraph.has(link.source)) tempGraph.set(link.source, new Set());
+      tempGraph.get(link.source)!.add(link.target);
+    }
+  });
+
+  return validLinks;
+};
+
 const SankeyChart = ({ data, config, zoom = 1 }: SankeyChartProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -140,9 +204,12 @@ const SankeyChart = ({ data, config, zoom = 1 }: SankeyChartProps) => {
         target: nodeArray.indexOf(String(d[targetKey])),
         value: parseFloat(d[valueKey]) || 1,
       }))
-      .filter(l => l.source !== -1 && l.target !== -1);
+      .filter(l => l.source !== -1 && l.target !== -1 && l.source !== l.target);
 
-    return { nodes: parsedNodes, links: parsedLinks };
+    // Detect and remove circular links to prevent d3-sankey error
+    const validLinks = removeCircularLinks(parsedLinks);
+
+    return { nodes: parsedNodes, links: validLinks.length > 0 ? validLinks : parsedLinks.slice(0, Math.max(1, parsedLinks.length - 1)) };
   }, [data, config]);
 
   useEffect(() => {
