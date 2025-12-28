@@ -164,7 +164,13 @@ function Scene({ points }: { points: DataPoint[] }) {
 
 const Scatter3DChart = ({ data, config, zoom = 1 }: Scatter3DChartProps) => {
   const points = useMemo<DataPoint[]>(() => {
-    if (!data || data.length === 0) {
+    // Check if data has valid content (not just empty objects)
+    const hasValidData = data && data.length > 0 && data.some(item => 
+      item && typeof item === 'object' && Object.keys(item).length > 0 &&
+      (item.x !== undefined || item.y !== undefined || item.name || item.value)
+    );
+
+    if (!hasValidData) {
       // Generate sample 3D data
       const sampleData: DataPoint[] = [];
       const categories = ['Tech', 'Finance', 'Healthcare', 'Energy'];
@@ -189,6 +195,11 @@ const Scatter3DChart = ({ data, config, zoom = 1 }: Scatter3DChartProps) => {
       return sampleData;
     }
 
+    // Filter out empty objects
+    const validData = data.filter(item => 
+      item && typeof item === 'object' && Object.keys(item).length > 0
+    );
+
     // Normalize real data to fit in -5 to 5 range
     const xKey = config?.xAxis || 'x';
     const yKey = config?.yAxis || 'y';
@@ -196,9 +207,10 @@ const Scatter3DChart = ({ data, config, zoom = 1 }: Scatter3DChartProps) => {
     const colorKey = config?.colorKey || 'category';
     const sizeKey = config?.sizeKey || 'size';
 
-    const xValues = data.map(d => parseFloat(d[xKey]) || 0);
-    const yValues = data.map(d => parseFloat(d[yKey]) || 0);
-    const zValues = data.map(d => parseFloat(d[zKey]) || 0);
+    // Try to extract x, y, z or fall back to generated values
+    const xValues = validData.map((d, i) => parseFloat(d[xKey]) || parseFloat(d.value) || i * 10);
+    const yValues = validData.map((d, i) => parseFloat(d[yKey]) || parseFloat(d.value) * 0.5 || i * 5);
+    const zValues = validData.map((d, i) => parseFloat(d[zKey]) || parseFloat(d.value) * 0.3 || i * 3);
 
     const normalize = (values: number[]) => {
       const min = Math.min(...values);
@@ -211,13 +223,13 @@ const Scatter3DChart = ({ data, config, zoom = 1 }: Scatter3DChartProps) => {
     const normalizedY = normalize(yValues);
     const normalizedZ = normalize(zValues);
 
-    const categories = [...new Set(data.map(d => d[colorKey]))];
+    const categories = [...new Set(validData.map(d => d[colorKey] || d.name || d.label || 'Default'))];
 
-    return data.map((item, i) => ({
+    return validData.map((item, i) => ({
       x: normalizedX[i],
       y: normalizedY[i],
       z: normalizedZ[i],
-      color: CATEGORY_COLORS[categories.indexOf(item[colorKey]) % CATEGORY_COLORS.length],
+      color: CATEGORY_COLORS[categories.indexOf(item[colorKey] || item.name || item.label || 'Default') % CATEGORY_COLORS.length],
       size: parseFloat(item[sizeKey]) || 1,
       label: item.name || item.label || `Point ${i + 1}`,
       original: item,

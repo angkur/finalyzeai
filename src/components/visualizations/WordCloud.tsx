@@ -40,7 +40,13 @@ const WordCloud = ({ data, config, zoom = 1 }: WordCloudProps) => {
   const words = useMemo<WordItem[]>(() => {
     let wordData: { text: string; value: number }[] = [];
 
-    if (!data || data.length === 0) {
+    // Check if data has valid content (not just empty objects)
+    const hasValidData = data && data.length > 0 && data.some(item => 
+      item && typeof item === 'object' && Object.keys(item).length > 0 &&
+      (item.text || item.name || item.word || item.label)
+    );
+
+    if (!hasValidData) {
       // Sample financial terms
       wordData = [
         { text: 'Investment', value: 100 },
@@ -78,10 +84,17 @@ const WordCloud = ({ data, config, zoom = 1 }: WordCloudProps) => {
       const textKey = config?.textKey || 'text';
       const valueKey = config?.valueKey || 'value';
       
-      wordData = data.map(item => ({
-        text: String(item[textKey] || item.name || item.word || 'Unknown'),
-        value: parseFloat(item[valueKey]) || Math.random() * 100,
-      }));
+      wordData = data
+        .filter(item => item && typeof item === 'object' && Object.keys(item).length > 0)
+        .map(item => {
+          const text = item[textKey] || item.name || item.word || item.label || item.text;
+          const value = parseFloat(item[valueKey]) || parseFloat(item.value) || Math.random() * 100;
+          return {
+            text: text ? String(text) : null,
+            value,
+          };
+        })
+        .filter(item => item.text !== null) as { text: string; value: number }[];
     }
 
     // Sort by value descending
