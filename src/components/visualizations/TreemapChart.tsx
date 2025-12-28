@@ -95,7 +95,13 @@ const TreemapChart = ({ data, config, zoom = 1 }: TreemapChartProps) => {
   const [breadcrumbs, setBreadcrumbs] = useState<TreemapNode[]>([]);
 
   const treeData = useMemo(() => {
-    if (!data || data.length === 0) {
+    // Check if data has valid content (not just empty objects)
+    const hasValidData = data && data.length > 0 && data.some(item => 
+      item && typeof item === 'object' && Object.keys(item).length > 0 &&
+      (item.name || item.label || item.value || item.size)
+    );
+
+    if (!hasValidData) {
       // Sample hierarchical data
       return {
         name: 'Portfolio',
@@ -135,23 +141,28 @@ const TreemapChart = ({ data, config, zoom = 1 }: TreemapChartProps) => {
       };
     }
 
+    // Filter out empty objects
+    const validData = data.filter(item => 
+      item && typeof item === 'object' && Object.keys(item).length > 0
+    );
+
     // Convert flat data to hierarchical
     const nameKey = config?.nameKey || 'name';
     const valueKey = config?.valueKey || 'value';
     const childrenKey = config?.childrenKey || 'children';
 
-    if (data[0]?.[childrenKey]) {
+    if (validData[0]?.[childrenKey]) {
       return {
         name: 'Root',
-        children: data,
+        children: validData,
       };
     }
 
     return {
       name: 'Data',
-      children: data.map(item => ({
-        name: item[nameKey] || 'Unknown',
-        size: parseFloat(item[valueKey]) || 0,
+      children: validData.map(item => ({
+        name: item[nameKey] || item.label || 'Item',
+        size: parseFloat(item[valueKey]) || parseFloat(item.size) || 0,
       })),
     };
   }, [data, config]);

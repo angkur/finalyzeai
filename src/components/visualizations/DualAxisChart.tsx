@@ -26,7 +26,13 @@ const DualAxisChart = ({ data, config, zoom = 1 }: DualAxisChartProps) => {
   const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
 
   const { chartData, leftKey, rightKey, xKey } = useMemo(() => {
-    if (!data || data.length === 0) {
+    // Check if data has valid content (not just empty objects)
+    const hasValidData = data && data.length > 0 && data.some(item => 
+      item && typeof item === 'object' && Object.keys(item).length > 0 &&
+      Object.values(item).some(v => typeof v === 'number' || typeof v === 'string')
+    );
+
+    if (!hasValidData) {
       // Generate sample dual-axis data
       const quarters = ['Q1 2022', 'Q2 2022', 'Q3 2022', 'Q4 2022', 'Q1 2023', 'Q2 2023', 'Q3 2023', 'Q4 2023'];
       const sampleData = quarters.map((quarter, i) => ({
@@ -42,12 +48,17 @@ const DualAxisChart = ({ data, config, zoom = 1 }: DualAxisChartProps) => {
       };
     }
 
-    const keys = Object.keys(data[0]);
-    const numericKeys = keys.filter(k => typeof data[0][k] === 'number');
-    const stringKey = keys.find(k => typeof data[0][k] === 'string') || keys[0];
+    // Filter out empty objects
+    const validData = data.filter(item => 
+      item && typeof item === 'object' && Object.keys(item).length > 0
+    );
+
+    const keys = Object.keys(validData[0] || {});
+    const numericKeys = keys.filter(k => typeof validData[0][k] === 'number');
+    const stringKey = keys.find(k => typeof validData[0][k] === 'string') || keys[0];
 
     return {
-      chartData: data,
+      chartData: validData,
       leftKey: config?.leftAxis || numericKeys[0] || 'value1',
       rightKey: config?.rightAxis || numericKeys[1] || 'value2',
       xKey: config?.xAxis || stringKey,

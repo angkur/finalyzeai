@@ -37,16 +37,29 @@ export const useRealtimeChart = (
       return config.dataGenerator();
     }
 
-    // Generate data based on chart type
+    // Generate data that works for all chart types
     const timestamp = new Date().toISOString();
-    const value = Math.round(Math.random() * 100);
+    const categories = ['Technology', 'Finance', 'Healthcare', 'Energy', 'Consumer', 'Industrial'];
+    const category = categories[Math.floor(Math.random() * categories.length)];
+    const value = Math.round(Math.random() * 10000000) + 1000000;
+    const value2 = Math.round(Math.random() * 5000000) + 500000;
     
     return {
+      name: category,
+      label: category,
+      text: category,
+      value,
+      value1: value,
+      value2: value2,
+      size: value,
       timestamp,
       time: new Date().toLocaleTimeString(),
-      value,
-      metric: `Metric ${Math.floor(Math.random() * 5) + 1}`,
-      category: ['A', 'B', 'C', 'D', 'E'][Math.floor(Math.random() * 5)],
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      z: Math.random() * 100,
+      category,
+      source: categories[Math.floor(Math.random() * categories.length)],
+      target: categories[Math.floor(Math.random() * categories.length)],
     };
   }, [config.dataGenerator]);
 

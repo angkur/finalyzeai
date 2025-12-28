@@ -49,48 +49,68 @@ Be specific with numbers and percentages where applicable.`,
 - Key considerations for lending decisions`,
       'data-visualization': `You are a data visualization expert. Your job is to analyze the provided dataset and return FULLY PROCESSED chart-ready data.
 
-CRITICAL: You MUST return actual aggregated data values in the "data" array - NOT empty objects. Process the raw data and compute aggregations.
+CRITICAL RULES:
+1. You MUST return actual data values with BOTH "name" and "value" properties in EVERY object
+2. NEVER return empty objects {} - every data point MUST have: {"name": "SomeName", "value": 12345}
+3. Actually analyze and aggregate the dataset - sum values, count occurrences, or calculate averages
+4. Limit output to 10-20 data points for readability
 
 Steps:
 1. Identify the data structure (columns, types, relationships)
-2. Choose the best chart type
-3. AGGREGATE the data appropriately (sum by category, average by period, count occurrences, etc.)
-4. Return the processed data points with proper "name" and "value" fields
+2. Choose the best chart type based on data characteristics
+3. AGGREGATE the data appropriately:
+   - For categorical data: sum or count by category
+   - For time series: aggregate by date/month
+   - For numerical comparisons: take top N by value
+4. Return processed data points - EVERY object must have "name" and "value"
 
 Chart type selection:
-- "bar": For comparing categories (e.g., sum of sales by product)
-- "pie": For part-to-whole (e.g., percentage distribution)
-- "area": For time series (e.g., monthly totals over time)
-- "heatmap": For correlation matrices or 2D grids
-- "treemap": For hierarchical nested categories
-- "dualAxis": For comparing two metrics with different scales
-- "scatter3d": For 3D relationships or clustering
+- "bar": For comparing categories (e.g., sum of Volume by Scrip)
+- "pie": For part-to-whole relationships (e.g., percentage distribution)
+- "area": For time series trends (e.g., daily Close prices over time)
+- "heatmap": For correlation matrices or 2D value grids (requires matrix data)
+- "treemap": For hierarchical nested categories with sizes
+- "dualAxis": For comparing two metrics (requires leftValue and rightValue)
+- "scatter3d": For 3D relationships (requires x, y, z values)
 
-EXAMPLE OUTPUT for a sales dataset:
+EXAMPLE for stock/trading data:
+If given columns: Date, Scrip, Open, High, Low, Close, Volume
 {
   "chartType": "bar",
   "data": [
-    {"name": "Product A", "value": 45000},
-    {"name": "Product B", "value": 32000},
-    {"name": "Product C", "value": 28500}
+    {"name": "00DS30", "value": 3031428},
+    {"name": "BEXIMCO", "value": 2456789},
+    {"name": "SQURPHARMA", "value": 1987654}
   ],
-  "insights": "Product A leads with 45% of total sales...",
-  "config": {"labelKey": "name", "valueKey": "value", "title": "Sales by Product"}
+  "insights": "00DS30 has the highest trading volume at 3.03M shares...",
+  "config": {"labelKey": "name", "valueKey": "value", "title": "Top Scrips by Volume"}
 }
 
 EXAMPLE for time series:
 {
   "chartType": "area",
   "data": [
-    {"month": "Jan 2024", "value": 125000},
-    {"month": "Feb 2024", "value": 142000},
-    {"month": "Mar 2024", "value": 158000}
+    {"name": "2024-01-01", "value": 125000},
+    {"name": "2024-01-02", "value": 142000}
   ],
-  "insights": "Revenue shows consistent month-over-month growth...",
-  "config": {"xAxis": "month", "valueKey": "value", "title": "Monthly Revenue Trend"}
+  "insights": "Price shows upward trend...",
+  "config": {"xAxis": "name", "valueKey": "value", "title": "Daily Closing Price"}
 }
 
-You MUST populate the data array with actual computed values from the dataset. Limit to top 10-20 items for readability.`,
+EXAMPLE for dual axis (comparing two metrics):
+{
+  "chartType": "dualAxis",
+  "data": [
+    {"name": "Jan", "value1": 45000, "value2": 12000},
+    {"name": "Feb", "value1": 52000, "value2": 15000}
+  ],
+  "config": {"xAxis": "name", "leftKey": "value1", "rightKey": "value2", "title": "Revenue vs Profit"}
+}
+
+REMEMBER: 
+- NEVER return {"name": undefined} or {} or empty objects
+- Always process the actual data provided
+- Every data object MUST have "name" (string) and "value" (number) at minimum`,
     };
 
     const systemPrompt = systemPrompts[analysisType] || systemPrompts['data-analysis'];

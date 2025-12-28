@@ -40,7 +40,13 @@ const NetworkGraph = ({ data, config, zoom = 1 }: NetworkGraphProps) => {
   const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string } | null>(null);
 
   const { nodes, links } = useMemo(() => {
-    if (!data || data.length === 0) {
+    // Check if data has valid content (not just empty objects)
+    const hasValidData = data && data.length > 0 && data.some(item => 
+      item && typeof item === 'object' && Object.keys(item).length > 0 &&
+      (item.source || item.target || item.id || item.nodes || item.links)
+    );
+
+    if (!hasValidData) {
       // Generate sample network data
       const sampleNodes: NetworkNode[] = [
         { id: 'Technology', group: 0, value: 100 },
@@ -82,6 +88,11 @@ const NetworkGraph = ({ data, config, zoom = 1 }: NetworkGraphProps) => {
       return { nodes: sampleNodes, links: sampleLinks };
     }
 
+    // Filter out empty objects
+    const validData = data.filter(item => 
+      item && typeof item === 'object' && Object.keys(item).length > 0
+    );
+
     // Parse provided data
     const nodeKey = config?.nodeKey || 'id';
     const linkSourceKey = config?.linkSourceKey || 'source';
@@ -89,14 +100,14 @@ const NetworkGraph = ({ data, config, zoom = 1 }: NetworkGraphProps) => {
     const valueKey = config?.valueKey || 'value';
 
     // Check if data has nodes and links structure
-    if (data[0]?.nodes && data[0]?.links) {
+    if (validData[0]?.nodes && validData[0]?.links) {
       return {
-        nodes: data[0].nodes.map((n: Record<string, unknown>, i: number) => ({
+        nodes: validData[0].nodes.map((n: Record<string, unknown>, i: number) => ({
           id: String(n[nodeKey] || n.id || `node${i}`),
           group: Number(n.group) || 0,
           value: Number(n[valueKey]) || 50,
         })),
-        links: data[0].links.map((l: Record<string, unknown>) => ({
+        links: validData[0].links.map((l: Record<string, unknown>) => ({
           source: String(l[linkSourceKey] || l.source),
           target: String(l[linkTargetKey] || l.target),
           value: Number(l[valueKey]) || 1,
@@ -108,7 +119,7 @@ const NetworkGraph = ({ data, config, zoom = 1 }: NetworkGraphProps) => {
     const nodeSet = new Set<string>();
     const extractedLinks: NetworkLink[] = [];
 
-    data.forEach((item) => {
+    validData.forEach((item) => {
       const source = item[linkSourceKey];
       const target = item[linkTargetKey];
       if (source && target) {
@@ -121,6 +132,24 @@ const NetworkGraph = ({ data, config, zoom = 1 }: NetworkGraphProps) => {
         });
       }
     });
+
+    // If no links found, try to create network from name/value pairs
+    if (extractedLinks.length === 0 && validData.length > 0) {
+      const items = validData.slice(0, 10);
+      items.forEach((item, i) => {
+        const name = item.name || item.label || `Node${i}`;
+        nodeSet.add(name);
+        if (i > 0) {
+          const prevItem = items[i - 1];
+          const prevName = prevItem.name || prevItem.label || `Node${i-1}`;
+          extractedLinks.push({
+            source: prevName,
+            target: name,
+            value: item.value || 1,
+          });
+        }
+      });
+    }
 
     const extractedNodes: NetworkNode[] = Array.from(nodeSet).map((id, i) => ({
       id,

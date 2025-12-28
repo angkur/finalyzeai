@@ -44,7 +44,13 @@ const SankeyChart = ({ data, config, zoom = 1 }: SankeyChartProps) => {
   const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string } | null>(null);
 
   const { nodes, links } = useMemo(() => {
-    if (!data || data.length === 0) {
+    // Check if data has valid content (not just empty objects)
+    const hasValidData = data && data.length > 0 && data.some(item => 
+      item && typeof item === 'object' && Object.keys(item).length > 0 &&
+      (item.source || item.target || item.name || item.value)
+    );
+
+    if (!hasValidData) {
       // Sample Sankey data - financial flow
       const sampleNodes: SNode[] = [
         { name: 'Revenue', category: 0 },
@@ -78,16 +84,48 @@ const SankeyChart = ({ data, config, zoom = 1 }: SankeyChartProps) => {
       return { nodes: sampleNodes, links: sampleLinks };
     }
 
+    // Filter out empty objects
+    const validData = data.filter(item => 
+      item && typeof item === 'object' && Object.keys(item).length > 0
+    );
+
     const sourceKey = config?.sourceKey || 'source';
     const targetKey = config?.targetKey || 'target';
     const valueKey = config?.valueKey || 'value';
 
     // Build nodes and links from data
     const nodeNames = new Set<string>();
-    data.forEach(d => {
-      if (d[sourceKey]) nodeNames.add(d[sourceKey]);
-      if (d[targetKey]) nodeNames.add(d[targetKey]);
+    validData.forEach(d => {
+      if (d[sourceKey]) nodeNames.add(String(d[sourceKey]));
+      if (d[targetKey]) nodeNames.add(String(d[targetKey]));
     });
+
+    // If no source/target pairs, try to create flow from name/value
+    if (nodeNames.size === 0 && validData.length > 0) {
+      const items = validData.slice(0, 8);
+      items.forEach((item) => {
+        const name = item.name || item.label;
+        if (name) nodeNames.add(String(name));
+      });
+      
+      const nodeArray = Array.from(nodeNames);
+      const parsedNodes: SNode[] = nodeArray.map((name, i) => ({ 
+        name, 
+        category: Math.floor(i / Math.ceil(nodeArray.length / 4)) 
+      }));
+      
+      // Create sequential links between nodes
+      const parsedLinks: SLink[] = [];
+      for (let i = 0; i < nodeArray.length - 1; i++) {
+        parsedLinks.push({
+          source: i,
+          target: i + 1,
+          value: parseFloat(validData[i]?.value) || 100,
+        });
+      }
+      
+      return { nodes: parsedNodes, links: parsedLinks };
+    }
 
     const nodeArray = Array.from(nodeNames);
     const parsedNodes: SNode[] = nodeArray.map((name, i) => ({ 
@@ -95,13 +133,14 @@ const SankeyChart = ({ data, config, zoom = 1 }: SankeyChartProps) => {
       category: Math.floor(i / Math.ceil(nodeArray.length / 4)) 
     }));
 
-    const parsedLinks: SLink[] = data
+    const parsedLinks: SLink[] = validData
       .filter(d => d[sourceKey] && d[targetKey])
       .map(d => ({
-        source: nodeArray.indexOf(d[sourceKey]),
-        target: nodeArray.indexOf(d[targetKey]),
+        source: nodeArray.indexOf(String(d[sourceKey])),
+        target: nodeArray.indexOf(String(d[targetKey])),
         value: parseFloat(d[valueKey]) || 1,
-      }));
+      }))
+      .filter(l => l.source !== -1 && l.target !== -1);
 
     return { nodes: parsedNodes, links: parsedLinks };
   }, [data, config]);
