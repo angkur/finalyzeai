@@ -141,6 +141,7 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
   } = useRealtimeChart(initialChartData, {
     intervalMs,
     maxDataPoints,
+    chartType: selectedChart || initialChartData?.chartType,
   });
 
   // Extract data points for annotation linking
