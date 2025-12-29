@@ -16,13 +16,14 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null; needsEmailConfirmation?: boolean }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null; needsEmailConfirmation?: boolean }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
   resetPasswordForEmail: (email: string) => Promise<{ error: Error | null }>;
   updatePassword: (password: string) => Promise<{ error: Error | null }>;
+  resendVerificationEmail: (email: string) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -98,6 +99,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
     });
     
+    // If signup succeeds, email confirmation is typically required
+    if (!error) {
+      return { error: null, needsEmailConfirmation: true };
+    }
+    
     return { error: error as Error | null };
   };
 
@@ -106,6 +112,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email,
       password,
     });
+    
+    // Check if email is not confirmed
+    if (error?.message?.toLowerCase().includes('email not confirmed')) {
+      return { error: error as Error | null, needsEmailConfirmation: true };
+    }
     
     return { error: error as Error | null };
   };
@@ -160,6 +171,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error: error as Error | null };
   };
 
+  const resendVerificationEmail = async (email: string) => {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+      },
+    });
+    return { error: error as Error | null };
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -174,6 +196,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         updateProfile,
         resetPasswordForEmail,
         updatePassword,
+        resendVerificationEmail,
       }}
     >
       {children}

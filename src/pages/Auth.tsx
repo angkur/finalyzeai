@@ -1,17 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Brain, Loader2, Mail, Lock, User, ArrowLeft } from "lucide-react";
+import { Brain, Loader2, Mail, Lock, User, ArrowLeft, CheckCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { z } from "zod";
 
-const emailSchema = z.string().email("Invalid email address");
+const emailSchema = z.string().trim().email("Invalid email address").max(255);
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
 
-type AuthMode = 'login' | 'signup' | 'forgot';
+type AuthMode = 'login' | 'signup' | 'forgot' | 'verification-sent';
 
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>('login');
@@ -20,14 +20,77 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
   const navigate = useNavigate();
-  const { user, signIn, signUp, signInWithGoogle, resetPasswordForEmail } = useAuth();
+  const { user, signIn, signUp, signInWithGoogle, signOut, resetPasswordForEmail, resendVerificationEmail, isLoading: authLoading } = useAuth();
 
-  useEffect(() => {
-    if (user) {
-      navigate("/");
+  // Friendly error messages
+  const getErrorMessage = (error: Error): string => {
+    const message = error.message.toLowerCase();
+    
+    if (message.includes('email not confirmed')) {
+      return 'Please verify your email before signing in. Check your inbox for the verification link.';
     }
-  }, [user, navigate]);
+    if (message.includes('invalid login credentials')) {
+      return 'Invalid email or password. Please try again.';
+    }
+    if (message.includes('user already registered') || message.includes('already registered')) {
+      return 'An account with this email already exists. Try signing in instead.';
+    }
+    if (message.includes('rate limit') || message.includes('too many requests')) {
+      return 'Too many attempts. Please wait a moment and try again.';
+    }
+    if (message.includes('network') || message.includes('fetch')) {
+      return 'Network error. Please check your connection and try again.';
+    }
+    
+    return error.message;
+  };
+
+  // If user is already logged in, show options instead of auto-redirecting
+  if (user && !authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
+        <div className="absolute inset-0 grid-pattern opacity-20" />
+        <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-accent/10 rounded-full blur-3xl" />
+
+        <div className="relative z-10 w-full max-w-md px-6">
+          <div className="bg-gradient-card rounded-2xl border border-border/50 p-8 shadow-card text-center">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-primary/20 flex items-center justify-center">
+              <CheckCircle className="w-8 h-8 text-primary" />
+            </div>
+            <h1 className="font-display text-2xl font-bold text-foreground mb-2">
+              Already Signed In
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              You're signed in as <span className="font-medium text-foreground">{user.email}</span>
+            </p>
+            <div className="space-y-3">
+              <Button 
+                variant="hero" 
+                className="w-full" 
+                onClick={() => navigate("/")}
+              >
+                Go to Dashboard
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={async () => {
+                  await signOut();
+                  setMode('login');
+                }}
+              >
+                Sign Out & Use Different Account
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +111,7 @@ const Auth = () => {
       try {
         const { error } = await resetPasswordForEmail(email);
         if (error) {
-          toast.error(error.message);
+          toast.error(getErrorMessage(error));
         } else {
           toast.success("Password reset email sent! Check your inbox.");
           setMode('login');
@@ -73,27 +136,29 @@ const Auth = () => {
 
     try {
       if (mode === 'login') {
-        const { error } = await signIn(email, password);
+        const { error, needsEmailConfirmation } = await signIn(email, password);
         if (error) {
-          if (error.message.includes("Invalid login credentials")) {
-            toast.error("Invalid email or password");
+          if (needsEmailConfirmation) {
+            setPendingVerificationEmail(email);
+            setMode('verification-sent');
           } else {
-            toast.error(error.message);
+            toast.error(getErrorMessage(error));
           }
         } else {
           toast.success("Welcome back!");
           navigate("/");
         }
       } else {
-        const { error } = await signUp(email, password, fullName);
+        const { error, needsEmailConfirmation } = await signUp(email, password, fullName);
         if (error) {
-          if (error.message.includes("already registered")) {
-            toast.error("This email is already registered. Please sign in.");
-          } else {
-            toast.error(error.message);
-          }
+          toast.error(getErrorMessage(error));
+        } else if (needsEmailConfirmation) {
+          setPendingVerificationEmail(email);
+          setMode('verification-sent');
+          toast.success("Account created! Please check your email to verify.");
         } else {
-          toast.success("Account created! Please check your email to verify your account.");
+          toast.success("Account created successfully!");
+          navigate("/");
         }
       }
     } finally {
@@ -106,12 +171,89 @@ const Auth = () => {
     try {
       const { error } = await signInWithGoogle();
       if (error) {
-        toast.error(error.message);
+        toast.error(getErrorMessage(error));
       }
     } finally {
       setIsGoogleLoading(false);
     }
   };
+
+  const handleResendVerification = async () => {
+    if (!pendingVerificationEmail) return;
+    
+    setIsResending(true);
+    try {
+      const { error } = await resendVerificationEmail(pendingVerificationEmail);
+      if (error) {
+        toast.error(getErrorMessage(error));
+      } else {
+        toast.success("Verification email resent! Check your inbox.");
+      }
+    } catch (error: any) {
+      toast.error("Failed to resend verification email. Please try again.");
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  // Verification sent screen
+  if (mode === 'verification-sent') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
+        <div className="absolute inset-0 grid-pattern opacity-20" />
+        <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-accent/10 rounded-full blur-3xl" />
+
+        <div className="relative z-10 w-full max-w-md px-6">
+          <div className="bg-gradient-card rounded-2xl border border-border/50 p-8 shadow-card text-center">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-primary/20 flex items-center justify-center">
+              <Mail className="w-8 h-8 text-primary" />
+            </div>
+            <h1 className="font-display text-2xl font-bold text-foreground mb-2">
+              Check Your Email
+            </h1>
+            <p className="text-muted-foreground mb-2">
+              We've sent a verification link to:
+            </p>
+            <p className="font-medium text-foreground mb-6">{pendingVerificationEmail}</p>
+            <p className="text-sm text-muted-foreground mb-6">
+              Click the link in the email to verify your account. If you don't see it, check your spam folder.
+            </p>
+            <div className="space-y-3">
+              <Button 
+                variant="outline" 
+                className="w-full gap-2"
+                onClick={handleResendVerification}
+                disabled={isResending}
+              >
+                {isResending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Resending...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    Resend Verification Email
+                  </>
+                )}
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full"
+                onClick={() => {
+                  setMode('login');
+                  setPendingVerificationEmail(null);
+                }}
+              >
+                Back to Sign In
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
@@ -167,6 +309,7 @@ const Auth = () => {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className="pl-10"
+                    maxLength={100}
                   />
                 </div>
               </div>
@@ -184,6 +327,7 @@ const Auth = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
                   required
+                  maxLength={255}
                 />
               </div>
             </div>
@@ -212,6 +356,7 @@ const Auth = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"
                     required
+                    minLength={6}
                   />
                 </div>
               </div>
