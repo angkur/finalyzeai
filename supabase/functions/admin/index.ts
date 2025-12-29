@@ -28,14 +28,27 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
+    
+    // Use admin.getUser to verify the token with service role
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    if (userError) {
+      console.error('Auth error:', userError.message);
+      return new Response(JSON.stringify({ error: 'Unauthorized', details: userError.message }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    
+    if (!user) {
+      console.error('No user found for token');
+      return new Response(JSON.stringify({ error: 'Unauthorized', details: 'No user found' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    console.log('Authenticated user:', user.id, user.email);
 
     const body = await req.json();
     const { action, targetUserId, role, dailyLimit, monthlyLimit, isBlocked: isBlockedFlag } = body;
