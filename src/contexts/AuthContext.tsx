@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { useEmail } from "@/hooks/useEmail";
 
 interface Profile {
   id: string;
@@ -41,6 +42,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { sendWelcomeEmail } = useEmail();
+  const welcomeEmailSentRef = useRef<Set<string>>(new Set());
 
   const fetchProfile = async (userId: string) => {
     const { data, error } = await supabase
@@ -65,6 +68,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setTimeout(() => {
             fetchProfile(session.user.id);
           }, 0);
+          
+          // Send welcome email on first sign in (SIGNED_IN event after confirmation)
+          if (event === 'SIGNED_IN' && !welcomeEmailSentRef.current.has(session.user.id)) {
+            const userEmail = session.user.email;
+            const userName = session.user.user_metadata?.full_name;
+            if (userEmail) {
+              welcomeEmailSentRef.current.add(session.user.id);
+              setTimeout(() => {
+                sendWelcomeEmail(userEmail, userName).catch(console.error);
+              }, 0);
+            }
+          }
         } else {
           setProfile(null);
         }

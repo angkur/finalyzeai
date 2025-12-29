@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Brain, Loader2, Lock, ArrowLeft, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEmail } from "@/hooks/useEmail";
 import { z } from "zod";
 
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
@@ -18,7 +19,8 @@ const ResetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [pageState, setPageState] = useState<PageState>('loading');
   const navigate = useNavigate();
-  const { updatePassword, session, isLoading: authLoading } = useAuth();
+  const { updatePassword, session, isLoading: authLoading, user } = useAuth();
+  const { sendPasswordResetSuccess } = useEmail();
 
   useEffect(() => {
     // Wait for auth to finish loading before determining state
@@ -67,6 +69,11 @@ const ResetPassword = () => {
       } else {
         setPageState('success');
         toast.success("Password updated successfully!");
+        
+        // Send confirmation email
+        if (user?.email) {
+          sendPasswordResetSuccess(user.email, user.user_metadata?.full_name).catch(console.error);
+        }
       }
     } catch (error: any) {
       toast.error("An unexpected error occurred. Please try again.");
