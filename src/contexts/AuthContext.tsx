@@ -58,6 +58,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    let initialSessionChecked = false;
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -69,15 +71,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             fetchProfile(session.user.id);
           }, 0);
           
-          // Send welcome email on first sign in (SIGNED_IN event after confirmation)
-          if (event === 'SIGNED_IN' && !welcomeEmailSentRef.current.has(session.user.id)) {
-            const userEmail = session.user.email;
-            const userName = session.user.user_metadata?.full_name;
-            if (userEmail) {
-              welcomeEmailSentRef.current.add(session.user.id);
-              setTimeout(() => {
-                sendWelcomeEmail(userEmail, userName).catch(console.error);
-              }, 0);
+          // Only send welcome email for truly new signups (not existing session restores)
+          // Check if user was created within last 30 seconds to detect new signup
+          if (event === 'SIGNED_IN' && initialSessionChecked && !welcomeEmailSentRef.current.has(session.user.id)) {
+            const createdAt = new Date(session.user.created_at).getTime();
+            const now = Date.now();
+            const isNewUser = (now - createdAt) < 30000; // Created within last 30 seconds
+            
+            if (isNewUser) {
+              const userEmail = session.user.email;
+              const userName = session.user.user_metadata?.full_name;
+              if (userEmail) {
+                welcomeEmailSentRef.current.add(session.user.id);
+                setTimeout(() => {
+                  sendWelcomeEmail(userEmail, userName).catch(console.error);
+                }, 0);
+              }
             }
           }
         } else {
@@ -95,6 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         fetchProfile(session.user.id);
       }
       setIsLoading(false);
+      initialSessionChecked = true;
     });
 
     return () => subscription.unsubscribe();
