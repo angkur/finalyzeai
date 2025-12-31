@@ -68,12 +68,17 @@ const ResetPassword = () => {
         toast.error(error.message || "Failed to reset password");
       } else {
         setPageState('success');
-        toast.success("Password updated successfully!");
+        toast.success("Password updated successfully! Redirecting...");
         
         // Send confirmation email
         if (user?.email) {
           sendPasswordResetSuccess(user.email, user.user_metadata?.full_name).catch(console.error);
         }
+        
+        // Auto-redirect to homepage after 2 seconds
+        setTimeout(() => {
+          navigate("/");
+        }, 2000);
       }
     } catch (error: any) {
       toast.error("An unexpected error occurred. Please try again.");
@@ -157,7 +162,7 @@ const ResetPassword = () => {
               Password Updated!
             </h1>
             <p className="text-muted-foreground mb-6">
-              Your password has been successfully changed. You can now sign in with your new password.
+              Your password has been successfully changed. Redirecting you to the dashboard...
             </p>
             <Button variant="hero" className="w-full" onClick={() => navigate("/")}>
               Go to Dashboard
