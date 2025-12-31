@@ -28,6 +28,7 @@ import { useConversation, Message } from "@/hooks/useConversation";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
+import UsageTracker from "@/components/UsageTracker";
 
 interface AttachedFile {
   id: string;
@@ -66,9 +67,90 @@ const AiPredict = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [usageLimitMessage, setUsageLimitMessage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Check usage limits on mount
+  useEffect(() => {
+    const checkUsageLimits = async () => {
+      if (!user) return;
+      
+      try {
+        // Get user's usage limits
+        const { data: limitsData } = await supabase
+          .from('ai_usage_limits')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        const limits = limitsData || { daily_limit: 5, monthly_limit: 5, is_blocked: false };
+        
+        if (limits.is_blocked) {
+          setIsBlocked(true);
+          setUsageLimitMessage("Your account has been restricted. Please contact support.");
+          return;
+        }
+
+        // Count today's interactions
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const { count: dailyCount } = await supabase
+          .from('interactions')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .gte('created_at', today.toISOString());
+
+        // Count this month's interactions
+        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+        
+        const { count: monthlyCount } = await supabase
+          .from('interactions')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .gte('created_at', monthStart.toISOString());
+
+        if ((dailyCount || 0) >= limits.daily_limit) {
+          setIsBlocked(true);
+          setUsageLimitMessage(`Daily limit reached (${limits.daily_limit} analyses). Upgrade your plan for more.`);
+        } else if ((monthlyCount || 0) >= limits.monthly_limit) {
+          setIsBlocked(true);
+          setUsageLimitMessage(`Monthly limit reached (${limits.monthly_limit} analyses). Upgrade your plan for more.`);
+        }
+      } catch (error) {
+        console.error("Failed to check usage limits:", error);
+      }
+    };
+
+    checkUsageLimits();
+  }, [user]);
+
+  // Log interaction for usage tracking
+  const logInteraction = async (query: string, responseText: string) => {
+    try {
+      await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/log-interaction`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            query,
+            response: responseText,
+            analysisType: 'ai-predict',
+            userId: user?.id,
+          }),
+        }
+      );
+    } catch (error) {
+      console.error("Failed to log interaction:", error);
+    }
+  };
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -87,6 +169,11 @@ const AiPredict = () => {
     if (!user) {
       toast.error("Please sign in to use AI Predict");
       navigate("/auth");
+      return;
+    }
+
+    if (isBlocked) {
+      toast.error(usageLimitMessage || "Usage limit reached. Please upgrade your plan.");
       return;
     }
 
@@ -191,6 +278,9 @@ const AiPredict = () => {
       if (fullResponse) {
         await addMessage(conversationId, 'assistant', fullResponse);
         setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
+        
+        // Log interaction for usage tracking
+        logInteraction(userMessage, fullResponse);
       }
 
     } catch (error) {
@@ -444,6 +534,13 @@ const AiPredict = () => {
             </div>
           )}
         </div>
+
+        {/* Usage Tracker */}
+        {user && (
+          <div className="px-3 py-2 border-t border-border/50">
+            <UsageTracker />
+          </div>
+        )}
 
         {/* Sidebar Footer */}
         {user && (
