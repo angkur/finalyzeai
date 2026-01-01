@@ -53,20 +53,53 @@ const getFileTypeBadge = (fileType: string) => {
   );
 };
 
+interface UserPlan {
+  plan_name: string;
+  upload_limit_mb: number;
+  history_retention_days: number;
+}
+
+const DEFAULT_PLAN: UserPlan = {
+  plan_name: 'free',
+  upload_limit_mb: 5,
+  history_retention_days: 7,
+};
+
 const DocumentUpload = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [userPlan, setUserPlan] = useState<UserPlan>(DEFAULT_PLAN);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch documents on mount
+  // Fetch user plan and documents on mount
   useEffect(() => {
     if (user) {
+      fetchUserPlan();
       fetchDocuments();
     }
   }, [user]);
+
+  const fetchUserPlan = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('user_plans')
+      .select('plan_name, upload_limit_mb, history_retention_days')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error fetching user plan:', error);
+      return;
+    }
+    
+    if (data) {
+      setUserPlan(data);
+    }
+  };
 
   const fetchDocuments = async () => {
     if (!user) return;
@@ -95,10 +128,10 @@ const DocumentUpload = () => {
     if (!files || files.length === 0) return;
 
     const file = files[0];
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    const maxSize = userPlan.upload_limit_mb * 1024 * 1024; // Dynamic limit based on plan
     
     if (file.size > maxSize) {
-      toast.error("File too large. Maximum size is 10MB.");
+      toast.error(`File too large. Your ${userPlan.plan_name} plan allows files up to ${userPlan.upload_limit_mb}MB.`);
       return;
     }
 
@@ -330,7 +363,9 @@ const DocumentUpload = () => {
             <>
               <Upload className="w-10 h-10 text-muted-foreground mb-3" />
               <span className="text-sm font-medium text-foreground">Drop files here or click to upload</span>
-              <span className="text-xs text-muted-foreground mt-1">PDF, TXT, CSV, JSON, MD (max 10MB)</span>
+              <span className="text-xs text-muted-foreground mt-1">
+                PDF, TXT, CSV, JSON, MD (max {userPlan.upload_limit_mb}MB • {userPlan.plan_name} plan)
+              </span>
             </>
           )}
         </label>
