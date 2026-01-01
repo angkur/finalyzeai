@@ -357,6 +357,54 @@ export type Database = {
         }
         Relationships: []
       }
+      user_plans: {
+        Row: {
+          created_at: string
+          daily_limit: number
+          expires_at: string | null
+          history_retention_days: number
+          id: string
+          monthly_limit: number
+          plan_name: string
+          started_at: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          upload_limit_mb: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_limit?: number
+          expires_at?: string | null
+          history_retention_days?: number
+          id?: string
+          monthly_limit?: number
+          plan_name?: string
+          started_at?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          upload_limit_mb?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_limit?: number
+          expires_at?: string | null
+          history_retention_days?: number
+          id?: string
+          monthly_limit?: number
+          plan_name?: string
+          started_at?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          upload_limit_mb?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
