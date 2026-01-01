@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { Check, Sparkles, Star, Zap, Crown } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, Sparkles, Star, Zap, Crown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,84 +7,112 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-const plans = [
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface Plan {
+  name: string;
+  price: string;
+  period: string;
+  description: string;
+  icon: typeof Sparkles;
+  features: string[];
+  limits: {
+    daily_limit: number;
+    monthly_limit: number;
+    upload_limit_mb: number;
+    history_retention_days: number | null;
+  };
+  popular: boolean;
+}
+
+const plans: Plan[] = [
   {
-    name: "Free",
+    name: "free",
     price: "$0",
     period: "/month",
     description: "Perfect for trying out AI Predict",
-    analyses: "5 analyses/month",
     icon: Sparkles,
     features: [
-      "5 AI-powered analyses per month",
-      "Basic financial insights",
+      "5 analyses per day",
+      "5 analyses per month",
       "Document upload (up to 5MB)",
-      "Standard response time",
+      "7-day analysis history",
       "Community support",
     ],
-    cta: "Get Started",
-    variant: "outline" as const,
+    limits: {
+      daily_limit: 5,
+      monthly_limit: 5,
+      upload_limit_mb: 5,
+      history_retention_days: 7,
+    },
     popular: false,
   },
   {
-    name: "Mini",
+    name: "mini",
     price: "$3",
     period: "/month",
     description: "Great for occasional users",
-    analyses: "25 analyses/month",
     icon: Star,
     features: [
-      "25 AI-powered analyses per month",
-      "Basic financial insights",
+      "10 analyses per day",
+      "25 analyses per month",
       "Document upload (up to 10MB)",
-      "Standard response time",
+      "30-day analysis history",
       "Email support",
-      "Analysis history (30 days)",
     ],
-    cta: "Get Started",
-    variant: "outline" as const,
+    limits: {
+      daily_limit: 10,
+      monthly_limit: 25,
+      upload_limit_mb: 10,
+      history_retention_days: 30,
+    },
     popular: false,
   },
   {
-    name: "Starter",
+    name: "starter",
     price: "$12",
     period: "/month",
     description: "Best for individuals and small teams",
-    analyses: "100 analyses/month",
     icon: Zap,
     features: [
-      "100 AI-powered analyses per month",
-      "Advanced financial modeling",
+      "25 analyses per day",
+      "100 analyses per month",
       "Document upload (up to 25MB)",
-      "Priority response time",
+      "90-day analysis history",
+      "Priority support",
       "Data visualization exports",
-      "Email support",
-      "Analysis history (90 days)",
     ],
-    cta: "Start Free Trial",
-    variant: "hero" as const,
+    limits: {
+      daily_limit: 25,
+      monthly_limit: 100,
+      upload_limit_mb: 25,
+      history_retention_days: 90,
+    },
     popular: true,
   },
   {
-    name: "Pro",
+    name: "pro",
     price: "$29",
     period: "/month",
     description: "For power users and growing businesses",
-    analyses: "500 analyses/month",
     icon: Crown,
     features: [
-      "500 AI-powered analyses per month",
-      "All Starter features",
-      "Predictive modeling & forecasting",
+      "100 analyses per day",
+      "500 analyses per month",
       "Document upload (up to 100MB)",
-      "Custom report templates",
-      "API access",
-      "Priority support",
       "Unlimited analysis history",
+      "Priority support",
+      "API access",
+      "Custom report templates",
       "Team collaboration (coming soon)",
     ],
-    cta: "Start Free Trial",
-    variant: "outline" as const,
+    limits: {
+      daily_limit: 100,
+      monthly_limit: 500,
+      upload_limit_mb: 100,
+      history_retention_days: null,
+    },
     popular: false,
   },
 ];
@@ -92,17 +120,103 @@ const plans = [
 const Pricing = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [changingPlan, setChangingPlan] = useState<string | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleGetStarted = () => {
-    if (user) {
-      navigate("/#demo");
-    } else {
+  useEffect(() => {
+    const fetchCurrentPlan = async () => {
+      if (!user) {
+        setCurrentPlan(null);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("user_plans")
+        .select("plan_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!error && data) {
+        setCurrentPlan(data.plan_name);
+      }
+    };
+
+    fetchCurrentPlan();
+  }, [user]);
+
+  const handlePlanChange = async (planName: string) => {
+    if (!user) {
       navigate("/auth");
+      return;
     }
+
+    if (planName === currentPlan) {
+      toast({
+        title: "Already on this plan",
+        description: "You're already subscribed to this plan.",
+      });
+      return;
+    }
+
+    const plan = plans.find((p) => p.name === planName);
+    if (!plan) return;
+
+    setChangingPlan(planName);
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from("user_plans")
+        .update({
+          plan_name: planName,
+          daily_limit: plan.limits.daily_limit,
+          monthly_limit: plan.limits.monthly_limit,
+          upload_limit_mb: plan.limits.upload_limit_mb,
+          history_retention_days: plan.limits.history_retention_days ?? 36500, // ~100 years for unlimited
+        })
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      setCurrentPlan(planName);
+      toast({
+        title: "Plan updated!",
+        description: `You've successfully switched to the ${planName.charAt(0).toUpperCase() + planName.slice(1)} plan.`,
+      });
+    } catch (error) {
+      console.error("Error updating plan:", error);
+      toast({
+        title: "Error updating plan",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+      setChangingPlan(null);
+    }
+  };
+
+  const getButtonText = (planName: string) => {
+    if (!user) return "Get Started";
+    if (currentPlan === planName) return "Current Plan";
+    
+    const currentIndex = plans.findIndex((p) => p.name === currentPlan);
+    const targetIndex = plans.findIndex((p) => p.name === planName);
+    
+    if (currentIndex === -1) return "Get Started";
+    return targetIndex > currentIndex ? "Upgrade" : "Downgrade";
+  };
+
+  const getButtonVariant = (plan: Plan) => {
+    if (currentPlan === plan.name) return "secondary" as const;
+    if (plan.popular) return "hero" as const;
+    return "outline" as const;
   };
 
   return (
@@ -126,24 +240,41 @@ const Pricing = () => {
               Start with our free tier and upgrade as your needs grow. All plans include access to our 
               powerful AI-driven financial analysis tools.
             </p>
+            {currentPlan && (
+              <div className="mt-4">
+                <Badge variant="secondary" className="text-sm">
+                  Current plan: {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
+                </Badge>
+              </div>
+            )}
           </div>
 
           {/* Pricing Cards */}
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {plans.map((plan) => {
               const Icon = plan.icon;
+              const isCurrentPlan = currentPlan === plan.name;
+              const isChanging = changingPlan === plan.name;
+              
               return (
                 <Card 
                   key={plan.name}
                   className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl ${
                     plan.popular 
                       ? "border-primary shadow-lg shadow-primary/10 scale-105" 
+                      : isCurrentPlan
+                      ? "border-primary/50 bg-primary/5"
                       : "hover:border-primary/50"
                   }`}
                 >
                   {plan.popular && (
                     <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-lg">
                       Most Popular
+                    </div>
+                  )}
+                  {isCurrentPlan && (
+                    <div className="absolute top-0 left-0 bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded-br-lg">
+                      Your Plan
                     </div>
                   )}
                   
@@ -155,7 +286,7 @@ const Pricing = () => {
                     }`}>
                       <Icon className={`w-6 h-6 ${plan.popular ? "text-primary-foreground" : "text-primary"}`} />
                     </div>
-                    <CardTitle className="font-display text-2xl">{plan.name}</CardTitle>
+                    <CardTitle className="font-display text-2xl capitalize">{plan.name}</CardTitle>
                     <CardDescription>{plan.description}</CardDescription>
                   </CardHeader>
                   
@@ -166,7 +297,9 @@ const Pricing = () => {
                     </div>
                     
                     <div className="mb-6 py-3 px-4 rounded-lg bg-primary/5 border border-primary/10">
-                      <span className="text-sm font-semibold text-primary">{plan.analyses}</span>
+                      <span className="text-sm font-semibold text-primary">
+                        {plan.limits.monthly_limit} analyses/month
+                      </span>
                     </div>
                     
                     <ul className="space-y-3 mb-8 text-left">
@@ -179,11 +312,19 @@ const Pricing = () => {
                     </ul>
                     
                     <Button 
-                      variant={plan.variant} 
+                      variant={getButtonVariant(plan)} 
                       className="w-full"
-                      onClick={handleGetStarted}
+                      onClick={() => handlePlanChange(plan.name)}
+                      disabled={isLoading || isCurrentPlan}
                     >
-                      {plan.cta}
+                      {isChanging ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Updating...
+                        </>
+                      ) : (
+                        getButtonText(plan.name)
+                      )}
                     </Button>
                   </CardContent>
                 </Card>
@@ -212,8 +353,9 @@ const Pricing = () => {
               <Card className="p-6">
                 <h3 className="font-semibold mb-2 text-foreground">Can I upgrade or downgrade anytime?</h3>
                 <p className="text-sm text-muted-foreground">
-                  Yes! You can change your plan at any time. When upgrading, you'll get immediate access 
-                  to additional features. When downgrading, the change takes effect at the next billing cycle.
+                  Yes! You can change your plan at any time. Your new limits take effect immediately.
+                  When upgrading, you'll get instant access to higher limits. When downgrading, your 
+                  limits will be adjusted right away.
                 </p>
               </Card>
               
@@ -226,10 +368,10 @@ const Pricing = () => {
               </Card>
               
               <Card className="p-6">
-                <h3 className="font-semibold mb-2 text-foreground">Is there a free trial?</h3>
+                <h3 className="font-semibold mb-2 text-foreground">What is analysis history retention?</h3>
                 <p className="text-sm text-muted-foreground">
-                  The Free plan gives you 5 analyses per month to try out AI Predict. For Starter and Pro 
-                  plans, we offer a 7-day free trial so you can experience the full power of our AI tools.
+                  Analysis history retention determines how long your past analyses and uploaded documents 
+                  are stored. Free users get 7 days, while Pro users enjoy unlimited history retention.
                 </p>
               </Card>
             </div>
@@ -242,10 +384,17 @@ const Pricing = () => {
                 Ready to transform your financial analysis?
               </h2>
               <p className="text-muted-foreground mb-6">
-                Start with our free tier and experience the power of AI-driven insights.
+                {user 
+                  ? "Upgrade your plan to unlock more powerful features."
+                  : "Start with our free tier and experience the power of AI-driven insights."
+                }
               </p>
-              <Button variant="hero" size="lg" onClick={handleGetStarted}>
-                Get Started for Free
+              <Button 
+                variant="hero" 
+                size="lg" 
+                onClick={() => user ? handlePlanChange("starter") : navigate("/auth")}
+              >
+                {user ? "Upgrade to Starter" : "Get Started for Free"}
               </Button>
             </Card>
           </div>
