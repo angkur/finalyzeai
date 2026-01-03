@@ -39,6 +39,222 @@ interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
+    id: "11",
+    slug: "mastering-ai-predict-platform",
+    title: "Mastering AI Predict: Your Complete Guide to Intelligent Financial Analysis",
+    excerpt: "Discover how AI Predict transforms complex financial questions into actionable insights through conversational AI and document intelligence.",
+    content: `AI Predict is our flagship conversational AI platform designed to revolutionize how you interact with financial data. Whether you're analyzing quarterly reports, comparing investment options, or seeking market insights, AI Predict delivers instant, intelligent responses.
+
+## What is AI Predict?
+
+AI Predict combines advanced natural language processing with financial domain expertise. Simply type your question in plain English, and our AI analyzes your uploaded documents along with its trained knowledge to provide comprehensive answers.
+
+## Key Features
+
+**Conversational Interface**: No complex queries or formulas needed. Ask questions naturally like "What was our revenue growth last quarter?" or "Compare the profit margins across all product lines."
+
+**Document Intelligence**: Upload financial documents—PDFs, spreadsheets, reports—and AI Predict extracts and analyzes the data automatically. It understands context, tables, and financial terminology.
+
+**Multi-Turn Conversations**: Build on previous answers. Follow up with "Why did that happen?" or "What about the previous year?" for deeper analysis.
+
+**Smart Suggestions**: Not sure what to ask? AI Predict offers intelligent suggestion chips based on your documents and conversation context.
+
+## Getting Started with AI Predict
+
+1. **Navigate to AI Predict**: Click on "AI Predict" in the navigation menu
+2. **Upload Documents**: Drag and drop your financial documents or click to browse
+3. **Start Asking**: Use the suggestion chips or type your own questions
+4. **Explore Insights**: Follow up on answers to dive deeper into your data
+
+## Best Use Cases
+
+- **Due Diligence**: Quickly analyze company financials before investment decisions
+- **Competitive Analysis**: Compare financial metrics across multiple companies
+- **Trend Identification**: Spot patterns in revenue, expenses, or growth rates
+- **Executive Summaries**: Generate quick overviews of complex financial reports
+- **Ad-hoc Queries**: Answer specific financial questions instantly
+
+## Pro Tips for Better Results
+
+**Be Specific**: Instead of "How are we doing?", ask "What is our operating margin trend over the last 4 quarters?"
+
+**Provide Context**: Mention the document or time period you're interested in.
+
+**Use Comparisons**: Ask AI Predict to compare metrics, periods, or entities for richer insights.
+
+**Chain Questions**: Start broad, then narrow down based on the answers you receive.
+
+## Sample Questions to Try
+
+- "Summarize the key financial highlights from this annual report"
+- "What are the top 5 expense categories and their year-over-year change?"
+- "Calculate the current ratio and quick ratio from the balance sheet"
+- "Identify any red flags in this company's financial statements"
+- "What's the compound annual growth rate of revenue over 3 years?"
+
+AI Predict is designed to make financial analysis accessible to everyone—from seasoned analysts to business owners just starting their financial journey.`,
+    category: "Product Guide",
+    readTime: "8 min read",
+    date: "January 2, 2026",
+    icon: <Brain className="w-6 h-6" />,
+    featured: true
+  },
+  {
+    id: "12",
+    slug: "fin-predict-advanced-forecasting",
+    title: "Fin Predict: Advanced AI-Powered Financial Forecasting and Visualization",
+    excerpt: "Learn how Fin Predict uses machine learning to generate accurate financial forecasts with stunning interactive visualizations.",
+    content: `Fin Predict takes financial forecasting to the next level by combining sophisticated machine learning models with beautiful, interactive visualizations. Perfect for strategic planning, budget projections, and investment analysis.
+
+## What Sets Fin Predict Apart?
+
+While AI Predict excels at conversational analysis, Fin Predict specializes in forward-looking predictions and visual storytelling. It transforms historical data into actionable forecasts with confidence intervals and scenario modeling.
+
+## Core Capabilities
+
+**Predictive Modeling**: Our AI analyzes historical patterns, seasonality, trends, and external factors to generate accurate forecasts for revenue, expenses, cash flow, and more.
+
+**Interactive Visualizations**: Every forecast comes with dynamic charts you can explore. Zoom, filter, and drill down into the data that matters most.
+
+**Scenario Analysis**: Model best-case, worst-case, and most-likely scenarios. Adjust assumptions and see how they impact projections in real-time.
+
+**Confidence Intervals**: Understand the certainty of predictions with clearly displayed confidence bands. Know when forecasts are highly reliable versus when more caution is needed.
+
+## Visualization Types
+
+**Trend Charts**: Track metrics over time with smooth trend lines and future projections
+**Comparison Views**: Side-by-side analysis of different scenarios or time periods
+**Heatmaps**: Identify patterns and anomalies across multiple dimensions
+**Sankey Diagrams**: Visualize flow of funds through your organization
+**3D Scatter Plots**: Explore relationships between multiple variables
+
+## Getting Started with Fin Predict
+
+1. **Access Fin Predict**: Navigate to the Fin Predict section from the main menu
+2. **Select Analysis Type**: Choose from revenue forecast, expense projection, cash flow prediction, or custom analysis
+3. **Configure Parameters**: Set your forecast horizon, confidence level, and any assumptions
+4. **Generate Forecast**: Let the AI work its magic
+5. **Explore Results**: Interact with visualizations and export findings
+
+## Forecast Types Available
+
+**Revenue Forecasting**: Project future sales based on historical performance, growth rates, and market indicators.
+
+**Expense Projection**: Anticipate future costs with category-level breakdowns and anomaly detection.
+
+**Cash Flow Prediction**: Plan for liquidity needs with daily, weekly, or monthly cash flow forecasts.
+
+**Profitability Analysis**: Combine revenue and expense forecasts to project future margins and profitability.
+
+**Custom Metrics**: Define your own KPIs and let Fin Predict generate forecasts tailored to your needs.
+
+## Improving Forecast Accuracy
+
+**More Data is Better**: Upload at least 24 months of historical data for best results. More data means better pattern recognition.
+
+**Consistent Formatting**: Ensure your data is clean and consistently formatted across time periods.
+
+**Regular Updates**: Refresh forecasts as new data becomes available. The AI learns from actual results vs. predictions.
+
+**Combine with Domain Knowledge**: AI predictions are powerful, but combining them with your industry expertise yields the best outcomes.
+
+## Export and Sharing
+
+- Export charts as high-resolution images for presentations
+- Download forecast data as CSV or Excel files
+- Share interactive dashboards with team members
+- Schedule automated forecast reports
+
+Fin Predict empowers you to see the future of your finances with unprecedented clarity and confidence.`,
+    category: "Product Guide",
+    readTime: "9 min read",
+    date: "January 2, 2026",
+    icon: <TrendingUp className="w-6 h-6" />
+  },
+  {
+    id: "13",
+    slug: "ai-predict-vs-fin-predict",
+    title: "AI Predict vs Fin Predict: Which Tool Should You Use?",
+    excerpt: "Understand the differences between our two powerful AI tools and learn when to use each for maximum impact.",
+    content: `Both AI Predict and Fin Predict are powerful tools in your financial analysis arsenal, but they serve different purposes. This guide will help you choose the right tool for each situation.
+
+## Quick Comparison
+
+| Feature | AI Predict | Fin Predict |
+|---------|------------|-------------|
+| Primary Use | Q&A and Analysis | Forecasting and Visualization |
+| Interface | Conversational Chat | Dashboard with Charts |
+| Output | Text Responses | Visual Forecasts |
+| Best For | Understanding Past/Present | Projecting Future |
+
+## When to Use AI Predict
+
+**Document Analysis**: Need to quickly understand what's in a financial report? AI Predict can summarize, extract key metrics, and answer specific questions about uploaded documents.
+
+**Ad-hoc Questions**: Have a quick question about your financials? Just ask AI Predict in natural language.
+
+**Comparative Analysis**: Want to compare two companies, time periods, or metrics? AI Predict excels at side-by-side analysis.
+
+**Learning and Exploration**: Not sure what to look for? AI Predict can guide you with suggestions and help you discover insights you hadn't considered.
+
+**Report Generation**: Need to create a summary or extract specific information? AI Predict can draft reports based on your data.
+
+## When to Use Fin Predict
+
+**Future Planning**: Creating a budget, planning for growth, or preparing investor projections? Fin Predict generates data-driven forecasts.
+
+**Visual Presentations**: Need charts for a board meeting or investor deck? Fin Predict creates professional visualizations.
+
+**Scenario Planning**: Modeling different outcomes? Fin Predict lets you adjust assumptions and see the impact.
+
+**Trend Analysis**: Want to see patterns over time with projections? Fin Predict's trend charts are perfect.
+
+**Risk Assessment**: Need to understand the range of possible outcomes? Fin Predict provides confidence intervals and scenario analysis.
+
+## Using Both Together
+
+The real power comes from using both tools in combination:
+
+1. **Start with AI Predict**: Upload documents and ask questions to understand your current financial position.
+
+2. **Switch to Fin Predict**: Use those insights to generate forecasts with appropriate assumptions.
+
+3. **Return to AI Predict**: Ask questions about the forecasts—"What would happen if revenue grows 20% instead of 10%?"
+
+4. **Refine in Fin Predict**: Adjust your models based on the conversational analysis.
+
+## Example Workflow
+
+**Scenario**: You're preparing a quarterly business review
+
+1. Upload Q4 financial statements to AI Predict
+2. Ask: "Summarize key financial highlights and compare to Q3"
+3. Open Fin Predict to generate Q1 revenue and expense forecasts
+4. Create visualizations for your presentation
+5. Return to AI Predict to ask: "What risks should we highlight based on current trends?"
+6. Export everything for your executive presentation
+
+## Making the Choice
+
+**Choose AI Predict when you need to:**
+- Understand existing data
+- Get quick answers
+- Analyze documents
+- Generate text-based insights
+
+**Choose Fin Predict when you need to:**
+- Project future performance
+- Create visualizations
+- Model scenarios
+- Present data visually
+
+Both tools are included in your FinanceAI subscription, so use them freely based on your needs!`,
+    category: "Product Guide",
+    readTime: "7 min read",
+    date: "January 1, 2026",
+    icon: <Lightbulb className="w-6 h-6" />
+  },
+  {
     id: "1",
     slug: "introduction-to-ai-financial-analysis",
     title: "Introduction to AI-Powered Financial Analysis",
