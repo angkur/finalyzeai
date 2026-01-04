@@ -2,11 +2,27 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, Trash2, CheckCircle, XCircle, Loader2, Database, LogIn, FileSpreadsheet, FileJson, FileType } from "lucide-react";
+import {
+  Upload,
+  FileText,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Database,
+  LogIn,
+  FileSpreadsheet,
+  FileJson,
+  FileType,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import * as pdfjsLib from "pdfjs-dist";
+import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min?url";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 interface Document {
   id: string;
@@ -64,6 +80,31 @@ const DEFAULT_PLAN: UserPlan = {
   upload_limit_mb: 5,
   history_retention_days: 7,
 };
+
+async function extractPdfText(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+  const maxPages = Math.min(pdf.numPages, 50);
+  const pageTexts: string[] = [];
+
+  for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .map((item: any) => (typeof item?.str === 'string' ? item.str : ''))
+      .filter(Boolean)
+      .join(' ');
+
+    if (pageText.trim()) pageTexts.push(pageText);
+
+    // Guardrail to avoid huge payloads / long processing
+    if (pageTexts.join('\n').length > 200_000) break;
+  }
+
+  const text = pageTexts.join('\n\n');
+  return text.trim();
+}
 
 const DocumentUpload = () => {
   const { user } = useAuth();
@@ -147,8 +188,17 @@ const DocumentUpload = () => {
     setUploadProgress(10);
 
     try {
-      // Read file content
-      const content = await file.text();
+      // Read/extract file content
+      let content = '';
+      if (extension === '.pdf') {
+        setUploadProgress(20);
+        content = await extractPdfText(file);
+        if (!content) {
+          throw new Error("Couldn't extract text from this PDF. Try a text-based PDF (not scanned images).");
+        }
+      } else {
+        content = await file.text();
+      }
       setUploadProgress(30);
 
       // Upload to storage with user folder

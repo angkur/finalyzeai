@@ -76,7 +76,7 @@ function parseCSVContent(content: string): { content: string; wordCount: number;
   const dataLines = lines.slice(1);
   const chunks: { content: string; wordCount: number; sentenceCount: number; position: string }[] = [];
   
-  const rowsPerChunk = 20;
+  const rowsPerChunk = 50;
   for (let i = 0; i < dataLines.length; i += rowsPerChunk) {
     const chunkRows = dataLines.slice(i, i + rowsPerChunk);
     const chunkContent = [headerLine, ...chunkRows].join('\n');
@@ -257,13 +257,13 @@ serve(async (req) => {
     if (documentType === 'csv') {
       chunks = parseCSVContent(content);
     } else {
-      chunks = createSemanticChunks(content, 400, 2);
+      chunks = createSemanticChunks(content, 650, 2);
     }
     
     console.log(`Created ${chunks.length} semantic chunks`);
 
     // Limit chunks for very large documents
-    const maxChunks = 100; // Reduced from 200 to prevent timeout
+    const maxChunks = 40; // Keep small to prevent request timeouts
     const chunksToProcess = chunks.slice(0, maxChunks);
     if (chunks.length > maxChunks) {
       console.log(`Document too large, processing first ${maxChunks} chunks out of ${chunks.length}`);
@@ -272,13 +272,16 @@ serve(async (req) => {
     // Generate embeddings if API key is available and not skipped
     let embeddingsMap = new Map<number, number[]>();
     if (openaiApiKey && !skipEmbeddings) {
-      const chunksForEmbedding = chunksToProcess.map((chunk, index) => ({
-        content: chunk.content,
-        index
-      }));
-      
-      // Process embeddings in batches of 3 with 2.5s delay to avoid rate limits
-      embeddingsMap = await processEmbeddingsInBatches(chunksForEmbedding, openaiApiKey, 3, 2500);
+      const maxEmbeddingChunks = 20;
+      const chunksForEmbedding = chunksToProcess
+        .slice(0, maxEmbeddingChunks)
+        .map((chunk, index) => ({
+          content: chunk.content,
+          index,
+        }));
+
+      // Keep this fast to avoid request timeouts
+      embeddingsMap = await processEmbeddingsInBatches(chunksForEmbedding, openaiApiKey, 5, 750);
     }
 
     // Prepare chunk inserts
