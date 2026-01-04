@@ -178,36 +178,91 @@ const AIDemo = () => {
       return;
     }
 
-    const allowedTypes = ['.csv', '.txt', '.json'];
+    const allowedTypes = ['.csv', '.txt', '.json', '.pdf'];
     const extension = '.' + file.name.split('.').pop()?.toLowerCase();
     if (!allowedTypes.includes(extension)) {
-      toast.error("Unsupported file type. Please upload CSV, TXT, or JSON files.");
+      toast.error("Unsupported file type. Please upload CSV, TXT, JSON, or PDF files.");
       return;
     }
 
     try {
-      const text = await file.text();
-      let parsedContent = text;
+      let parsedContent = '';
 
-      if (extension === '.csv') {
-        parsedContent = parseCSV(text);
-      } else if (extension === '.json') {
-        try {
-          const json = JSON.parse(text);
-          parsedContent = `JSON Data:\n${JSON.stringify(json, null, 2).slice(0, 5000)}`;
-          if (text.length > 5000) {
-            parsedContent += '\n... (truncated for preview)';
-          }
-        } catch {
-          parsedContent = text;
+      if (extension === '.pdf') {
+        // For PDF files, we need to upload to storage and process
+        toast.info("Processing PDF file...");
+        
+        // Upload PDF to storage first
+        const filePath = `${user.id}/${Date.now()}-${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(filePath, file);
+        
+        if (uploadError) {
+          throw new Error("Failed to upload PDF: " + uploadError.message);
         }
+        
+        // Create document record
+        const { data: docData, error: docError } = await supabase
+          .from('documents')
+          .insert({
+            name: file.name,
+            file_path: filePath,
+            file_type: 'application/pdf',
+            file_size: file.size,
+            user_id: user.id,
+            status: 'pending'
+          })
+          .select()
+          .single();
+        
+        if (docError) {
+          throw new Error("Failed to create document record: " + docError.message);
+        }
+        
+        // Trigger document processing
+        const { error: processError } = await supabase.functions.invoke('process-document', {
+          body: {
+            documentId: docData.id,
+            content: `PDF file: ${file.name}`,
+            fileName: file.name,
+            userId: user.id,
+            skipEmbeddings: true // Skip embeddings to avoid rate limiting
+          }
+        });
+        
+        if (processError) {
+          console.error("Processing error:", processError);
+        }
+        
+        parsedContent = `PDF uploaded: ${file.name}\nDocument ID: ${docData.id}\n\nThe PDF has been uploaded and will be processed. You can now ask questions about this document in the Knowledge Query section, or describe what analysis you'd like to perform on this financial document.`;
+        
+        toast.success(`PDF "${file.name}" uploaded and processing started!`);
+      } else {
+        const text = await file.text();
+        parsedContent = text;
+
+        if (extension === '.csv') {
+          parsedContent = parseCSV(text);
+        } else if (extension === '.json') {
+          try {
+            const json = JSON.parse(text);
+            parsedContent = `JSON Data:\n${JSON.stringify(json, null, 2).slice(0, 5000)}`;
+            if (text.length > 5000) {
+              parsedContent += '\n... (truncated for preview)';
+            }
+          } catch {
+            parsedContent = text;
+          }
+        }
+        
+        toast.success(`File "${file.name}" uploaded successfully!`);
       }
 
       setUploadedFile({ name: file.name, content: parsedContent });
       setInput(`Analyze this uploaded dataset (${file.name}):\n\n${parsedContent}`);
-      toast.success(`File "${file.name}" uploaded successfully!`);
     } catch (error) {
-      toast.error("Failed to read file");
+      toast.error(error instanceof Error ? error.message : "Failed to read file");
       console.error(error);
     }
 
@@ -426,7 +481,7 @@ const AIDemo = () => {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept=".csv,.txt,.json"
+                    accept=".csv,.txt,.json,.pdf"
                     onChange={handleFileUpload}
                     className="hidden"
                     id="file-upload"

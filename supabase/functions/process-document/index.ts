@@ -111,7 +111,11 @@ function detectDocumentType(fileName: string, content: string): string {
   
   const lowerContent = content.toLowerCase();
   if (lowerContent.includes('balance sheet') || lowerContent.includes('income statement') || 
-      lowerContent.includes('cash flow') || lowerContent.includes('revenue')) {
+      lowerContent.includes('cash flow') || lowerContent.includes('revenue') ||
+      lowerContent.includes('stock') || lowerContent.includes('price') ||
+      lowerContent.includes('volume') || lowerContent.includes('open') ||
+      lowerContent.includes('close') || lowerContent.includes('high') ||
+      lowerContent.includes('low')) {
     return 'financial';
   }
   if (lowerContent.includes('§') || lowerContent.includes('article') || lowerContent.includes('clause')) {

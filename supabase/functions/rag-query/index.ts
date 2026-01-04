@@ -131,35 +131,63 @@ serve(async (req) => {
       }
     }
 
-    // Fallback to keyword search
-    if (matches.length === 0 && keywords.length > 0) {
+    // Fallback to keyword search or get user's documents directly
+    if (matches.length === 0) {
       searchMethod = 'keyword';
       
-      const { data, error } = await supabase
-        .from('document_chunks')
-        .select('id, content, document_id, metadata, document_type, chunk_position, confidence_score')
-        .or(keywords.map(k => `content.ilike.%${k}%`).join(','))
-        .limit(matchCount * 2);
+      // First try keyword search
+      if (keywords.length > 0) {
+        const { data, error } = await supabase
+          .from('document_chunks')
+          .select('id, content, document_id, metadata, document_type, chunk_position, confidence_score')
+          .or(keywords.map(k => `content.ilike.%${k}%`).join(','))
+          .limit(matchCount * 2);
+        
+        if (error) {
+          console.error("Search error:", error);
+        } else if (data && data.length > 0) {
+          matches = data.map(chunk => {
+            const contentLower = chunk.content.toLowerCase();
+            const keywordScore = keywords.reduce((acc, kw) => {
+              return acc + (contentLower.includes(kw) ? 1 : 0);
+            }, 0);
+            const normalizedScore = keywords.length > 0 ? keywordScore / keywords.length : 0;
+            
+            return { 
+              ...chunk, 
+              combined_score: normalizedScore,
+              similarity: 0,
+              keyword_score: keywordScore,
+            };
+          })
+          .sort((a, b) => b.combined_score - a.combined_score)
+          .slice(0, matchCount);
+        }
+      }
       
-      if (error) {
-        console.error("Search error:", error);
-      } else if (data) {
-        matches = data.map(chunk => {
-          const contentLower = chunk.content.toLowerCase();
-          const keywordScore = keywords.reduce((acc, kw) => {
-            return acc + (contentLower.includes(kw) ? 1 : 0);
-          }, 0);
-          const normalizedScore = keywords.length > 0 ? keywordScore / keywords.length : 0;
-          
-          return { 
+      // If still no matches, get user's most recent documents
+      if (matches.length === 0 && userId) {
+        console.log("No keyword matches, fetching user's recent documents");
+        searchMethod = 'recent';
+        
+        const { data, error } = await supabase
+          .from('document_chunks')
+          .select('id, content, document_id, metadata, document_type, chunk_position, confidence_score')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(matchCount);
+        
+        if (error) {
+          console.error("Recent docs search error:", error);
+        } else if (data && data.length > 0) {
+          matches = data.map(chunk => ({ 
             ...chunk, 
-            combined_score: normalizedScore,
+            combined_score: 0.5, // Default score for recent docs
             similarity: 0,
-            keyword_score: keywordScore,
-          };
-        })
-        .sort((a, b) => b.combined_score - a.combined_score)
-        .slice(0, matchCount);
+            keyword_score: 0,
+          }));
+          console.log(`Found ${matches.length} recent document chunks for user`);
+        }
       }
     }
 
