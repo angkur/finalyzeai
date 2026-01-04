@@ -18,6 +18,7 @@ import AiPredict from "./pages/AiPredict";
 import FinPredict from "./pages/FinPredict";
 import UsageDashboard from "./pages/UsageDashboard";
 import Analytics from "./pages/Analytics";
+import Documents from "./pages/Documents";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/fin-predict" element={<FinPredict />} />
               <Route path="/usage" element={<UsageDashboard />} />
               <Route path="/analytics" element={<Analytics />} />
+              <Route path="/documents" element={<Documents />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
