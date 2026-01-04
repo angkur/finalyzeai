@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Brain, User, LogOut, Shield, BookOpen, FileText, ChevronDown, CreditCard, Menu, X } from "lucide-react";
+import { Brain, User, LogOut, Shield, BookOpen, FileText, ChevronDown, CreditCard, Menu, X, FolderOpen } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
@@ -141,6 +141,10 @@ const Navbar = () => {
                         <User className="w-4 h-4 mr-2" />
                         Profile
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/documents")} className="cursor-pointer">
+                        <FolderOpen className="w-4 h-4 mr-2" />
+                        My Documents
+                      </DropdownMenuItem>
                       {hasAdminAccess && (
                         <>
                           <DropdownMenuSeparator />
@@ -247,6 +251,16 @@ const Navbar = () => {
                             >
                               <User className="w-4 h-4" />
                               Profile
+                            </Link>
+                          </SheetClose>
+                          <SheetClose asChild>
+                            <Link 
+                              to="/documents" 
+                              className="py-2.5 px-3 text-sm text-foreground hover:bg-accent rounded-lg transition-colors flex items-center gap-2"
+                              onClick={closeMobileMenu}
+                            >
+                              <FolderOpen className="w-4 h-4" />
+                              My Documents
                             </Link>
                           </SheetClose>
                           {hasAdminAccess && (
