@@ -100,6 +100,7 @@ const UsageTracker = () => {
   const getPlanName = () => {
     const monthlyLimit = limits.monthly_limit;
     if (monthlyLimit <= 5) return "Free";
+    if (monthlyLimit <= 15) return "Mini Pro";
     if (monthlyLimit <= 25) return "Mini";
     if (monthlyLimit <= 100) return "Starter";
     if (monthlyLimit <= 500) return "Pro";
@@ -110,6 +111,7 @@ const UsageTracker = () => {
     const plan = getPlanName();
     switch (plan) {
       case "Free": return "bg-muted text-muted-foreground";
+      case "Mini Pro": return "bg-purple-500/10 text-purple-500 border-purple-500/20";
       case "Mini": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
       case "Starter": return "bg-primary/10 text-primary border-primary/20";
       case "Pro": return "bg-gradient-to-r from-amber-500/10 to-orange-500/10 text-amber-600 border-amber-500/20";
