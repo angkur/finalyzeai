@@ -49,11 +49,32 @@ const plans: Plan[] = [
     popular: false,
   },
   {
+    name: "mini-pro",
+    price: "$2",
+    period: "/month",
+    description: "Perfect for light users who need a bit more",
+    icon: Star,
+    features: [
+      "7 analyses per day",
+      "15 analyses per month",
+      "Document upload (up to 8MB)",
+      "14-day analysis history",
+      "Basic email support",
+    ],
+    limits: {
+      daily_limit: 7,
+      monthly_limit: 15,
+      upload_limit_mb: 8,
+      history_retention_days: 14,
+    },
+    popular: false,
+  },
+  {
     name: "mini",
     price: "$3",
     period: "/month",
     description: "Great for occasional users",
-    icon: Star,
+    icon: Zap,
     features: [
       "10 analyses per day",
       "25 analyses per month",
@@ -250,7 +271,7 @@ const Pricing = () => {
           </div>
 
           {/* Pricing Cards */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
             {plans.map((plan) => {
               const Icon = plan.icon;
               const isCurrentPlan = currentPlan === plan.name;
