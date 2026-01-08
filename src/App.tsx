@@ -20,6 +20,7 @@ import UsageDashboard from "./pages/UsageDashboard";
 import Analytics from "./pages/Analytics";
 import Documents from "./pages/Documents";
 import NotFound from "./pages/NotFound";
+import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/usage" element={<UsageDashboard />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/documents" element={<Documents />} />
+              <Route path="/subscription-success" element={<SubscriptionSuccess />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
