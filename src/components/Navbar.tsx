@@ -145,6 +145,10 @@ const Navbar = () => {
                         <FolderOpen className="w-4 h-4 mr-2" />
                         My Documents
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/subscription")} className="cursor-pointer">
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        Subscription
+                      </DropdownMenuItem>
                       {hasAdminAccess && (
                         <>
                           <DropdownMenuSeparator />
@@ -261,6 +265,16 @@ const Navbar = () => {
                             >
                               <FolderOpen className="w-4 h-4" />
                               My Documents
+                            </Link>
+                          </SheetClose>
+                          <SheetClose asChild>
+                            <Link 
+                              to="/subscription" 
+                              className="py-2.5 px-3 text-sm text-foreground hover:bg-accent rounded-lg transition-colors flex items-center gap-2"
+                              onClick={closeMobileMenu}
+                            >
+                              <CreditCard className="w-4 h-4" />
+                              Subscription
                             </Link>
                           </SheetClose>
                           {hasAdminAccess && (
