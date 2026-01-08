@@ -1,14 +1,22 @@
 import { useEffect, useState } from "react";
-import { Check, Sparkles, Star, Zap, Crown, Loader2 } from "lucide-react";
+import { Check, Sparkles, Star, Zap, Crown, Loader2, ExternalLink, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+
+// Stripe price IDs for each plan
+const STRIPE_PRICES = {
+  "mini-pro": "price_1SnNzFGj42kzuAASjkxZfEvI",
+  "mini": "price_1SnNzYGj42kzuAASdZ3S0PwS",
+  "starter": "price_1SnO0KGj42kzuAASMuvVqTrS",
+  "pro": "price_1SnO1NGj42kzuAASLZ9votZm",
+};
 
 interface Plan {
   name: string;
@@ -24,6 +32,7 @@ interface Plan {
     history_retention_days: number | null;
   };
   popular: boolean;
+  stripePrice?: string;
 }
 
 const plans: Plan[] = [
@@ -68,6 +77,7 @@ const plans: Plan[] = [
       history_retention_days: 14,
     },
     popular: false,
+    stripePrice: STRIPE_PRICES["mini-pro"],
   },
   {
     name: "mini",
@@ -89,10 +99,11 @@ const plans: Plan[] = [
       history_retention_days: 30,
     },
     popular: false,
+    stripePrice: STRIPE_PRICES["mini"],
   },
   {
     name: "starter",
-    price: "$12",
+    price: "$5",
     period: "/month",
     description: "Best for individuals and small teams",
     icon: Zap,
@@ -111,17 +122,18 @@ const plans: Plan[] = [
       history_retention_days: 90,
     },
     popular: true,
+    stripePrice: STRIPE_PRICES["starter"],
   },
   {
     name: "pro",
-    price: "$29",
+    price: "$10",
     period: "/month",
     description: "For power users and growing businesses",
     icon: Crown,
     features: [
-      "100 analyses per day",
+      "50 analyses per day",
       "500 analyses per month",
-      "Document upload (up to 100MB)",
+      "Document upload (up to 50MB)",
       "Unlimited analysis history",
       "Priority support",
       "API access",
@@ -129,49 +141,113 @@ const plans: Plan[] = [
       "Team collaboration (coming soon)",
     ],
     limits: {
-      daily_limit: 100,
+      daily_limit: 50,
       monthly_limit: 500,
-      upload_limit_mb: 100,
+      upload_limit_mb: 50,
       history_retention_days: null,
     },
     popular: false,
+    stripePrice: STRIPE_PRICES["pro"],
   },
 ];
 
 const Pricing = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [changingPlan, setChangingPlan] = useState<string | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  // Handle success/cancel URL params
   useEffect(() => {
-    const fetchCurrentPlan = async () => {
-      if (!user) {
-        setCurrentPlan(null);
-        return;
-      }
+    const success = searchParams.get("success");
+    const canceled = searchParams.get("canceled");
+    const planName = searchParams.get("plan");
 
-      const { data, error } = await supabase
+    if (success === "true" && planName) {
+      toast({
+        title: "Subscription successful!",
+        description: `Welcome to the ${planName.charAt(0).toUpperCase() + planName.slice(1)} plan. Refreshing your subscription status...`,
+      });
+      // Clear URL params and refresh subscription
+      window.history.replaceState({}, "", "/pricing");
+      checkSubscription();
+    } else if (canceled === "true") {
+      toast({
+        title: "Checkout canceled",
+        description: "Your subscription was not processed.",
+        variant: "destructive",
+      });
+      window.history.replaceState({}, "", "/pricing");
+    }
+  }, [searchParams]);
+
+  const checkSubscription = async () => {
+    if (!user) {
+      setCurrentPlan(null);
+      setSubscriptionEnd(null);
+      return;
+    }
+
+    setIsRefreshing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("check-subscription");
+      
+      if (error) throw error;
+      
+      if (data) {
+        setCurrentPlan(data.plan_name || "free");
+        setSubscriptionEnd(data.subscription_end);
+        
+        // Update local user_plans table to sync with Stripe
+        if (data.plan_name && data.plan_name !== "free") {
+          const plan = plans.find(p => p.name === data.plan_name);
+          if (plan) {
+            await supabase
+              .from("user_plans")
+              .update({
+                plan_name: data.plan_name,
+                daily_limit: plan.limits.daily_limit,
+                monthly_limit: plan.limits.monthly_limit,
+                upload_limit_mb: plan.limits.upload_limit_mb,
+                history_retention_days: plan.limits.history_retention_days ?? 36500,
+                stripe_customer_id: data.stripe_customer_id,
+                stripe_subscription_id: data.stripe_subscription_id,
+              })
+              .eq("user_id", user.id);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error checking subscription:", error);
+      // Fall back to database
+      const { data, error: dbError } = await supabase
         .from("user_plans")
         .select("plan_name")
         .eq("user_id", user.id)
         .maybeSingle();
 
-      if (!error && data) {
+      if (!dbError && data) {
         setCurrentPlan(data.plan_name);
       }
-    };
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
-    fetchCurrentPlan();
+  useEffect(() => {
+    checkSubscription();
   }, [user]);
 
-  const handlePlanChange = async (planName: string) => {
+  const handleCheckout = async (planName: string, priceId: string) => {
     if (!user) {
       navigate("/auth");
       return;
@@ -185,53 +261,86 @@ const Pricing = () => {
       return;
     }
 
-    const plan = plans.find((p) => p.name === planName);
-    if (!plan) return;
-
-    setChangingPlan(planName);
-    setIsLoading(true);
+    setCheckoutLoading(planName);
 
     try {
-      const { error } = await supabase
-        .from("user_plans")
-        .update({
-          plan_name: planName,
-          daily_limit: plan.limits.daily_limit,
-          monthly_limit: plan.limits.monthly_limit,
-          upload_limit_mb: plan.limits.upload_limit_mb,
-          history_retention_days: plan.limits.history_retention_days ?? 36500, // ~100 years for unlimited
-        })
-        .eq("user_id", user.id);
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { priceId, planName },
+      });
 
       if (error) throw error;
 
-      setCurrentPlan(planName);
-      toast({
-        title: "Plan updated!",
-        description: `You've successfully switched to the ${planName.charAt(0).toUpperCase() + planName.slice(1)} plan.`,
-      });
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
     } catch (error) {
-      console.error("Error updating plan:", error);
+      console.error("Error creating checkout:", error);
       toast({
-        title: "Error updating plan",
-        description: "Please try again later.",
+        title: "Checkout error",
+        description: "Unable to start checkout. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      } else {
+        throw new Error("No portal URL returned");
+      }
+    } catch (error) {
+      console.error("Error opening customer portal:", error);
+      toast({
+        title: "Portal error",
+        description: "Unable to open subscription management. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
-      setChangingPlan(null);
     }
+  };
+
+  const handleFreePlan = async () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+
+    // If they have an active subscription, direct them to manage it
+    if (currentPlan && currentPlan !== "free") {
+      handleManageSubscription();
+      return;
+    }
+
+    toast({
+      title: "Already on Free plan",
+      description: "You're currently on the Free plan.",
+    });
   };
 
   const getButtonText = (planName: string) => {
     if (!user) return "Get Started";
     if (currentPlan === planName) return "Current Plan";
+    if (planName === "free" && currentPlan !== "free") return "Manage Subscription";
     
     const currentIndex = plans.findIndex((p) => p.name === currentPlan);
     const targetIndex = plans.findIndex((p) => p.name === planName);
     
-    if (currentIndex === -1) return "Get Started";
-    return targetIndex > currentIndex ? "Upgrade" : "Downgrade";
+    if (currentIndex === -1) return "Subscribe";
+    return targetIndex > currentIndex ? "Upgrade" : "Change Plan";
   };
 
   const getButtonVariant = (plan: Plan) => {
@@ -261,11 +370,42 @@ const Pricing = () => {
               Start with our free tier and upgrade as your needs grow. All plans include access to our 
               powerful AI-driven financial analysis tools.
             </p>
-            {currentPlan && (
+            {user && (
+              <div className="mt-4 flex items-center justify-center gap-3">
+                {currentPlan && (
+                  <Badge variant="secondary" className="text-sm">
+                    Current plan: {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
+                  </Badge>
+                )}
+                {subscriptionEnd && currentPlan !== "free" && (
+                  <Badge variant="outline" className="text-sm">
+                    Renews: {new Date(subscriptionEnd).toLocaleDateString()}
+                  </Badge>
+                )}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={checkSubscription}
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
+            )}
+            {currentPlan && currentPlan !== "free" && (
               <div className="mt-4">
-                <Badge variant="secondary" className="text-sm">
-                  Current plan: {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
-                </Badge>
+                <Button 
+                  variant="outline" 
+                  onClick={handleManageSubscription}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                  )}
+                  Manage Subscription
+                </Button>
               </div>
             )}
           </div>
@@ -275,7 +415,7 @@ const Pricing = () => {
             {plans.map((plan) => {
               const Icon = plan.icon;
               const isCurrentPlan = currentPlan === plan.name;
-              const isChanging = changingPlan === plan.name;
+              const isCheckingOut = checkoutLoading === plan.name;
               
               return (
                 <Card 
@@ -335,13 +475,19 @@ const Pricing = () => {
                     <Button 
                       variant={getButtonVariant(plan)} 
                       className="w-full"
-                      onClick={() => handlePlanChange(plan.name)}
-                      disabled={isLoading || isCurrentPlan}
+                      onClick={() => {
+                        if (plan.name === "free") {
+                          handleFreePlan();
+                        } else if (plan.stripePrice) {
+                          handleCheckout(plan.name, plan.stripePrice);
+                        }
+                      }}
+                      disabled={isCheckingOut || isCurrentPlan}
                     >
-                      {isChanging ? (
+                      {isCheckingOut ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Updating...
+                          Redirecting...
                         </>
                       ) : (
                         getButtonText(plan.name)
@@ -374,9 +520,8 @@ const Pricing = () => {
               <Card className="p-6">
                 <h3 className="font-semibold mb-2 text-foreground">Can I upgrade or downgrade anytime?</h3>
                 <p className="text-sm text-muted-foreground">
-                  Yes! You can change your plan at any time. Your new limits take effect immediately.
-                  When upgrading, you'll get instant access to higher limits. When downgrading, your 
-                  limits will be adjusted right away.
+                  Yes! You can change your plan at any time through the "Manage Subscription" button.
+                  Changes take effect immediately and billing is prorated.
                 </p>
               </Card>
               
@@ -389,10 +534,10 @@ const Pricing = () => {
               </Card>
               
               <Card className="p-6">
-                <h3 className="font-semibold mb-2 text-foreground">What is analysis history retention?</h3>
+                <h3 className="font-semibold mb-2 text-foreground">How do I cancel my subscription?</h3>
                 <p className="text-sm text-muted-foreground">
-                  Analysis history retention determines how long your past analyses and uploaded documents 
-                  are stored. Free users get 7 days, while Pro users enjoy unlimited history retention.
+                  You can cancel anytime through the "Manage Subscription" button. Your subscription will 
+                  remain active until the end of your current billing period.
                 </p>
               </Card>
             </div>
@@ -413,9 +558,25 @@ const Pricing = () => {
               <Button 
                 variant="hero" 
                 size="lg" 
-                onClick={() => user ? handlePlanChange("starter") : navigate("/auth")}
+                onClick={() => {
+                  if (!user) {
+                    navigate("/auth");
+                  } else if (STRIPE_PRICES["starter"]) {
+                    handleCheckout("starter", STRIPE_PRICES["starter"]);
+                  }
+                }}
+                disabled={checkoutLoading === "starter"}
               >
-                {user ? "Upgrade to Starter" : "Get Started for Free"}
+                {checkoutLoading === "starter" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Redirecting...
+                  </>
+                ) : user ? (
+                  "Upgrade to Starter"
+                ) : (
+                  "Get Started for Free"
+                )}
               </Button>
             </Card>
           </div>
