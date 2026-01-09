@@ -1,5 +1,5 @@
-# AI Predict - robots.txt
-# https://aipredict.app
+# FinalyzeAI - robots.txt
+# https://finalyzeai.com
 
 User-agent: Googlebot
 Allow: /
@@ -32,4 +32,4 @@ Disallow: /documents
 Disallow: /reset-password
 
 # Sitemap location
-Sitemap: https://aipredict.app/sitemap.xml
+Sitemap: https://finalyzeai.com/sitemap.xml
