@@ -144,7 +144,7 @@ const SubscriptionManagement = () => {
       <div className="container max-w-4xl py-8 px-4">
         <div className="flex items-center gap-4 mb-8">
           <Button variant="ghost" size="icon" asChild>
-            <Link to="/pricing">
+            <Link to="/">
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
