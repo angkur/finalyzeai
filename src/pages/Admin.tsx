@@ -16,8 +16,9 @@ import { toast } from "sonner";
 import { 
   Shield, Users, BarChart3, FileText, Brain, 
   ArrowLeft, Settings, Activity, Ban, Check,
-  Eye, Loader2, MessageSquare, Trash2, Mail, CheckCheck
+  Eye, Loader2, MessageSquare, Trash2, Mail, CheckCheck, Search
 } from "lucide-react";
+import SEOMonitor from "@/components/admin/SEOMonitor";
 
 interface AdminStats {
   totalUsers: number;
@@ -216,7 +217,7 @@ const Admin = () => {
 
       <main className="container mx-auto px-6 py-8">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-flex">
             <TabsTrigger value="dashboard" className="gap-2">
               <BarChart3 className="w-4 h-4" />
               Dashboard
@@ -232,6 +233,10 @@ const Admin = () => {
             <TabsTrigger value="activity" className="gap-2">
               <Activity className="w-4 h-4" />
               AI Usage
+            </TabsTrigger>
+            <TabsTrigger value="seo" className="gap-2">
+              <Search className="w-4 h-4" />
+              SEO
             </TabsTrigger>
           </TabsList>
 
@@ -490,6 +495,11 @@ const Admin = () => {
                 <RecentActivityList />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* SEO Tab */}
+          <TabsContent value="seo">
+            <SEOMonitor />
           </TabsContent>
         </Tabs>
       </main>
