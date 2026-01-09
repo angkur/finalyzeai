@@ -75,10 +75,10 @@ const Navbar = () => {
       <div className="container px-4 md:px-6">
         <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 rounded-2xl bg-card/80 backdrop-blur-lg border border-border/50">
           {/* Logo */}
-          <a href="#" className="flex items-center gap-2 md:gap-3">
+          <Link to="/" className="flex items-center gap-2 md:gap-3">
             <img src={logoImage} alt="FinalyzeAI Logo" className="w-8 h-8 md:w-10 md:h-10 rounded-xl" />
             <span className="font-display font-bold text-base md:text-lg text-foreground">FinalyzeAI</span>
-          </a>
+          </Link>
 
           {/* Desktop Nav Links */}
           <div className="hidden lg:flex items-center gap-6 xl:gap-8">
