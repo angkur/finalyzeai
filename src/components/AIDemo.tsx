@@ -91,6 +91,7 @@ const AIDemo = () => {
   const [interactionId, setInteractionId] = useState<string | null>(null);
   const [isBlocked, setIsBlocked] = useState(false);
   const [usageLimitMessage, setUsageLimitMessage] = useState<string | null>(null);
+  const [usageStats, setUsageStats] = useState<{ used: number; limit: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Check if user is blocked or has exceeded usage limits
@@ -139,6 +140,9 @@ const AIDemo = () => {
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id)
           .gte('created_at', monthStart.toISOString());
+
+        // Update usage stats for display
+        setUsageStats({ used: monthCount ?? 0, limit: monthlyLimit });
 
         if ((todayCount ?? 0) >= dailyLimit) {
           setIsBlocked(true);
@@ -452,6 +456,26 @@ const AIDemo = () => {
           <p className="text-muted-foreground text-lg">
             Upload your dataset or enter data manually. Our AI will analyze and provide actionable insights with interactive visualizations.
           </p>
+          
+          {/* Usage Counter */}
+          {user && usageStats && (
+            <div className="mt-6 inline-flex items-center gap-3 px-4 py-2 rounded-full bg-card border border-border/50">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${usageStats.used >= usageStats.limit ? 'bg-destructive' : usageStats.used >= usageStats.limit * 0.8 ? 'bg-yellow-500' : 'bg-green-500'}`} />
+                <span className="text-sm text-muted-foreground">
+                  <span className={`font-semibold ${usageStats.used >= usageStats.limit ? 'text-destructive' : 'text-foreground'}`}>
+                    {Math.max(0, usageStats.limit - usageStats.used)}
+                  </span>
+                  {' '}of {usageStats.limit} analyses remaining this month
+                </span>
+              </div>
+              {usageStats.used >= usageStats.limit * 0.8 && usageStats.used < usageStats.limit && (
+                <Button variant="link" size="sm" className="text-primary p-0 h-auto" onClick={() => navigate('/pricing')}>
+                  Upgrade
+                </Button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Analysis Type Selector */}
