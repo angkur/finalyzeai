@@ -69,6 +69,7 @@ const AiPredict = () => {
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [usageLimitMessage, setUsageLimitMessage] = useState<string | null>(null);
+  const [usageStats, setUsageStats] = useState<{ used: number; limit: number } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -121,6 +122,9 @@ const AiPredict = () => {
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id)
           .gte('created_at', monthStart.toISOString());
+
+        // Update usage stats for display
+        setUsageStats({ used: monthlyCount ?? 0, limit: monthlyLimit });
 
         if ((dailyCount || 0) >= dailyLimit) {
           setIsBlocked(true);
@@ -468,6 +472,41 @@ const AiPredict = () => {
   // Show empty state (welcome screen) when no messages
   const showWelcome = messages.length === 0;
 
+  // Usage counter component
+  const UsageCounter = () => {
+    if (!user || !usageStats) return null;
+    
+    const remaining = Math.max(0, usageStats.limit - usageStats.used);
+    const usagePercent = (usageStats.used / usageStats.limit) * 100;
+    const isNearLimit = usagePercent >= 80 && usagePercent < 100;
+    const isAtLimit = usagePercent >= 100;
+    
+    return (
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/50 border border-border/50 text-xs">
+        <div className={cn(
+          "w-1.5 h-1.5 rounded-full",
+          isAtLimit ? "bg-destructive" : isNearLimit ? "bg-yellow-500" : "bg-green-500"
+        )} />
+        <span className="text-muted-foreground">
+          <span className={cn("font-semibold", isAtLimit && "text-destructive")}>
+            {remaining}
+          </span>
+          /{usageStats.limit} left
+        </span>
+        {isNearLimit && (
+          <Button 
+            variant="link" 
+            size="sm" 
+            className="text-primary p-0 h-auto text-xs" 
+            onClick={() => navigate('/pricing')}
+          >
+            Upgrade
+          </Button>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
@@ -591,7 +630,8 @@ const AiPredict = () => {
             )}
             <h1 className="font-display font-semibold text-foreground">AI Predict</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <UsageCounter />
             <ThemeToggle />
             {!user && (
               <Button variant="hero" size="sm" onClick={() => navigate('/auth')}>
