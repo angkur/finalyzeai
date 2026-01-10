@@ -5,24 +5,25 @@ import Process from "@/components/Process";
 import TechStack from "@/components/TechStack";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
+import ScrollSection from "@/components/ScrollSection";
 
 const Index = () => {
   return (
     <main className="min-h-screen bg-background">
       <Navbar />
       <Hero />
-      <section id="services">
+      <ScrollSection id="services" animation="fade-up">
         <Services />
-      </section>
-      <section id="process">
+      </ScrollSection>
+      <ScrollSection id="process" animation="fade-up" delay={1}>
         <Process />
-      </section>
-      <section id="tech">
+      </ScrollSection>
+      <ScrollSection id="tech" animation="fade-up" delay={1}>
         <TechStack />
-      </section>
-      <section id="contact">
+      </ScrollSection>
+      <ScrollSection id="contact" animation="fade-up" delay={1}>
         <Contact />
-      </section>
+      </ScrollSection>
       <Footer />
     </main>
   );
