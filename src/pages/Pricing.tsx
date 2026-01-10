@@ -353,32 +353,32 @@ const Pricing = () => {
     <main className="min-h-screen bg-background">
       <Navbar />
       
-      <section className="pt-32 pb-20">
-        <div className="container px-6">
+      <section className="pt-24 sm:pt-32 pb-12 sm:pb-20">
+        <div className="container px-4 sm:px-6">
           {/* Header */}
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <Badge variant="outline" className="mb-6 px-4 py-2 text-sm font-medium">
-              <Sparkles className="w-4 h-4 mr-2" />
+          <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-16">
+            <Badge variant="outline" className="mb-4 sm:mb-6 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium">
+              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
               Simple, transparent pricing
             </Badge>
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+            <h1 className="font-display text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">
               <span className="text-foreground">Choose your </span>
               <span className="bg-gradient-primary bg-clip-text text-transparent">AI Predict</span>
               <span className="text-foreground"> plan</span>
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
               Start with our free tier and upgrade as your needs grow. All plans include access to our 
               powerful AI-driven financial analysis tools.
             </p>
             {user && (
-              <div className="mt-4 flex items-center justify-center gap-3">
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
                 {currentPlan && (
-                  <Badge variant="secondary" className="text-sm">
+                  <Badge variant="secondary" className="text-xs sm:text-sm">
                     Current plan: {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
                   </Badge>
                 )}
                 {subscriptionEnd && currentPlan !== "free" && (
-                  <Badge variant="outline" className="text-sm">
+                  <Badge variant="outline" className="text-xs sm:text-sm">
                     Renews: {new Date(subscriptionEnd).toLocaleDateString()}
                   </Badge>
                 )}
@@ -396,6 +396,8 @@ const Pricing = () => {
               <div className="mt-4">
                 <Button 
                   variant="outline" 
+                  size="sm"
+                  className="text-sm"
                   onClick={handleManageSubscription}
                   disabled={isLoading}
                 >
@@ -411,7 +413,7 @@ const Pricing = () => {
           </div>
 
           {/* Pricing Cards */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 max-w-7xl mx-auto">
             {plans.map((plan) => {
               const Icon = plan.icon;
               const isCurrentPlan = currentPlan === plan.name;
@@ -422,52 +424,52 @@ const Pricing = () => {
                   key={plan.name}
                   className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl ${
                     plan.popular 
-                      ? "border-primary shadow-lg shadow-primary/10 scale-105" 
+                      ? "border-primary shadow-lg shadow-primary/10 sm:scale-105" 
                       : isCurrentPlan
                       ? "border-primary/50 bg-primary/5"
                       : "hover:border-primary/50"
                   }`}
                 >
                   {plan.popular && (
-                    <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-lg">
+                    <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 rounded-bl-lg">
                       Most Popular
                     </div>
                   )}
                   {isCurrentPlan && (
-                    <div className="absolute top-0 left-0 bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded-br-lg">
+                    <div className="absolute top-0 left-0 bg-secondary text-secondary-foreground text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 rounded-br-lg">
                       Your Plan
                     </div>
                   )}
                   
-                  <CardHeader className="text-center pb-2">
-                    <div className={`mx-auto p-3 rounded-xl mb-4 ${
+                  <CardHeader className="text-center pb-2 pt-6 sm:pt-4">
+                    <div className={`mx-auto p-2 sm:p-3 rounded-lg sm:rounded-xl mb-3 sm:mb-4 ${
                       plan.popular 
                         ? "bg-gradient-primary" 
                         : "bg-primary/10"
                     }`}>
-                      <Icon className={`w-6 h-6 ${plan.popular ? "text-primary-foreground" : "text-primary"}`} />
+                      <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${plan.popular ? "text-primary-foreground" : "text-primary"}`} />
                     </div>
-                    <CardTitle className="font-display text-2xl capitalize">{plan.name}</CardTitle>
-                    <CardDescription>{plan.description}</CardDescription>
+                    <CardTitle className="font-display text-xl sm:text-2xl capitalize">{plan.name}</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">{plan.description}</CardDescription>
                   </CardHeader>
                   
-                  <CardContent className="text-center">
-                    <div className="mb-6">
-                      <span className="font-display text-5xl font-bold text-foreground">{plan.price}</span>
-                      <span className="text-muted-foreground">{plan.period}</span>
+                  <CardContent className="text-center px-3 sm:px-6">
+                    <div className="mb-4 sm:mb-6">
+                      <span className="font-display text-3xl sm:text-5xl font-bold text-foreground">{plan.price}</span>
+                      <span className="text-muted-foreground text-sm">{plan.period}</span>
                     </div>
                     
-                    <div className="mb-6 py-3 px-4 rounded-lg bg-primary/5 border border-primary/10">
-                      <span className="text-sm font-semibold text-primary">
+                    <div className="mb-4 sm:mb-6 py-2 sm:py-3 px-3 sm:px-4 rounded-lg bg-primary/5 border border-primary/10">
+                      <span className="text-xs sm:text-sm font-semibold text-primary">
                         {plan.limits.monthly_limit} analyses/month
                       </span>
                     </div>
                     
-                    <ul className="space-y-3 mb-8 text-left">
+                    <ul className="space-y-2 sm:space-y-3 mb-6 sm:mb-8 text-left">
                       {plan.features.map((feature, index) => (
-                        <li key={index} className="flex items-start gap-3">
-                          <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                          <span className="text-sm text-muted-foreground">{feature}</span>
+                        <li key={index} className="flex items-start gap-2 sm:gap-3">
+                          <Check className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0 mt-0.5" />
+                          <span className="text-xs sm:text-sm text-muted-foreground">{feature}</span>
                         </li>
                       ))}
                     </ul>

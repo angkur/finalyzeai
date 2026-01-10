@@ -64,38 +64,38 @@ const Contact = () => {
   const wordCount = message.split(/\s+/).filter(word => word.length > 0).length;
 
   return (
-    <section className="py-32 relative overflow-hidden">
+    <section className="py-16 sm:py-24 md:py-32 relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-secondary/20 to-background" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] md:w-[1000px] h-[400px] md:h-[600px] bg-primary/5 rounded-full blur-3xl" />
 
-      <div className="container relative z-10 px-6">
+      <div className="container relative z-10 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
           {/* Badge */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 mb-8">
-              <span className="text-sm text-accent font-medium">Open to New Projects</span>
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-accent/10 border border-accent/20 mb-6 sm:mb-8">
+              <span className="text-xs sm:text-sm text-accent font-medium">Open to New Projects</span>
             </div>
 
             {/* Headline */}
-            <h2 className="font-display text-4xl md:text-6xl font-bold mb-6">
+            <h2 className="font-display text-2xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6">
               <span className="text-foreground">Let's Build </span>
               <span className="text-gradient-accent">Something</span>
               <br />
               <span className="text-gradient-primary">Extraordinary</span>
             </h2>
 
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
+            <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-8 sm:mb-10 px-2">
               Ready to transform your financial operations with AI? Let's discuss how 
               intelligent systems can drive growth and efficiency for your organization.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-12">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12">
             {/* Contact Form */}
-            <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-8">
-              <h3 className="text-xl font-semibold mb-6">Send a Message</h3>
-              <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8">
+              <h3 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">Send a Message</h3>
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="name">Name</Label>
                   <Input
@@ -156,51 +156,51 @@ const Contact = () => {
             </div>
 
             {/* Contact Info */}
-            <div className="space-y-8">
+            <div className="space-y-6 sm:space-y-8">
               <div>
-                <h3 className="text-xl font-semibold mb-6">Get in Touch</h3>
-                <div className="space-y-4">
+                <h3 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">Get in Touch</h3>
+                <div className="space-y-3 sm:space-y-4">
                   <a
                     href="tel:+8801405236457"
-                    className="flex items-center gap-4 p-4 rounded-xl bg-secondary/50 border border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-glow group"
+                    className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-secondary/50 border border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-glow group"
                   >
-                    <div className="p-3 rounded-lg bg-primary/10">
-                      <Phone className="w-5 h-5 text-primary" />
+                    <div className="p-2 sm:p-3 rounded-lg bg-primary/10">
+                      <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Phone</p>
-                      <p className="font-medium group-hover:text-primary transition-colors">+880 1405 236457</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Phone</p>
+                      <p className="text-sm sm:text-base font-medium group-hover:text-primary transition-colors">+880 1405 236457</p>
                     </div>
                   </a>
                 </div>
               </div>
 
               {/* CTA Buttons */}
-              <div className="space-y-4">
-                <Button variant="accent" size="lg" className="w-full">
+              <div className="space-y-3 sm:space-y-4">
+                <Button variant="accent" size="lg" className="w-full text-sm sm:text-base">
                   Schedule Consultation
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
-                <Button variant="glass" size="lg" className="w-full">
+                <Button variant="glass" size="lg" className="w-full text-sm sm:text-base">
                   Download Portfolio
                 </Button>
               </div>
 
               {/* Social Links */}
               <div>
-                <p className="text-sm text-muted-foreground mb-4">Follow me on</p>
-                <div className="flex gap-4">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">Follow me on</p>
+                <div className="flex gap-3 sm:gap-4">
                   <a
                     href="#"
-                    className="p-4 rounded-xl bg-secondary/50 border border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-glow group"
+                    className="p-3 sm:p-4 rounded-lg sm:rounded-xl bg-secondary/50 border border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-glow group"
                   >
-                    <Linkedin className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <Linkedin className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </a>
                   <a
                     href="#"
-                    className="p-4 rounded-xl bg-secondary/50 border border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-glow group"
+                    className="p-3 sm:p-4 rounded-lg sm:rounded-xl bg-secondary/50 border border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-glow group"
                   >
-                    <Github className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <Github className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </a>
                 </div>
               </div>
