@@ -99,18 +99,29 @@ const AIDemo = () => {
 
     const checkUsageLimit = async () => {
       try {
-        // Get user's limits
-        const { data: limits } = await supabase
+        // First check if user is blocked via ai_usage_limits
+        const { data: blockData } = await supabase
           .from('ai_usage_limits')
-          .select('is_blocked, daily_limit, monthly_limit')
+          .select('is_blocked')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (limits?.is_blocked) {
+        if (blockData?.is_blocked) {
           setIsBlocked(true);
           setUsageLimitMessage("Your AI access has been blocked by an administrator.");
           return;
         }
+
+        // Get user's plan limits from user_plans table
+        const { data: planData } = await supabase
+          .from('user_plans')
+          .select('daily_limit, monthly_limit')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        // Default to free plan limits (5 per month total)
+        const dailyLimit = planData?.daily_limit ?? 5;
+        const monthlyLimit = planData?.monthly_limit ?? 5;
 
         // Get today's interaction count
         const today = new Date();
@@ -129,21 +140,19 @@ const AIDemo = () => {
           .eq('user_id', user.id)
           .gte('created_at', monthStart.toISOString());
 
-        const dailyLimit = limits?.daily_limit ?? 50;
-        const monthlyLimit = limits?.monthly_limit ?? 500;
-
         if ((todayCount ?? 0) >= dailyLimit) {
           setIsBlocked(true);
-          setUsageLimitMessage(`You've reached your daily limit of ${dailyLimit} AI analyses. Please try again tomorrow.`);
+          setUsageLimitMessage(`You've reached your daily limit of ${dailyLimit} AI analyses. Please try again tomorrow or upgrade your plan.`);
         } else if ((monthCount ?? 0) >= monthlyLimit) {
           setIsBlocked(true);
-          setUsageLimitMessage(`You've reached your monthly limit of ${monthlyLimit} AI analyses. Please try again next month.`);
+          setUsageLimitMessage(`You've reached your monthly limit of ${monthlyLimit} AI analyses. Upgrade your plan for more.`);
         } else {
           setIsBlocked(false);
           setUsageLimitMessage(null);
         }
-      } catch {
-        // No limits set, user is not blocked
+      } catch (error) {
+        console.error("Failed to check usage limits:", error);
+        // Default to allowing access but with strict free limits
         setIsBlocked(false);
         setUsageLimitMessage(null);
       }

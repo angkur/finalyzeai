@@ -73,26 +73,35 @@ const AiPredict = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Check usage limits on mount
+  // Check usage limits on mount and after sending messages
   useEffect(() => {
     const checkUsageLimits = async () => {
       if (!user) return;
       
       try {
-        // Get user's usage limits
-        const { data: limitsData } = await supabase
+        // First check if user is blocked via ai_usage_limits
+        const { data: blockData } = await supabase
           .from('ai_usage_limits')
-          .select('*')
+          .select('is_blocked')
           .eq('user_id', user.id)
           .maybeSingle();
 
-        const limits = limitsData || { daily_limit: 5, monthly_limit: 5, is_blocked: false };
-        
-        if (limits.is_blocked) {
+        if (blockData?.is_blocked) {
           setIsBlocked(true);
           setUsageLimitMessage("Your account has been restricted. Please contact support.");
           return;
         }
+
+        // Get user's plan limits from user_plans table
+        const { data: planData } = await supabase
+          .from('user_plans')
+          .select('daily_limit, monthly_limit')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        // Default to free plan limits (5 per month total)
+        const dailyLimit = planData?.daily_limit ?? 5;
+        const monthlyLimit = planData?.monthly_limit ?? 5;
 
         // Count today's interactions
         const today = new Date();
@@ -113,12 +122,15 @@ const AiPredict = () => {
           .eq('user_id', user.id)
           .gte('created_at', monthStart.toISOString());
 
-        if ((dailyCount || 0) >= limits.daily_limit) {
+        if ((dailyCount || 0) >= dailyLimit) {
           setIsBlocked(true);
-          setUsageLimitMessage(`Daily limit reached (${limits.daily_limit} analyses). Upgrade your plan for more.`);
-        } else if ((monthlyCount || 0) >= limits.monthly_limit) {
+          setUsageLimitMessage(`Daily limit reached (${dailyLimit} analyses). Upgrade your plan for more.`);
+        } else if ((monthlyCount || 0) >= monthlyLimit) {
           setIsBlocked(true);
-          setUsageLimitMessage(`Monthly limit reached (${limits.monthly_limit} analyses). Upgrade your plan for more.`);
+          setUsageLimitMessage(`Monthly limit reached (${monthlyLimit} analyses). Upgrade your plan for more.`);
+        } else {
+          setIsBlocked(false);
+          setUsageLimitMessage(null);
         }
       } catch (error) {
         console.error("Failed to check usage limits:", error);
@@ -126,7 +138,7 @@ const AiPredict = () => {
     };
 
     checkUsageLimits();
-  }, [user]);
+  }, [user, messages.length]); // Re-check after messages change
 
   // Log interaction for usage tracking
   const logInteraction = async (query: string, responseText: string) => {
