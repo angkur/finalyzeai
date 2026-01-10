@@ -1,4 +1,6 @@
 import { Brain, Database, LineChart, FileSearch, Workflow, Shield } from "lucide-react";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { cn } from "@/lib/utils";
 
 const services = [
   {
@@ -39,7 +41,41 @@ const services = [
   },
 ];
 
+const ServiceCard = ({ service, index }: { service: typeof services[0]; index: number }) => {
+  const { ref, isVisible } = useScrollAnimation({ threshold: 0.1 });
+
+  return (
+    <div
+      ref={ref as React.RefObject<HTMLDivElement>}
+      className={cn(
+        "group relative p-8 rounded-2xl bg-gradient-card border border-border/50 hover:border-primary/50 transition-all duration-500 hover:shadow-glow",
+        "scroll-animate-scale",
+        isVisible && "visible"
+      )}
+      style={{ animationDelay: `${index * 0.1}s` }}
+    >
+      {/* Icon */}
+      <div className={`inline-flex p-4 rounded-xl ${service.gradient === 'primary' ? 'bg-primary/10' : 'bg-accent/10'} mb-6 group-hover:scale-110 transition-transform duration-300`}>
+        <service.icon className={`w-6 h-6 ${service.gradient === 'primary' ? 'text-primary' : 'text-accent'}`} />
+      </div>
+
+      {/* Content */}
+      <h3 className="font-display text-xl font-semibold text-foreground mb-3">
+        {service.title}
+      </h3>
+      <p className="text-muted-foreground leading-relaxed">
+        {service.description}
+      </p>
+
+      {/* Hover Gradient */}
+      <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${service.gradient === 'primary' ? 'bg-gradient-to-br from-primary/5 to-transparent' : 'bg-gradient-to-br from-accent/5 to-transparent'} pointer-events-none`} />
+    </div>
+  );
+};
+
 const Services = () => {
+  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation({ threshold: 0.2 });
+
   return (
     <section className="py-32 relative overflow-hidden">
       {/* Background */}
@@ -48,7 +84,13 @@ const Services = () => {
 
       <div className="container relative z-10 px-6">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-20">
+        <div 
+          ref={headerRef as React.RefObject<HTMLDivElement>}
+          className={cn(
+            "text-center max-w-3xl mx-auto mb-20 scroll-animate",
+            headerVisible && "visible"
+          )}
+        >
           <span className="text-primary font-medium text-sm tracking-wider uppercase">Services</span>
           <h2 className="font-display text-4xl md:text-5xl font-bold mt-4 mb-6">
             <span className="text-foreground">End-to-End </span>
@@ -63,27 +105,7 @@ const Services = () => {
         {/* Services Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((service, index) => (
-            <div
-              key={service.title}
-              className="group relative p-8 rounded-2xl bg-gradient-card border border-border/50 hover:border-primary/50 transition-all duration-500 hover:shadow-glow"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              {/* Icon */}
-              <div className={`inline-flex p-4 rounded-xl ${service.gradient === 'primary' ? 'bg-primary/10' : 'bg-accent/10'} mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                <service.icon className={`w-6 h-6 ${service.gradient === 'primary' ? 'text-primary' : 'text-accent'}`} />
-              </div>
-
-              {/* Content */}
-              <h3 className="font-display text-xl font-semibold text-foreground mb-3">
-                {service.title}
-              </h3>
-              <p className="text-muted-foreground leading-relaxed">
-                {service.description}
-              </p>
-
-              {/* Hover Gradient */}
-              <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${service.gradient === 'primary' ? 'bg-gradient-to-br from-primary/5 to-transparent' : 'bg-gradient-to-br from-accent/5 to-transparent'} pointer-events-none`} />
-            </div>
+            <ServiceCard key={service.title} service={service} index={index} />
           ))}
         </div>
       </div>
