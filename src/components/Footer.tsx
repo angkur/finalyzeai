@@ -1,4 +1,4 @@
-import { Brain } from "lucide-react";
+import { Brain, Linkedin } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -20,6 +20,15 @@ const Footer = () => {
             </a>
             <a href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors">
               Terms
+            </a>
+            <a 
+              href="https://www.linkedin.com/company/finalyzeai/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors"
+              aria-label="Follow us on LinkedIn"
+            >
+              <Linkedin className="w-4 h-4 sm:w-5 sm:h-5" />
             </a>
           </div>
 
