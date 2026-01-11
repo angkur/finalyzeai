@@ -191,7 +191,9 @@ const Contact = () => {
                 <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">Follow me on</p>
                 <div className="flex gap-3 sm:gap-4">
                   <a
-                    href="#"
+                    href="https://www.linkedin.com/company/finalyzeai/"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="p-3 sm:p-4 rounded-lg sm:rounded-xl bg-secondary/50 border border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-glow group"
                   >
                     <Linkedin className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-primary transition-colors" />
