@@ -9,11 +9,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useState } from "react";
 
-// Video embed component for tutorials
+// Video embed component for tutorials - supports YouTube and placeholder videos
 const VideoEmbed = ({ id, title, description, duration }: { id: string; title: string; description: string; duration: string }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [thumbnailError, setThumbnailError] = useState(false);
   
-  // Map video IDs to placeholder thumbnails (in production, these would be real video URLs)
+  // Check if it's a YouTube video ID (11 characters, alphanumeric with - and _)
+  const isYouTubeId = /^[a-zA-Z0-9_-]{11}$/.test(id);
+  
+  // Fallback gradient colors for placeholders
   const thumbnailColors: Record<string, string> = {
     'getting-started': 'from-blue-500 to-cyan-500',
     'ai-predict-deep-dive': 'from-purple-500 to-pink-500',
@@ -24,50 +28,81 @@ const VideoEmbed = ({ id, title, description, duration }: { id: string; title: s
   };
 
   const gradientClass = thumbnailColors[id] || 'from-primary to-primary/70';
+  const youTubeThumbnail = isYouTubeId ? `https://img.youtube.com/vi/${id}/maxresdefault.jpg` : null;
 
   return (
     <div className="my-6 rounded-xl overflow-hidden border border-border bg-card">
-      <div 
-        className={`relative aspect-video bg-gradient-to-br ${gradientClass} cursor-pointer group`}
-        onClick={() => setIsPlaying(!isPlaying)}
-      >
-        {!isPlaying ? (
-          <>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Play className="w-10 h-10 text-white fill-white ml-1" />
-              </div>
-            </div>
-            <div className="absolute bottom-4 left-4 right-4">
-              <div className="flex items-center gap-2 text-white/90">
-                <Video className="w-5 h-5" />
-                <span className="font-medium">{title}</span>
-                <Badge variant="secondary" className="ml-auto bg-black/30 text-white border-0">
-                  {duration}
-                </Badge>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-            <div className="text-center text-white p-8">
-              <Video className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-medium mb-2">Video Coming Soon</p>
-              <p className="text-sm text-white/70">This tutorial video is being produced.</p>
-              <Button 
-                variant="outline" 
-                className="mt-4 border-white/30 text-white hover:bg-white/10"
-                onClick={(e) => { e.stopPropagation(); setIsPlaying(false); }}
-              >
-                Close Preview
-              </Button>
+      {isPlaying && isYouTubeId ? (
+        // YouTube iframe embed
+        <div className="relative aspect-video bg-black">
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`}
+            title={title}
+            className="absolute inset-0 w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
+        </div>
+      ) : (
+        <div 
+          className={`relative aspect-video cursor-pointer group ${
+            isYouTubeId && !thumbnailError 
+              ? 'bg-black' 
+              : `bg-gradient-to-br ${gradientClass}`
+          }`}
+          onClick={() => setIsPlaying(true)}
+        >
+          {/* YouTube thumbnail */}
+          {isYouTubeId && !thumbnailError && youTubeThumbnail && (
+            <img 
+              src={youTubeThumbnail}
+              alt={title}
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={() => setThumbnailError(true)}
+            />
+          )}
+          
+          {/* Play button overlay */}
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+            <div className="w-20 h-20 rounded-full bg-red-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+              <Play className="w-10 h-10 text-white fill-white ml-1" />
             </div>
           </div>
-        )}
-      </div>
+          
+          {/* Video info overlay */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+            <div className="flex items-center gap-2 text-white/90">
+              <Video className="w-5 h-5" />
+              <span className="font-medium">{title}</span>
+              <Badge variant="secondary" className="ml-auto bg-black/50 text-white border-0">
+                {duration}
+              </Badge>
+            </div>
+          </div>
+          
+          {/* Placeholder message for non-YouTube videos */}
+          {!isYouTubeId && (
+            <div className="absolute top-4 right-4">
+              <Badge variant="secondary" className="bg-white/20 text-white border-0 text-xs">
+                Coming Soon
+              </Badge>
+            </div>
+          )}
+        </div>
+      )}
       <div className="p-4">
         <h4 className="font-semibold text-foreground mb-1">{title}</h4>
         <p className="text-sm text-muted-foreground">{description}</p>
+        {isYouTubeId && isPlaying && (
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="mt-2 text-muted-foreground"
+            onClick={() => setIsPlaying(false)}
+          >
+            Close Video
+          </Button>
+        )}
       </div>
     </div>
   );
