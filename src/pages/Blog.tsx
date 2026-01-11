@@ -39,6 +39,195 @@ interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
+    id: "100",
+    slug: "complete-guide-financeai-platform-features",
+    title: "The Complete Guide to FinanceAI: All Platform Features Explained",
+    excerpt: "Explore every feature of FinanceAI - from AI-powered analysis and document intelligence to interactive visualizations, secure authentication, and subscription management.",
+    content: `FinanceAI is a comprehensive AI-powered financial analysis platform designed to transform how businesses and individuals interact with financial data. This guide covers every feature available on our platform.
+
+## 🏠 Homepage & Navigation
+
+Our sleek, modern homepage introduces you to FinanceAI with:
+- **Hero Section**: Eye-catching introduction with call-to-action buttons
+- **Services Overview**: Quick look at what we offer
+- **Process Explanation**: How our AI analysis works
+- **Tech Stack**: The cutting-edge technology powering our platform
+- **Contact Form**: Easy way to reach our team
+
+## 🤖 AI Predict - Conversational Financial Analysis
+
+AI Predict is our flagship feature for natural language financial analysis:
+
+**Core Capabilities:**
+- Ask questions in plain English about your financial data
+- Upload documents (PDFs, spreadsheets, reports) for AI analysis
+- Get instant, intelligent responses with context awareness
+- Multi-turn conversations for deeper analysis
+- Smart suggestion chips based on your documents
+
+**Best Use Cases:**
+- Due diligence before investments
+- Competitive financial analysis
+- Trend identification in revenue and expenses
+- Executive summaries of complex reports
+- Ad-hoc financial queries
+
+## 📈 Fin Predict - Advanced Forecasting & Visualization
+
+Fin Predict specializes in forward-looking predictions:
+
+**Visualization Types:**
+- **Trend Charts**: Track metrics over time with projections
+- **Dual-Axis Charts**: Compare related metrics with different scales
+- **Heatmaps**: Identify patterns across multiple dimensions
+- **Sankey Diagrams**: Visualize fund flows
+- **3D Scatter Plots**: Explore multi-variable relationships
+- **Treemaps**: Hierarchical data visualization
+- **Network Graphs**: Relationship mapping
+- **Word Clouds**: Text analysis visualization
+- **Area Charts**: Time-series with volume emphasis
+
+**Forecasting Features:**
+- Revenue and expense projections
+- Cash flow predictions
+- Scenario analysis (best/worst/likely)
+- Confidence intervals
+- Custom metric forecasting
+
+## 📄 Document Management
+
+Our intelligent document system supports:
+- **Multiple Formats**: PDF, Excel, Word, CSV files
+- **Smart Processing**: AI extracts and indexes content
+- **Semantic Search**: Find information across all documents
+- **RAG (Retrieval Augmented Generation)**: Documents enhance AI responses
+- **Secure Storage**: Enterprise-grade encryption
+
+## 🔐 Authentication & Security
+
+Robust security features include:
+- **Email/Password Authentication**: Standard secure login
+- **Password Reset**: Self-service recovery
+- **Profile Management**: Update personal information
+- **Session Management**: Active session tracking
+- **Row Level Security**: Database-level data protection
+- **Encrypted Storage**: All data encrypted at rest
+
+## 👤 User Profiles
+
+Personalized experience with:
+- Display name and avatar customization
+- Email preferences
+- Usage history tracking
+- Subscription status viewing
+- Account settings management
+
+## 💳 Subscription & Pricing
+
+Flexible plans for every need:
+- **Free Tier**: Basic access to try the platform
+- **Pro Plans**: Enhanced features and limits
+- **Usage Tracking**: Monitor your AI usage
+- **Billing History**: View past invoices
+- **Stripe Integration**: Secure payment processing
+- **Customer Portal**: Self-service subscription management
+
+## 📊 Analytics & Usage Dashboard
+
+Track your platform usage:
+- **Interaction History**: See all your AI conversations
+- **Usage Metrics**: Monitor API calls and credits
+- **Performance Insights**: Response times and accuracy
+- **Export Capabilities**: Download your data
+
+## 📚 Blog & Resources
+
+Stay informed with:
+- **Product Guides**: Deep dives into features
+- **Best Practices**: Tips for better analysis
+- **Industry Insights**: Financial analysis trends
+- **Tutorial Content**: Step-by-step guides
+- **Search & Filter**: Find relevant articles quickly
+- **Category Organization**: Browse by topic
+
+## 📖 User Guide
+
+Comprehensive documentation covering:
+- Getting started tutorials
+- Feature explanations
+- FAQ section
+- Best practices
+- Troubleshooting tips
+
+## 🔧 Admin Panel
+
+For administrators:
+- User management
+- SEO monitoring
+- System analytics
+- Content moderation
+- Role-based access control
+
+## 📱 Progressive Web App (PWA)
+
+Install FinanceAI on any device:
+- **Desktop Installation**: Add to taskbar/dock
+- **Mobile Installation**: Home screen icon
+- **Offline Capability**: Basic features work offline
+- **Push Notifications**: Stay updated (coming soon)
+- **Fast Loading**: Cached resources for speed
+
+## 🌙 Theme Support
+
+Personalize your experience:
+- **Light Mode**: Clean, bright interface
+- **Dark Mode**: Easy on the eyes
+- **System Preference**: Auto-match your device
+- **Persistent Setting**: Remembers your choice
+
+## 📧 Contact & Support
+
+Multiple ways to reach us:
+- **Contact Form**: Submit inquiries
+- **Email Integration**: Direct communication
+- **Feedback System**: Rate your experience
+- **Response Tracking**: Follow-up on tickets
+
+## 🔄 Real-time Features
+
+Live updates across the platform:
+- **Real-time Charts**: Data updates as it changes
+- **Live Notifications**: Instant alerts
+- **Collaborative Sessions**: Share analysis (coming soon)
+
+## 🛡️ Enterprise-Grade Infrastructure
+
+Built on robust technology:
+- **Cloud Database**: Scalable PostgreSQL
+- **Edge Functions**: Serverless backend logic
+- **CDN Distribution**: Global content delivery
+- **99.9% Uptime**: Reliable service
+- **Automatic Backups**: Data protection
+
+## Getting Started
+
+1. **Sign Up**: Create your free account
+2. **Explore**: Try AI Predict with sample questions
+3. **Upload Documents**: Add your financial files
+4. **Analyze**: Ask questions and get insights
+5. **Visualize**: Use Fin Predict for forecasts
+6. **Upgrade**: Choose a plan that fits your needs
+
+FinanceAI combines the power of artificial intelligence with intuitive design to make financial analysis accessible to everyone. Whether you're a solo entrepreneur, financial analyst, or enterprise team, our platform scales to meet your needs.
+
+Start your journey with FinanceAI today and transform how you understand financial data!`,
+    category: "Platform Overview",
+    readTime: "12 min read",
+    date: "January 11, 2026",
+    icon: <Rocket className="w-6 h-6" />,
+    featured: true
+  },
+  {
     id: "11",
     slug: "mastering-ai-predict-platform",
     title: "Mastering AI Predict: Your Complete Guide to Intelligent Financial Analysis",
