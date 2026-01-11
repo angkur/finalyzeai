@@ -485,54 +485,7 @@ export type Database = {
       }
     }
     Views: {
-      user_plans_safe: {
-        Row: {
-          created_at: string | null
-          daily_limit: number | null
-          expires_at: string | null
-          has_customer: boolean | null
-          has_subscription: boolean | null
-          history_retention_days: number | null
-          id: string | null
-          monthly_limit: number | null
-          plan_name: string | null
-          started_at: string | null
-          updated_at: string | null
-          upload_limit_mb: number | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          daily_limit?: number | null
-          expires_at?: string | null
-          has_customer?: never
-          has_subscription?: never
-          history_retention_days?: number | null
-          id?: string | null
-          monthly_limit?: number | null
-          plan_name?: string | null
-          started_at?: string | null
-          updated_at?: string | null
-          upload_limit_mb?: number | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          daily_limit?: number | null
-          expires_at?: string | null
-          has_customer?: never
-          has_subscription?: never
-          history_retention_days?: number | null
-          id?: string | null
-          monthly_limit?: number | null
-          plan_name?: string | null
-          started_at?: string | null
-          updated_at?: string | null
-          upload_limit_mb?: number | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       has_role: {
