@@ -209,6 +209,22 @@ Built on robust technology:
 - **99.9% Uptime**: Reliable service
 - **Automatic Backups**: Data protection
 
+## 🎬 Video Walkthroughs
+
+Learn FinanceAI through our comprehensive video tutorials. Each video is designed to help you master specific features quickly.
+
+[VIDEO:getting-started:Getting Started with FinanceAI:A complete introduction to the platform - from signing up to your first AI analysis. Perfect for new users.:5 min]
+
+[VIDEO:ai-predict-deep-dive:AI Predict Deep Dive:Master conversational financial analysis with pro tips, real examples, and advanced query techniques.:8 min]
+
+[VIDEO:document-management:Document Upload & Processing:Learn how to upload, organize, and query your financial documents for maximum insight extraction.:4 min]
+
+[VIDEO:fin-predict-visualizations:Fin Predict Visualizations:Create stunning forecasts and interactive charts. Covers all visualization types and customization options.:7 min]
+
+[VIDEO:advanced-features:Advanced Features & Power Tips:Power user techniques including keyboard shortcuts, batch processing, and API integration.:6 min]
+
+[VIDEO:mobile-pwa:Mobile & PWA Installation:Install FinanceAI on your phone or desktop for quick access. Works offline too!:3 min]
+
 ## Getting Started
 
 1. **Sign Up**: Create your free account
