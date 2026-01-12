@@ -642,7 +642,7 @@ const AIDemo = () => {
 
           {/* Visualization Feature Cards */}
           {isVisualization && (
-            <div className="mt-8 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+            <div className="mt-8 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
               {[
                 { icon: '📊', label: 'Bar Charts' },
                 { icon: '🥧', label: 'Pie Charts' },
@@ -651,6 +651,7 @@ const AIDemo = () => {
                 { icon: '🌳', label: 'Treemaps' },
                 { icon: '📉', label: 'Dual Axis' },
                 { icon: '🎯', label: '3D Scatter' },
+                { icon: '🔄', label: '3D Workflow' },
               ].map((item, i) => (
                 <div key={i} className="p-3 rounded-xl bg-card/50 border border-border/30 text-center">
                   <span className="text-2xl">{item.icon}</span>
