@@ -9,15 +9,16 @@ import Scatter3DChart from "./Scatter3DChart";
 import NetworkGraph from "./NetworkGraph";
 import SankeyChart from "./SankeyChart";
 import WordCloud from "./WordCloud";
+import Workflow3DChart from "./Workflow3DChart";
 import ChartControls from "./ChartControls";
 import ChartAnnotations, { Annotation } from "./ChartAnnotations";
 import RealtimeControls from "./RealtimeControls";
 import ChartComparison, { ComparisonDataset } from "./ChartComparison";
 import useRealtimeChart from "@/hooks/useRealtimeChart";
-import { BarChart3, PieChart, TrendingUp, Grid3X3, Layers, Box, Network, GitBranch, Cloud } from "lucide-react";
+import { BarChart3, PieChart, TrendingUp, Grid3X3, Layers, Box, Network, GitBranch, Cloud, Workflow } from "lucide-react";
 
 export interface ChartData {
-  chartType: 'heatmap' | 'bar' | 'pie' | 'area' | 'treemap' | 'dualAxis' | 'scatter3d' | 'network' | 'sankey' | 'wordcloud';
+  chartType: 'heatmap' | 'bar' | 'pie' | 'area' | 'treemap' | 'dualAxis' | 'scatter3d' | 'network' | 'sankey' | 'wordcloud' | 'workflow3d';
   data: any[];
   config?: {
     xAxis?: string;
@@ -48,6 +49,7 @@ const chartTypeIcons = {
   network: Network,
   sankey: GitBranch,
   wordcloud: Cloud,
+  workflow3d: Workflow,
 };
 
 const chartTypeLabels = {
@@ -61,6 +63,7 @@ const chartTypeLabels = {
   network: "Network",
   sankey: "Sankey",
   wordcloud: "Word Cloud",
+  workflow3d: "3D Workflow",
 };
 
 const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartData: initialChartData, isLoading, enableRealtime = true }, ref) => {
@@ -258,12 +261,14 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
         return <SankeyChart {...commonProps} />;
       case 'wordcloud':
         return <WordCloud {...commonProps} />;
+      case 'workflow3d':
+        return <Workflow3DChart {...commonProps} />;
       default:
         return <PieBarChart {...commonProps} type="bar" />;
     }
   };
 
-  const availableCharts: ChartData['chartType'][] = ['bar', 'pie', 'area', 'heatmap', 'treemap', 'dualAxis', 'scatter3d', 'network', 'sankey', 'wordcloud'];
+  const availableCharts: ChartData['chartType'][] = ['bar', 'pie', 'area', 'heatmap', 'treemap', 'dualAxis', 'scatter3d', 'network', 'sankey', 'wordcloud', 'workflow3d'];
 
   return (
     <div 

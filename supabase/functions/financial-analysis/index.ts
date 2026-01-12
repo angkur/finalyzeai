@@ -62,6 +62,7 @@ Steps:
    - For categorical data: sum or count by category
    - For time series: aggregate by date/month
    - For numerical comparisons: take top N by value
+   - For process/workflow data: identify steps and connections
 4. Return processed data points - EVERY object must have "name" and "value"
 
 Chart type selection:
@@ -72,6 +73,23 @@ Chart type selection:
 - "treemap": For hierarchical nested categories with sizes
 - "dualAxis": For comparing two metrics (requires leftValue and rightValue)
 - "scatter3d": For 3D relationships (requires x, y, z values)
+- "workflow3d": For process flows, pipelines, decision trees - use when data describes steps, stages, or connected processes
+
+EXAMPLE for workflow/process data:
+If the data describes processes, steps, pipelines, or connected stages:
+{
+  "chartType": "workflow3d",
+  "data": [
+    {"source": "Data Input", "target": "Validation", "value": 100, "category": "Input"},
+    {"source": "Validation", "target": "Analysis", "value": 95, "category": "Process"},
+    {"source": "Analysis", "target": "Prediction", "value": 90, "category": "AI"},
+    {"source": "Analysis", "target": "Report", "value": 85, "category": "Output"},
+    {"source": "Prediction", "target": "Decision", "value": 80, "category": "Decision"},
+    {"source": "Report", "target": "Decision", "value": 75, "category": "Output"}
+  ],
+  "insights": "The workflow shows a data processing pipeline with 6 stages...",
+  "config": {"sourceKey": "source", "targetKey": "target", "valueKey": "value", "categoryKey": "category", "title": "Financial Analysis Pipeline"}
+}
 
 EXAMPLE for stock/trading data:
 If given columns: Date, Scrip, Open, High, Low, Close, Volume
@@ -110,7 +128,8 @@ EXAMPLE for dual axis (comparing two metrics):
 REMEMBER: 
 - NEVER return {"name": undefined} or {} or empty objects
 - Always process the actual data provided
-- Every data object MUST have "name" (string) and "value" (number) at minimum`,
+- Every data object MUST have "name" (string) and "value" (number) at minimum
+- Use "workflow3d" for process flows, decision trees, pipelines, and connected stages`,
     };
 
     const systemPrompt = systemPrompts[analysisType] || systemPrompts['data-analysis'];
@@ -142,8 +161,8 @@ REMEMBER:
                   properties: {
                     chartType: {
                       type: "string",
-                      enum: ["heatmap", "bar", "pie", "area", "treemap", "dualAxis", "scatter3d"],
-                      description: "The recommended chart type based on data analysis"
+                      enum: ["heatmap", "bar", "pie", "area", "treemap", "dualAxis", "scatter3d", "workflow3d"],
+                      description: "The recommended chart type based on data analysis. Use workflow3d for process flows and pipelines."
                     },
                     data: {
                       type: "array",
