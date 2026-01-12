@@ -296,6 +296,43 @@ const Workflow3DChart = ({ data, config, zoom = 1 }: Workflow3DChartProps) => {
     const processedNodes: WorkflowNode[] = [];
     const processedLinks: WorkflowLink[] = [];
     
+    console.log('Workflow3DChart received data:', data);
+    console.log('Workflow3DChart config:', config);
+    
+    // Auto-detect keys from data
+    const detectKeys = (items: any[]) => {
+      if (!items || items.length === 0) return { nodeKey: 'name', valueKey: 'value', categoryKey: 'category' };
+      
+      const sample = items[0];
+      const keys = Object.keys(sample);
+      
+      // Try common name/label keys
+      const nodeKey = keys.find(k => 
+        ['name', 'label', 'id', 'title', 'step', 'node', 'stage', 'scripps', 'symbol', 'stock'].includes(k.toLowerCase())
+      ) || keys[0];
+      
+      // Try common value keys
+      const valueKey = keys.find(k => 
+        ['value', 'amount', 'count', 'total', 'volume', 'trading_volume', 'quantity', 'size'].includes(k.toLowerCase())
+      ) || keys.find(k => typeof sample[k] === 'number') || 'value';
+      
+      // Try common category keys
+      const categoryKey = keys.find(k => 
+        ['category', 'type', 'group', 'status', 'phase', 'stage'].includes(k.toLowerCase())
+      ) || 'category';
+      
+      return { nodeKey, valueKey, categoryKey };
+    };
+    
+    const detectedKeys = detectKeys(data);
+    const nodeKey = config?.nodeKey || detectedKeys.nodeKey;
+    const valueKey = config?.valueKey || detectedKeys.valueKey;
+    const categoryKey = config?.categoryKey || detectedKeys.categoryKey;
+    const sourceKey = config?.sourceKey || 'source';
+    const targetKey = config?.targetKey || 'target';
+    
+    console.log('Using keys:', { nodeKey, valueKey, categoryKey, sourceKey, targetKey });
+    
     if (!data || data.length === 0) {
       // Generate sample workflow data
       const sampleNodes = [
@@ -342,13 +379,6 @@ const Workflow3DChart = ({ data, config, zoom = 1 }: Workflow3DChartProps) => {
       
       return { nodes: processedNodes, links: processedLinks };
     }
-    
-    // Process actual data
-    const nodeKey = config?.nodeKey || 'name';
-    const valueKey = config?.valueKey || 'value';
-    const categoryKey = config?.categoryKey || 'category';
-    const sourceKey = config?.sourceKey || 'source';
-    const targetKey = config?.targetKey || 'target';
     
     // Check if data contains links (workflow structure)
     const hasLinks = data.some(item => item[sourceKey] && item[targetKey]);
@@ -397,41 +427,68 @@ const Workflow3DChart = ({ data, config, zoom = 1 }: Workflow3DChartProps) => {
         });
       });
     } else {
-      // Process as flat node list - create sequential workflow
-      const categories = [...new Set(data.map(item => item[categoryKey] || 'Step'))];
+      // Process as flat node list - create a circular/flow layout
+      // Get unique categories and sort data by value for better visualization
+      const sortedData = [...data].sort((a, b) => {
+        const valA = Number(a[valueKey]) || 0;
+        const valB = Number(b[valueKey]) || 0;
+        return valB - valA;
+      });
       
-      data.forEach((item, i) => {
-        const id = String(item[nodeKey] || `node_${i}`);
-        const category = item[categoryKey] || 'Step';
+      const categories = [...new Set(sortedData.map(item => item[categoryKey] || 'Data'))];
+      const maxValue = Math.max(...sortedData.map(item => Number(item[valueKey]) || 1));
+      
+      console.log('Processing flat data:', { categories, maxValue, dataCount: sortedData.length });
+      
+      sortedData.forEach((item, i) => {
+        const nodeLabel = String(item[nodeKey] || `Node ${i + 1}`);
+        const id = `node_${i}_${nodeLabel.replace(/\s+/g, '_')}`;
+        const category = String(item[categoryKey] || 'Data');
+        const value = Number(item[valueKey]) || 50;
         const categoryIndex = categories.indexOf(category);
-        const nodesInCategory = data.filter(d => (d[categoryKey] || 'Step') === category);
-        const indexInCategory = nodesInCategory.indexOf(item);
+        
+        // Circular layout for flat data - spread nodes around a circle
+        const angle = (i / sortedData.length) * Math.PI * 2;
+        const radius = 2.5 + (value / maxValue) * 0.5; // Vary radius by value
         
         processedNodes.push({
           id,
-          label: String(item[nodeKey] || `Step ${i + 1}`),
-          value: Number(item[valueKey]) || 50,
+          label: nodeLabel,
+          value,
           category,
           position: new THREE.Vector3(
-            (categoryIndex - categories.length / 2) * 2.5,
-            (indexInCategory - nodesInCategory.length / 2) * 1.5,
-            0
+            Math.cos(angle) * radius,
+            Math.sin(angle) * 0.8, // Flatten the Y distribution
+            Math.sin(angle) * radius * 0.4 // Add some depth
           ),
           color: CATEGORY_COLORS[categoryIndex % CATEGORY_COLORS.length],
           connections: [],
         });
         
-        // Create sequential links
+        // Create sequential links to form a flow
         if (i > 0) {
           processedLinks.push({
             source: processedNodes[i - 1].id,
             target: id,
-            value: Number(item[valueKey]) || 50,
+            value,
           });
           processedNodes[i - 1].connections.push(id);
         }
       });
+      
+      // Close the loop if we have multiple nodes
+      if (processedNodes.length > 2) {
+        processedLinks.push({
+          source: processedNodes[processedNodes.length - 1].id,
+          target: processedNodes[0].id,
+          value: processedNodes[0].value,
+        });
+        processedNodes[processedNodes.length - 1].connections.push(processedNodes[0].id);
+      }
     }
+    
+    console.log('Processed nodes:', processedNodes.length);
+    console.log('Processed links:', processedLinks.length);
     
     return { nodes: processedNodes, links: processedLinks };
   }, [data, config]);
