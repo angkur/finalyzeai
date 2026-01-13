@@ -1,12 +1,20 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, ArrowRight, Play, RotateCcw, Workflow, Link2 } from "lucide-react";
+import { Plus, Trash2, ArrowRight, Play, RotateCcw, Workflow, Link2, Download, Upload, FileJson, LayoutTemplate } from "lucide-react";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 
 export interface WorkflowNode {
   id: string;
@@ -53,9 +61,107 @@ const CATEGORY_COLORS: Record<string, string> = {
   Custom: "bg-gray-500",
 };
 
+// Pre-built workflow templates
+const WORKFLOW_TEMPLATES: Record<string, WorkflowData> = {
+  financial_analysis: {
+    nodes: [
+      { id: "data_input", label: "Market Data Input", value: 100, category: "Input" },
+      { id: "validation", label: "Data Validation", value: 95, category: "Process" },
+      { id: "preprocessing", label: "Preprocessing", value: 90, category: "Process" },
+      { id: "risk_analysis", label: "Risk Analysis", value: 85, category: "AI" },
+      { id: "trend_detection", label: "Trend Detection", value: 80, category: "AI" },
+      { id: "portfolio_opt", label: "Portfolio Optimization", value: 75, category: "Decision" },
+      { id: "report_gen", label: "Report Generation", value: 70, category: "Output" },
+      { id: "storage", label: "Results Storage", value: 65, category: "Storage" },
+    ],
+    links: [
+      { source: "data_input", target: "validation", value: 100 },
+      { source: "validation", target: "preprocessing", value: 95 },
+      { source: "preprocessing", target: "risk_analysis", value: 90 },
+      { source: "preprocessing", target: "trend_detection", value: 85 },
+      { source: "risk_analysis", target: "portfolio_opt", value: 80 },
+      { source: "trend_detection", target: "portfolio_opt", value: 75 },
+      { source: "portfolio_opt", target: "report_gen", value: 70 },
+      { source: "report_gen", target: "storage", value: 65 },
+    ],
+  },
+  data_processing: {
+    nodes: [
+      { id: "raw_data", label: "Raw Data", value: 100, category: "Input" },
+      { id: "etl", label: "ETL Process", value: 95, category: "Process" },
+      { id: "clean", label: "Data Cleaning", value: 90, category: "Process" },
+      { id: "transform", label: "Transformation", value: 85, category: "Process" },
+      { id: "quality", label: "Quality Check", value: 80, category: "Decision" },
+      { id: "enrichment", label: "Data Enrichment", value: 75, category: "Integration" },
+      { id: "warehouse", label: "Data Warehouse", value: 70, category: "Storage" },
+      { id: "analytics", label: "Analytics Ready", value: 65, category: "Output" },
+    ],
+    links: [
+      { source: "raw_data", target: "etl", value: 100 },
+      { source: "etl", target: "clean", value: 95 },
+      { source: "clean", target: "transform", value: 90 },
+      { source: "transform", target: "quality", value: 85 },
+      { source: "quality", target: "enrichment", value: 80 },
+      { source: "enrichment", target: "warehouse", value: 75 },
+      { source: "warehouse", target: "analytics", value: 70 },
+    ],
+  },
+  risk_assessment: {
+    nodes: [
+      { id: "inputs", label: "Risk Inputs", value: 100, category: "Input" },
+      { id: "historical", label: "Historical Data", value: 95, category: "Storage" },
+      { id: "market_risk", label: "Market Risk", value: 90, category: "AI" },
+      { id: "credit_risk", label: "Credit Risk", value: 85, category: "AI" },
+      { id: "operational", label: "Operational Risk", value: 80, category: "AI" },
+      { id: "aggregation", label: "Risk Aggregation", value: 75, category: "Process" },
+      { id: "scoring", label: "Risk Scoring", value: 70, category: "Decision" },
+      { id: "mitigation", label: "Mitigation Plan", value: 65, category: "Output" },
+      { id: "dashboard", label: "Risk Dashboard", value: 60, category: "Output" },
+    ],
+    links: [
+      { source: "inputs", target: "market_risk", value: 100 },
+      { source: "inputs", target: "credit_risk", value: 95 },
+      { source: "inputs", target: "operational", value: 90 },
+      { source: "historical", target: "market_risk", value: 85 },
+      { source: "historical", target: "credit_risk", value: 80 },
+      { source: "market_risk", target: "aggregation", value: 75 },
+      { source: "credit_risk", target: "aggregation", value: 70 },
+      { source: "operational", target: "aggregation", value: 65 },
+      { source: "aggregation", target: "scoring", value: 60 },
+      { source: "scoring", target: "mitigation", value: 55 },
+      { source: "scoring", target: "dashboard", value: 50 },
+    ],
+  },
+  ml_pipeline: {
+    nodes: [
+      { id: "data_source", label: "Data Source", value: 100, category: "Input" },
+      { id: "feature_eng", label: "Feature Engineering", value: 95, category: "Process" },
+      { id: "train_split", label: "Train/Test Split", value: 90, category: "Process" },
+      { id: "model_train", label: "Model Training", value: 85, category: "AI" },
+      { id: "validation", label: "Validation", value: 80, category: "Decision" },
+      { id: "hypertuning", label: "Hyperparameter Tuning", value: 75, category: "AI" },
+      { id: "evaluation", label: "Model Evaluation", value: 70, category: "Process" },
+      { id: "deployment", label: "Deployment", value: 65, category: "Integration" },
+      { id: "monitoring", label: "Monitoring", value: 60, category: "Output" },
+    ],
+    links: [
+      { source: "data_source", target: "feature_eng", value: 100 },
+      { source: "feature_eng", target: "train_split", value: 95 },
+      { source: "train_split", target: "model_train", value: 90 },
+      { source: "model_train", target: "validation", value: 85 },
+      { source: "validation", target: "hypertuning", value: 80 },
+      { source: "hypertuning", target: "model_train", value: 75 },
+      { source: "validation", target: "evaluation", value: 70 },
+      { source: "evaluation", target: "deployment", value: 65 },
+      { source: "deployment", target: "monitoring", value: 60 },
+    ],
+  },
+};
+
 const WorkflowBuilder = ({ onBuild, initialData }: WorkflowBuilderProps) => {
   const [nodes, setNodes] = useState<WorkflowNode[]>(initialData?.nodes || []);
   const [links, setLinks] = useState<WorkflowLink[]>(initialData?.links || []);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // New node form state
   const [newNodeLabel, setNewNodeLabel] = useState("");
@@ -151,17 +257,133 @@ const WorkflowBuilder = ({ onBuild, initialData }: WorkflowBuilderProps) => {
     toast.info("Workflow reset");
   }, []);
 
+  // Template loading
+  const handleLoadTemplate = useCallback((templateKey: string) => {
+    const template = WORKFLOW_TEMPLATES[templateKey];
+    if (template) {
+      setNodes(template.nodes);
+      setLinks(template.links);
+      toast.success(`Loaded template: ${templateKey.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}`);
+    }
+  }, []);
+
+  // Export workflow as JSON
+  const handleExport = useCallback(() => {
+    if (nodes.length === 0) {
+      toast.error("No workflow to export");
+      return;
+    }
+
+    const workflowData: WorkflowData = { nodes, links };
+    const dataStr = JSON.stringify(workflowData, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `workflow_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast.success("Workflow exported successfully!");
+  }, [nodes, links]);
+
+  // Import workflow from JSON
+  const handleImport = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const data = JSON.parse(content) as WorkflowData;
+        
+        if (!Array.isArray(data.nodes) || !Array.isArray(data.links)) {
+          throw new Error("Invalid workflow format");
+        }
+        
+        setNodes(data.nodes);
+        setLinks(data.links);
+        toast.success("Workflow imported successfully!");
+      } catch (error) {
+        toast.error("Failed to import workflow: Invalid file format");
+      }
+    };
+    reader.readAsText(file);
+    
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }, []);
+
   const getNodeLabel = (id: string) => nodes.find((n) => n.id === id)?.label || id;
 
   return (
     <div className="space-y-4">
+      {/* Hidden file input for import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        onChange={handleImport}
+        className="hidden"
+      />
+
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Workflow className="w-5 h-5 text-primary" />
           <h3 className="font-semibold text-foreground">Workflow Builder</h3>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Templates Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <LayoutTemplate className="w-4 h-4 mr-1" />
+                Templates
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Load Template</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleLoadTemplate("financial_analysis")}>
+                <FileJson className="w-4 h-4 mr-2 text-blue-500" />
+                Financial Analysis Pipeline
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleLoadTemplate("data_processing")}>
+                <FileJson className="w-4 h-4 mr-2 text-green-500" />
+                Data Processing Flow
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleLoadTemplate("risk_assessment")}>
+                <FileJson className="w-4 h-4 mr-2 text-orange-500" />
+                Risk Assessment Workflow
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleLoadTemplate("ml_pipeline")}>
+                <FileJson className="w-4 h-4 mr-2 text-purple-500" />
+                ML Pipeline
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Export Button */}
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={nodes.length === 0}>
+            <Download className="w-4 h-4 mr-1" />
+            Export
+          </Button>
+
+          {/* Import Button */}
+          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+            <Upload className="w-4 h-4 mr-1" />
+            Import
+          </Button>
+
+          <div className="w-px h-6 bg-border" />
+
           <Button variant="outline" size="sm" onClick={handleReset}>
             <RotateCcw className="w-4 h-4 mr-1" />
             Reset
@@ -353,7 +575,7 @@ const WorkflowBuilder = ({ onBuild, initialData }: WorkflowBuilderProps) => {
       {nodes.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
           <Workflow className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p className="text-sm">Start by adding steps to your workflow</p>
+          <p className="text-sm">Start by adding steps or load a template</p>
           <p className="text-xs mt-1">Then connect them to visualize the flow</p>
         </div>
       )}
