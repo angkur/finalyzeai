@@ -18,7 +18,8 @@ import ChartAnnotations, { Annotation } from "./ChartAnnotations";
 import RealtimeControls from "./RealtimeControls";
 import ChartComparison, { ComparisonDataset } from "./ChartComparison";
 import useRealtimeChart from "@/hooks/useRealtimeChart";
-import { BarChart3, PieChart, TrendingUp, Grid3X3, Layers, Box, Network, GitBranch, Cloud, Workflow, Wrench } from "lucide-react";
+import { BarChart3, PieChart, TrendingUp, Grid3X3, Layers, Box, Network, GitBranch, Cloud, Workflow, Wrench, Monitor, Database } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 export interface ChartData {
   chartType: 'heatmap' | 'bar' | 'pie' | 'area' | 'treemap' | 'dualAxis' | 'scatter3d' | 'network' | 'sankey' | 'wordcloud' | 'workflow3d';
@@ -80,7 +81,8 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
   const [comparisonDatasets, setComparisonDatasets] = useState<ComparisonDataset[]>([]);
   const [showWorkflowBuilder, setShowWorkflowBuilder] = useState(false);
   const [customWorkflowData, setCustomWorkflowData] = useState<WorkflowData | null>(null);
-  
+  const [workflowRenderMode, setWorkflowRenderMode] = useState<"3d" | "2d">("3d");
+  const [workflowDataSource, setWorkflowDataSource] = useState<"uploaded" | "custom">("uploaded");
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Forward the ref to the container
@@ -220,6 +222,7 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
   // Handle workflow builder output
   const handleWorkflowBuild = useCallback((workflowData: WorkflowData) => {
     setCustomWorkflowData(workflowData);
+    setWorkflowDataSource("custom");
     setSelectedChart('workflow3d');
     setShowWorkflowBuilder(false);
   }, []);
@@ -229,17 +232,35 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
     if (!customWorkflowData) return null;
     
     const { nodes, links } = customWorkflowData;
-    return nodes.map((node, i) => {
-      const nodeLinks = links.filter(l => l.source === node.id);
+    
+    // Create proper link format with source/target labels
+    return links.map((link) => {
+      const sourceNode = nodes.find(n => n.id === link.source);
+      const targetNode = nodes.find(n => n.id === link.target);
       return {
-        name: node.label,
+        source: sourceNode?.label || link.source,
+        target: targetNode?.label || link.target,
+        value: link.value,
+        category: sourceNode?.category || "Process",
+      };
+    }).concat(
+      // Add nodes without outgoing links
+      nodes.filter(n => !links.some(l => l.source === n.id)).map(node => ({
+        source: node.label,
+        target: "",
         value: node.value,
         category: node.category,
-        source: nodeLinks.length > 0 ? node.label : undefined,
-        target: nodeLinks.length > 0 ? nodes.find(n => n.id === nodeLinks[0]?.target)?.label : undefined,
-      };
-    });
+      }))
+    );
   }, [customWorkflowData]);
+
+  // Determine which data to use for workflow
+  const activeWorkflowData = useMemo(() => {
+    if (workflowDataSource === "custom" && workflowChartData && workflowChartData.length > 0) {
+      return workflowChartData;
+    }
+    return mergedChartData?.data || [];
+  }, [workflowDataSource, workflowChartData, mergedChartData]);
 
   if (isLoading) {
     return (
@@ -268,8 +289,8 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
   const activeChart = selectedChart || chartData.chartType;
 
   const renderChart = (type: ChartData['chartType'], data: any[] = mergedChartData?.data || []) => {
-    // Use custom workflow data if available for workflow3d
-    const chartDataToUse = type === 'workflow3d' && workflowChartData ? workflowChartData : data;
+    // Use workflow-specific data for workflow charts
+    const chartDataToUse = type === 'workflow3d' ? activeWorkflowData : data;
     const commonProps = { data: chartDataToUse, config: chartData.config, zoom };
 
     switch (type) {
@@ -293,6 +314,10 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
       case 'wordcloud':
         return <WordCloud {...commonProps} />;
       case 'workflow3d':
+        // Render 2D fallback if user selected 2D mode
+        if (workflowRenderMode === "2d") {
+          return <Workflow2DFallback {...commonProps} isManualMode={true} />;
+        }
         return <Workflow3DChart {...commonProps} />;
       default:
         return <PieBarChart {...commonProps} type="bar" />;
@@ -366,10 +391,45 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
               chartType={activeChart}
               chartData={chartData.data}
             />
-            {/* Workflow Builder Toggle */}
+            {/* Workflow Builder Toggle and Controls */}
             {activeChart === 'workflow3d' && (
               <>
                 <div className="w-px h-6 bg-border hidden sm:block" />
+                
+                {/* 3D/2D Toggle */}
+                <ToggleGroup 
+                  type="single" 
+                  value={workflowRenderMode}
+                  onValueChange={(value) => value && setWorkflowRenderMode(value as "3d" | "2d")}
+                  className="bg-secondary/50 p-0.5 rounded-md"
+                >
+                  <ToggleGroupItem value="3d" size="sm" className="px-3 py-1 text-xs data-[state=on]:bg-primary/20 data-[state=on]:text-primary">
+                    <Box className="w-3.5 h-3.5 mr-1" />
+                    3D
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="2d" size="sm" className="px-3 py-1 text-xs data-[state=on]:bg-primary/20 data-[state=on]:text-primary">
+                    <Monitor className="w-3.5 h-3.5 mr-1" />
+                    2D
+                  </ToggleGroupItem>
+                </ToggleGroup>
+
+                {/* Data Source Toggle */}
+                <ToggleGroup 
+                  type="single" 
+                  value={workflowDataSource}
+                  onValueChange={(value) => value && setWorkflowDataSource(value as "uploaded" | "custom")}
+                  className="bg-secondary/50 p-0.5 rounded-md"
+                >
+                  <ToggleGroupItem value="uploaded" size="sm" className="px-3 py-1 text-xs data-[state=on]:bg-primary/20 data-[state=on]:text-primary">
+                    <Database className="w-3.5 h-3.5 mr-1" />
+                    Uploaded
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="custom" size="sm" className="px-3 py-1 text-xs data-[state=on]:bg-primary/20 data-[state=on]:text-primary">
+                    <Wrench className="w-3.5 h-3.5 mr-1" />
+                    Custom
+                  </ToggleGroupItem>
+                </ToggleGroup>
+
                 <Button
                   variant={showWorkflowBuilder ? "default" : "outline"}
                   size="sm"

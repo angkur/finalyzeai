@@ -15,6 +15,7 @@ interface Workflow2DFallbackProps {
   zoom?: number;
   renderMode?: "sankey" | "network";
   errorMessage?: string;
+  isManualMode?: boolean; // When user explicitly chose 2D
 }
 
 interface FlowNode extends d3.SimulationNodeDatum {
@@ -70,6 +71,7 @@ const Workflow2DFallback = ({
   zoom = 1,
   renderMode = "network",
   errorMessage,
+  isManualMode = false,
 }: Workflow2DFallbackProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -337,13 +339,21 @@ const Workflow2DFallback = ({
       className="w-full h-[400px] relative bg-secondary/30 rounded-xl overflow-hidden"
       style={{ transform: `scale(${zoom})`, transformOrigin: "center" }}
     >
-      {/* Fallback notice */}
-      <div className="absolute top-2 left-2 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
-        <AlertCircle className="w-4 h-4 text-yellow-500" />
-        <span className="text-xs text-yellow-600 dark:text-yellow-400">
-          2D Fallback Mode {errorMessage && `(${errorMessage})`}
-        </span>
-      </div>
+      {/* Mode notice - only show for fallback, not manual 2D selection */}
+      {!isManualMode && (
+        <div className="absolute top-2 left-2 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+          <AlertCircle className="w-4 h-4 text-yellow-500" />
+          <span className="text-xs text-yellow-600 dark:text-yellow-400">
+            2D Fallback Mode {errorMessage && `(${errorMessage})`}
+          </span>
+        </div>
+      )}
+      {isManualMode && (
+        <div className="absolute top-2 left-2 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/30">
+          <Monitor className="w-4 h-4 text-primary" />
+          <span className="text-xs text-primary">2D Network View</span>
+        </div>
+      )}
 
       {problem ? (
         <div className="absolute inset-0 flex items-center justify-center p-6">
