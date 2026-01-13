@@ -1,7 +1,8 @@
-import { Component, useRef, useState, useMemo, useEffect } from 'react';
+import { Component, useRef, useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Text, Line, Html, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
+import Workflow2DFallback from './Workflow2DFallback';
 
 interface Workflow3DChartProps {
   data: any[];
@@ -601,7 +602,7 @@ const Workflow3DChart = ({ data, config, zoom = 1 }: Workflow3DChartProps) => {
     if (!webglSupported) {
       return {
         title: '3D not supported on this device',
-        message: 'WebGL is unavailable. Try another browser/device or switch to a 2D chart type.',
+        message: 'WebGL is unavailable. Rendering in 2D fallback mode.',
       };
     }
     if (renderError) {
@@ -612,6 +613,20 @@ const Workflow3DChart = ({ data, config, zoom = 1 }: Workflow3DChartProps) => {
     }
     return problem;
   }, [problem, renderError, webglSupported]);
+
+  // Use 2D fallback when WebGL is not supported or render error occurred
+  const shouldUse2DFallback = !webglSupported || renderError !== null;
+
+  if (shouldUse2DFallback && nodes.length > 0) {
+    return (
+      <Workflow2DFallback
+        data={data}
+        config={config}
+        zoom={zoom}
+        errorMessage={!webglSupported ? 'WebGL unavailable' : 'Render error'}
+      />
+    );
+  }
 
   return (
     <div className="w-full h-[400px] relative" style={{ transform: `scale(${zoom})`, transformOrigin: 'center' }}>
@@ -645,12 +660,12 @@ const Workflow3DChart = ({ data, config, zoom = 1 }: Workflow3DChartProps) => {
         <ThreeErrorBoundary
           onError={setRenderError}
           fallback={(error) => (
-            <div className="absolute inset-0 flex items-center justify-center p-6">
-              <div className="w-full max-w-xl rounded-xl border border-border bg-card/95 backdrop-blur-sm p-4 shadow-card">
-                <div className="text-sm font-semibold text-foreground">3D renderer crashed</div>
-                <div className="mt-1 text-sm text-muted-foreground">{error.message}</div>
-              </div>
-            </div>
+            <Workflow2DFallback
+              data={data}
+              config={config}
+              zoom={zoom}
+              errorMessage={error.message}
+            />
           )}
         >
           <Canvas camera={{ position: [0, 2, 6], fov: 50 }} gl={{ antialias: true, alpha: true }} style={{ background: 'transparent' }}>

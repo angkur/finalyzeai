@@ -1,5 +1,6 @@
 import { forwardRef, useState, useMemo, useCallback, useEffect, useRef, useImperativeHandle } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import HeatmapChart from "./HeatmapChart";
 import PieBarChart from "./PieBarChart";
 import AreaTimeChart from "./AreaTimeChart";
@@ -10,12 +11,14 @@ import NetworkGraph from "./NetworkGraph";
 import SankeyChart from "./SankeyChart";
 import WordCloud from "./WordCloud";
 import Workflow3DChart from "./Workflow3DChart";
+import Workflow2DFallback from "./Workflow2DFallback";
+import WorkflowBuilder, { WorkflowData } from "./WorkflowBuilder";
 import ChartControls from "./ChartControls";
 import ChartAnnotations, { Annotation } from "./ChartAnnotations";
 import RealtimeControls from "./RealtimeControls";
 import ChartComparison, { ComparisonDataset } from "./ChartComparison";
 import useRealtimeChart from "@/hooks/useRealtimeChart";
-import { BarChart3, PieChart, TrendingUp, Grid3X3, Layers, Box, Network, GitBranch, Cloud, Workflow } from "lucide-react";
+import { BarChart3, PieChart, TrendingUp, Grid3X3, Layers, Box, Network, GitBranch, Cloud, Workflow, Wrench } from "lucide-react";
 
 export interface ChartData {
   chartType: 'heatmap' | 'bar' | 'pie' | 'area' | 'treemap' | 'dualAxis' | 'scatter3d' | 'network' | 'sankey' | 'wordcloud' | 'workflow3d';
@@ -75,6 +78,8 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
   const [maxDataPoints, setMaxDataPoints] = useState(50);
   const [isCompareMode, setIsCompareMode] = useState(false);
   const [comparisonDatasets, setComparisonDatasets] = useState<ComparisonDataset[]>([]);
+  const [showWorkflowBuilder, setShowWorkflowBuilder] = useState(false);
+  const [customWorkflowData, setCustomWorkflowData] = useState<WorkflowData | null>(null);
   
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -212,6 +217,30 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
     return { ...chartData, data: mergedData };
   }, [chartData, comparisonDatasets, isCompareMode]);
 
+  // Handle workflow builder output
+  const handleWorkflowBuild = useCallback((workflowData: WorkflowData) => {
+    setCustomWorkflowData(workflowData);
+    setSelectedChart('workflow3d');
+    setShowWorkflowBuilder(false);
+  }, []);
+
+  // Convert custom workflow data to chart format
+  const workflowChartData = useMemo(() => {
+    if (!customWorkflowData) return null;
+    
+    const { nodes, links } = customWorkflowData;
+    return nodes.map((node, i) => {
+      const nodeLinks = links.filter(l => l.source === node.id);
+      return {
+        name: node.label,
+        value: node.value,
+        category: node.category,
+        source: nodeLinks.length > 0 ? node.label : undefined,
+        target: nodeLinks.length > 0 ? nodes.find(n => n.id === nodeLinks[0]?.target)?.label : undefined,
+      };
+    });
+  }, [customWorkflowData]);
+
   if (isLoading) {
     return (
       <div ref={containerRef} className="flex items-center justify-center h-[400px] bg-secondary/30 rounded-xl border border-border/30">
@@ -239,7 +268,9 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
   const activeChart = selectedChart || chartData.chartType;
 
   const renderChart = (type: ChartData['chartType'], data: any[] = mergedChartData?.data || []) => {
-    const commonProps = { data, config: chartData.config, zoom };
+    // Use custom workflow data if available for workflow3d
+    const chartDataToUse = type === 'workflow3d' && workflowChartData ? workflowChartData : data;
+    const commonProps = { data: chartDataToUse, config: chartData.config, zoom };
 
     switch (type) {
       case 'heatmap':
@@ -335,8 +366,30 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
               chartType={activeChart}
               chartData={chartData.data}
             />
+            {/* Workflow Builder Toggle */}
+            {activeChart === 'workflow3d' && (
+              <>
+                <div className="w-px h-6 bg-border hidden sm:block" />
+                <Button
+                  variant={showWorkflowBuilder ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setShowWorkflowBuilder(!showWorkflowBuilder)}
+                  className="flex items-center gap-1.5"
+                >
+                  <Wrench className="w-4 h-4" />
+                  <span className="hidden sm:inline">Builder</span>
+                </Button>
+              </>
+            )}
           </div>
         </div>
+
+        {/* Workflow Builder Panel */}
+        {showWorkflowBuilder && activeChart === 'workflow3d' && (
+          <div className="mb-4 p-4 bg-card/50 rounded-xl border border-border/50">
+            <WorkflowBuilder onBuild={handleWorkflowBuild} initialData={customWorkflowData || undefined} />
+          </div>
+        )}
 
         <div className={`bg-secondary/30 rounded-xl border border-border/30 p-4 min-h-[400px] relative ${isCompareMode && comparisonDatasets.filter(d => d.visible).length > 0 ? 'grid grid-cols-1 lg:grid-cols-2 gap-4' : ''}`}>
           {isCompareMode && comparisonDatasets.filter(d => d.visible).length > 0 ? (
