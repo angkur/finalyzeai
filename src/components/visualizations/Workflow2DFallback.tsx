@@ -1,6 +1,7 @@
-import { useMemo, useRef, useEffect, useState } from "react";
+import { useMemo, useRef, useEffect, useState, useCallback } from "react";
 import * as d3 from "d3";
-import { AlertCircle, Monitor, Layers } from "lucide-react";
+import { AlertCircle, Monitor, Layers, RotateCcw, Move } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Workflow2DFallbackProps {
   data: any[];
@@ -16,6 +17,12 @@ interface Workflow2DFallbackProps {
   renderMode?: "sankey" | "network";
   errorMessage?: string;
   isManualMode?: boolean; // When user explicitly chose 2D
+}
+
+interface NodePosition {
+  id: string;
+  x: number;
+  y: number;
 }
 
 interface FlowNode extends d3.SimulationNodeDatum {
@@ -75,7 +82,19 @@ const Workflow2DFallback = ({
 }: Workflow2DFallbackProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const simulationRef = useRef<d3.Simulation<FlowNode, undefined> | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string } | null>(null);
+  const [savedPositions, setSavedPositions] = useState<NodePosition[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [hasCustomLayout, setHasCustomLayout] = useState(false);
+  const layoutVersion = useRef(0);
+
+  // Reset layout to force-directed positioning
+  const resetLayout = () => {
+    setSavedPositions([]);
+    setHasCustomLayout(false);
+    layoutVersion.current += 1;
+  };
 
   const { nodes, links, problem } = useMemo(() => {
     if (!Array.isArray(data)) {
@@ -214,7 +233,17 @@ const Workflow2DFallback = ({
     });
 
     // Create links with source/target as objects for simulation
-    const nodesCopy: FlowNode[] = nodes.map((d) => ({ ...d }));
+    const nodesCopy: FlowNode[] = nodes.map((d) => {
+      // Apply saved positions if available
+      const savedPos = savedPositions.find(p => p.id === d.id);
+      return {
+        ...d,
+        x: savedPos?.x,
+        y: savedPos?.y,
+        fx: savedPos?.x, // Fix position if saved
+        fy: savedPos?.y,
+      };
+    });
     const linksCopy = links.map((d) => ({
       source: typeof d.source === "string" ? d.source : d.source.id,
       target: typeof d.target === "string" ? d.target : d.target.id,
@@ -231,8 +260,10 @@ const Workflow2DFallback = ({
           .distance(100)
       )
       .force("charge", d3.forceManyBody().strength(-400))
-      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("center", savedPositions.length > 0 ? null : d3.forceCenter(width / 2, height / 2))
       .force("collision", d3.forceCollide().radius(40));
+
+    simulationRef.current = simulation;
 
     // Draw links
     const link = svg
@@ -278,6 +309,9 @@ const Workflow2DFallback = ({
             if (!event.active) simulation.alphaTarget(0.3).restart();
             d.fx = d.x;
             d.fy = d.y;
+            setIsDragging(true);
+            // Highlight dragged node
+            d3.select(event.sourceEvent.target).attr("stroke", "hsl(var(--primary))").attr("stroke-width", 3);
           })
           .on("drag", (event, d) => {
             d.fx = event.x;
@@ -285,8 +319,20 @@ const Workflow2DFallback = ({
           })
           .on("end", (event, d) => {
             if (!event.active) simulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
+            // Keep the position fixed (persist the layout)
+            d.fx = event.x;
+            d.fy = event.y;
+            setIsDragging(false);
+            setHasCustomLayout(true);
+            // Reset stroke
+            d3.select(event.sourceEvent.target).attr("stroke", "hsl(var(--background))").attr("stroke-width", 2);
+            // Save all current positions
+            const newPositions = nodesCopy.map(n => ({
+              id: n.id,
+              x: n.x!,
+              y: n.y!,
+            }));
+            setSavedPositions(newPositions);
           })
       );
 
@@ -331,7 +377,7 @@ const Workflow2DFallback = ({
     return () => {
       simulation.stop();
     };
-  }, [nodes, links, zoom]);
+  }, [nodes, links, zoom, savedPositions, layoutVersion.current]);
 
   return (
     <div
@@ -352,6 +398,9 @@ const Workflow2DFallback = ({
         <div className="absolute top-2 left-2 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/30">
           <Monitor className="w-4 h-4 text-primary" />
           <span className="text-xs text-primary">2D Network View</span>
+          {hasCustomLayout && (
+            <span className="text-xs text-primary/70 ml-1">• Custom Layout</span>
+          )}
         </div>
       )}
 
@@ -393,9 +442,29 @@ const Workflow2DFallback = ({
         </div>
       )}
 
-      <p className="absolute bottom-4 right-4 text-xs text-muted-foreground bg-card/60 backdrop-blur-sm px-2 py-1 rounded">
-        Drag nodes to rearrange • Hover for details
-      </p>
+      {/* Drag indicator and Reset button */}
+      <div className="absolute bottom-4 right-4 flex items-center gap-2">
+        {isDragging && (
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-primary/20 border border-primary/30">
+            <Move className="w-3 h-3 text-primary animate-pulse" />
+            <span className="text-xs text-primary">Dragging...</span>
+          </div>
+        )}
+        {hasCustomLayout && !isDragging && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={resetLayout}
+            className="h-7 text-xs gap-1.5"
+          >
+            <RotateCcw className="w-3 h-3" />
+            Reset Layout
+          </Button>
+        )}
+        <p className="text-xs text-muted-foreground bg-card/60 backdrop-blur-sm px-2 py-1 rounded">
+          Drag nodes to rearrange • Hover for details
+        </p>
+      </div>
     </div>
   );
 };
