@@ -18,8 +18,10 @@ import ChartAnnotations, { Annotation } from "./ChartAnnotations";
 import RealtimeControls from "./RealtimeControls";
 import ChartComparison, { ComparisonDataset } from "./ChartComparison";
 import useRealtimeChart from "@/hooks/useRealtimeChart";
-import { BarChart3, PieChart, TrendingUp, Grid3X3, Layers, Box, Network, GitBranch, Cloud, Workflow, Wrench, Monitor, Database } from "lucide-react";
+import { BarChart3, PieChart, TrendingUp, Grid3X3, Layers, Box, Network, GitBranch, Cloud, Workflow, Wrench, Monitor, Database, HelpCircle } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 
 export interface ChartData {
   chartType: 'heatmap' | 'bar' | 'pie' | 'area' | 'treemap' | 'dualAxis' | 'scatter3d' | 'network' | 'sankey' | 'wordcloud' | 'workflow3d';
@@ -84,6 +86,7 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
   const [workflowRenderMode, setWorkflowRenderMode] = useState<"3d" | "2d">("3d");
   const [workflowDataSource, setWorkflowDataSource] = useState<"uploaded" | "custom">("uploaded");
   const containerRef = useRef<HTMLDivElement>(null);
+  const workflowChartRef = useRef<HTMLDivElement>(null);
   
   // Forward the ref to the container
   useImperativeHandle(ref, () => containerRef.current as HTMLDivElement);
@@ -224,7 +227,64 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
     setCustomWorkflowData(workflowData);
     setWorkflowDataSource("custom");
     setSelectedChart('workflow3d');
-    setShowWorkflowBuilder(false);
+    // Don't close builder so user can see both the builder and visualization
+  }, []);
+
+  // Export workflow as image
+  const handleExportWorkflowImage = useCallback(async () => {
+    const chartContainer = workflowChartRef.current;
+    if (!chartContainer) {
+      toast.error("No workflow visualization to export. Please build the workflow first.");
+      return;
+    }
+
+    try {
+      // For 3D Canvas, we need to capture the canvas element
+      const canvas = chartContainer.querySelector('canvas');
+      const svgElement = chartContainer.querySelector('svg');
+      
+      if (canvas) {
+        // Export 3D canvas
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `workflow_3d_${new Date().toISOString().slice(0, 10)}.png`;
+        link.href = dataUrl;
+        link.click();
+        toast.success("Workflow image exported successfully!");
+      } else if (svgElement) {
+        // Export 2D SVG as PNG
+        const svgData = new XMLSerializer().serializeToString(svgElement);
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+        
+        const img = new window.Image();
+        img.onload = () => {
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = svgElement.clientWidth * 2;
+          tempCanvas.height = svgElement.clientHeight * 2;
+          const ctx = tempCanvas.getContext('2d');
+          if (ctx) {
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            ctx.scale(2, 2);
+            ctx.drawImage(img, 0, 0);
+            const dataUrl = tempCanvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `workflow_2d_${new Date().toISOString().slice(0, 10)}.png`;
+            link.href = dataUrl;
+            link.click();
+            toast.success("Workflow image exported successfully!");
+          }
+          URL.revokeObjectURL(url);
+        };
+        img.src = url;
+      } else {
+        toast.error("Could not find workflow visualization to export");
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error("Failed to export image. Please try again.");
+    }
   }, []);
 
   // Convert custom workflow data to chart format
@@ -288,40 +348,49 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
 
   const activeChart = selectedChart || chartData.chartType;
 
-  const renderChart = (type: ChartData['chartType'], data: any[] = mergedChartData?.data || []) => {
+  const renderChart = (type: ChartData['chartType'], data: any[] = mergedChartData?.data || [], isWorkflowRef = false) => {
     // Use workflow-specific data for workflow charts
     const chartDataToUse = type === 'workflow3d' ? activeWorkflowData : data;
     const commonProps = { data: chartDataToUse, config: chartData.config, zoom };
 
-    switch (type) {
-      case 'heatmap':
-        return <HeatmapChart {...commonProps} />;
-      case 'bar':
-      case 'pie':
-        return <PieBarChart {...commonProps} type={type} />;
-      case 'area':
-        return <AreaTimeChart {...commonProps} />;
-      case 'treemap':
-        return <TreemapChart {...commonProps} />;
-      case 'dualAxis':
-        return <DualAxisChart {...commonProps} />;
-      case 'scatter3d':
-        return <Scatter3DChart {...commonProps} />;
-      case 'network':
-        return <NetworkGraph {...commonProps} />;
-      case 'sankey':
-        return <SankeyChart {...commonProps} />;
-      case 'wordcloud':
-        return <WordCloud {...commonProps} />;
-      case 'workflow3d':
-        // Render 2D fallback if user selected 2D mode
-        if (workflowRenderMode === "2d") {
-          return <Workflow2DFallback {...commonProps} isManualMode={true} />;
-        }
-        return <Workflow3DChart {...commonProps} />;
-      default:
-        return <PieBarChart {...commonProps} type="bar" />;
+    const chartElement = (() => {
+      switch (type) {
+        case 'heatmap':
+          return <HeatmapChart {...commonProps} />;
+        case 'bar':
+        case 'pie':
+          return <PieBarChart {...commonProps} type={type} />;
+        case 'area':
+          return <AreaTimeChart {...commonProps} />;
+        case 'treemap':
+          return <TreemapChart {...commonProps} />;
+        case 'dualAxis':
+          return <DualAxisChart {...commonProps} />;
+        case 'scatter3d':
+          return <Scatter3DChart {...commonProps} />;
+        case 'network':
+          return <NetworkGraph {...commonProps} />;
+        case 'sankey':
+          return <SankeyChart {...commonProps} />;
+        case 'wordcloud':
+          return <WordCloud {...commonProps} />;
+        case 'workflow3d':
+          // Render 2D fallback if user selected 2D mode
+          if (workflowRenderMode === "2d") {
+            return <Workflow2DFallback {...commonProps} isManualMode={true} />;
+          }
+          return <Workflow3DChart {...commonProps} />;
+        default:
+          return <PieBarChart {...commonProps} type="bar" />;
+      }
+    })();
+
+    // Wrap workflow charts in a ref for image export
+    if (type === 'workflow3d' && isWorkflowRef) {
+      return <div ref={workflowChartRef}>{chartElement}</div>;
     }
+
+    return chartElement;
   };
 
   const availableCharts: ChartData['chartType'][] = ['bar', 'pie', 'area', 'heatmap', 'treemap', 'dualAxis', 'scatter3d', 'network', 'sankey', 'wordcloud', 'workflow3d'];
@@ -396,39 +465,71 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
               <>
                 <div className="w-px h-6 bg-border hidden sm:block" />
                 
-                {/* 3D/2D Toggle */}
-                <ToggleGroup 
-                  type="single" 
-                  value={workflowRenderMode}
-                  onValueChange={(value) => value && setWorkflowRenderMode(value as "3d" | "2d")}
-                  className="bg-secondary/50 p-0.5 rounded-md"
-                >
-                  <ToggleGroupItem value="3d" size="sm" className="px-3 py-1 text-xs data-[state=on]:bg-primary/20 data-[state=on]:text-primary">
-                    <Box className="w-3.5 h-3.5 mr-1" />
-                    3D
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="2d" size="sm" className="px-3 py-1 text-xs data-[state=on]:bg-primary/20 data-[state=on]:text-primary">
-                    <Monitor className="w-3.5 h-3.5 mr-1" />
-                    2D
-                  </ToggleGroupItem>
-                </ToggleGroup>
+                {/* 3D/2D Toggle with Tooltip */}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div>
+                        <ToggleGroup 
+                          type="single" 
+                          value={workflowRenderMode}
+                          onValueChange={(value) => value && setWorkflowRenderMode(value as "3d" | "2d")}
+                          className="bg-secondary/50 p-0.5 rounded-md"
+                        >
+                          <ToggleGroupItem value="3d" size="sm" className="px-3 py-1 text-xs data-[state=on]:bg-primary/20 data-[state=on]:text-primary">
+                            <Box className="w-3.5 h-3.5 mr-1" />
+                            3D
+                          </ToggleGroupItem>
+                          <ToggleGroupItem value="2d" size="sm" className="px-3 py-1 text-xs data-[state=on]:bg-primary/20 data-[state=on]:text-primary">
+                            <Monitor className="w-3.5 h-3.5 mr-1" />
+                            2D
+                          </ToggleGroupItem>
+                        </ToggleGroup>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Switch between 3D (interactive rotate) and 2D (drag nodes) views</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
 
-                {/* Data Source Toggle */}
-                <ToggleGroup 
-                  type="single" 
-                  value={workflowDataSource}
-                  onValueChange={(value) => value && setWorkflowDataSource(value as "uploaded" | "custom")}
-                  className="bg-secondary/50 p-0.5 rounded-md"
-                >
-                  <ToggleGroupItem value="uploaded" size="sm" className="px-3 py-1 text-xs data-[state=on]:bg-primary/20 data-[state=on]:text-primary">
-                    <Database className="w-3.5 h-3.5 mr-1" />
-                    Uploaded
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="custom" size="sm" className="px-3 py-1 text-xs data-[state=on]:bg-primary/20 data-[state=on]:text-primary">
-                    <Wrench className="w-3.5 h-3.5 mr-1" />
-                    Custom
-                  </ToggleGroupItem>
-                </ToggleGroup>
+                {/* Data Source Toggle with Tooltip */}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1">
+                        <ToggleGroup 
+                          type="single" 
+                          value={workflowDataSource}
+                          onValueChange={(value) => value && setWorkflowDataSource(value as "uploaded" | "custom")}
+                          className="bg-secondary/50 p-0.5 rounded-md"
+                        >
+                          <ToggleGroupItem value="uploaded" size="sm" className="px-3 py-1 text-xs data-[state=on]:bg-primary/20 data-[state=on]:text-primary">
+                            <Database className="w-3.5 h-3.5 mr-1" />
+                            Uploaded
+                          </ToggleGroupItem>
+                          <ToggleGroupItem value="custom" size="sm" className="px-3 py-1 text-xs data-[state=on]:bg-primary/20 data-[state=on]:text-primary">
+                            <Wrench className="w-3.5 h-3.5 mr-1" />
+                            Custom
+                          </ToggleGroupItem>
+                        </ToggleGroup>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p className="font-medium mb-1">Data Source Options:</p>
+                            <p className="text-xs"><strong>Uploaded:</strong> Visualize data from your uploaded CSV/JSON files</p>
+                            <p className="text-xs"><strong>Custom:</strong> Use workflows you create in the Builder panel</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Choose between uploaded data or custom-built workflow</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
 
                 <Button
                   variant={showWorkflowBuilder ? "default" : "outline"}
@@ -447,7 +548,12 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
         {/* Workflow Builder Panel */}
         {showWorkflowBuilder && activeChart === 'workflow3d' && (
           <div className="mb-4 p-4 bg-card/50 rounded-xl border border-border/50">
-            <WorkflowBuilder onBuild={handleWorkflowBuild} initialData={customWorkflowData || undefined} />
+            <WorkflowBuilder 
+              onBuild={handleWorkflowBuild} 
+              initialData={customWorkflowData || undefined}
+              onExportImage={handleExportWorkflowImage}
+              canExportImage={customWorkflowData !== null && customWorkflowData.nodes.length > 0}
+            />
           </div>
         )}
 
@@ -482,7 +588,7 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
           ) : (
             availableCharts.map((type) => (
               <TabsContent key={type} value={type} className="mt-0 h-full">
-                {renderChart(type)}
+                {renderChart(type, mergedChartData?.data || [], type === 'workflow3d')}
               </TabsContent>
             ))
           )}
