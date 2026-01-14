@@ -1,11 +1,11 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, ArrowRight, Play, RotateCcw, Workflow, Link2, Download, Upload, FileJson, LayoutTemplate } from "lucide-react";
+import { Plus, Trash2, ArrowRight, Play, RotateCcw, Workflow, Link2, Download, Upload, FileJson, LayoutTemplate, Image, Info } from "lucide-react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -15,6 +15,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export interface WorkflowNode {
   id: string;
@@ -37,6 +43,8 @@ export interface WorkflowData {
 interface WorkflowBuilderProps {
   onBuild: (data: WorkflowData) => void;
   initialData?: WorkflowData;
+  onExportImage?: () => void;
+  canExportImage?: boolean;
 }
 
 const CATEGORIES = [
@@ -158,15 +166,24 @@ const WORKFLOW_TEMPLATES: Record<string, WorkflowData> = {
   },
 };
 
-const WorkflowBuilder = ({ onBuild, initialData }: WorkflowBuilderProps) => {
+const WorkflowBuilder = ({ onBuild, initialData, onExportImage, canExportImage }: WorkflowBuilderProps) => {
   const [nodes, setNodes] = useState<WorkflowNode[]>(initialData?.nodes || []);
   const [links, setLinks] = useState<WorkflowLink[]>(initialData?.links || []);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [hasBuilt, setHasBuilt] = useState(false);
   
   // New node form state
   const [newNodeLabel, setNewNodeLabel] = useState("");
   const [newNodeValue, setNewNodeValue] = useState(50);
   const [newNodeCategory, setNewNodeCategory] = useState("Process");
+  
+  // Auto-build when initialData changes (e.g., from template or import)
+  useEffect(() => {
+    if (initialData && initialData.nodes.length > 0) {
+      setNodes(initialData.nodes);
+      setLinks(initialData.links);
+    }
+  }, [initialData]);
   
   // New link form state
   const [linkSource, setLinkSource] = useState("");
@@ -244,7 +261,8 @@ const WorkflowBuilder = ({ onBuild, initialData }: WorkflowBuilderProps) => {
     }
 
     onBuild({ nodes, links });
-    toast.success("Workflow built successfully!");
+    setHasBuilt(true);
+    toast.success("Workflow built! Check the visualization below.");
   }, [nodes, links, onBuild]);
 
   const handleReset = useCallback(() => {
@@ -254,18 +272,24 @@ const WorkflowBuilder = ({ onBuild, initialData }: WorkflowBuilderProps) => {
     setNewNodeValue(50);
     setLinkSource("");
     setLinkTarget("");
+    setHasBuilt(false);
     toast.info("Workflow reset");
   }, []);
 
-  // Template loading
+  // Template loading - auto-build after loading
   const handleLoadTemplate = useCallback((templateKey: string) => {
     const template = WORKFLOW_TEMPLATES[templateKey];
     if (template) {
       setNodes(template.nodes);
       setLinks(template.links);
-      toast.success(`Loaded template: ${templateKey.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}`);
+      // Auto-build the template
+      setTimeout(() => {
+        onBuild(template);
+        setHasBuilt(true);
+      }, 100);
+      toast.success(`Loaded and built template: ${templateKey.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}`);
     }
-  }, []);
+  }, [onBuild]);
 
   // Export workflow as JSON
   const handleExport = useCallback(() => {
@@ -290,7 +314,7 @@ const WorkflowBuilder = ({ onBuild, initialData }: WorkflowBuilderProps) => {
     toast.success("Workflow exported successfully!");
   }, [nodes, links]);
 
-  // Import workflow from JSON
+  // Import workflow from JSON - auto-build after import
   const handleImport = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -307,7 +331,12 @@ const WorkflowBuilder = ({ onBuild, initialData }: WorkflowBuilderProps) => {
         
         setNodes(data.nodes);
         setLinks(data.links);
-        toast.success("Workflow imported successfully!");
+        // Auto-build the imported workflow
+        setTimeout(() => {
+          onBuild(data);
+          setHasBuilt(true);
+        }, 100);
+        toast.success("Workflow imported and built! Check the visualization below.");
       } catch (error) {
         toast.error("Failed to import workflow: Invalid file format");
       }
@@ -318,7 +347,7 @@ const WorkflowBuilder = ({ onBuild, initialData }: WorkflowBuilderProps) => {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  }, []);
+  }, [onBuild]);
 
   const getNodeLabel = (id: string) => nodes.find((n) => n.id === id)?.label || id;
 
@@ -370,17 +399,55 @@ const WorkflowBuilder = ({ onBuild, initialData }: WorkflowBuilderProps) => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Export Button */}
-          <Button variant="outline" size="sm" onClick={handleExport} disabled={nodes.length === 0}>
-            <Download className="w-4 h-4 mr-1" />
-            Export
-          </Button>
+          {/* Export Dropdown */}
+          <TooltipProvider>
+            <DropdownMenu>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" disabled={nodes.length === 0}>
+                      <Download className="w-4 h-4 mr-1" />
+                      Export
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Export workflow as JSON or Image</p>
+                </TooltipContent>
+              </Tooltip>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleExport}>
+                  <FileJson className="w-4 h-4 mr-2" />
+                  Export as JSON
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={onExportImage} 
+                  disabled={!canExportImage || !hasBuilt}
+                >
+                  <Image className="w-4 h-4 mr-2" />
+                  Export as Image
+                  {!hasBuilt && <span className="text-xs text-muted-foreground ml-1">(Build first)</span>}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </TooltipProvider>
 
           {/* Import Button */}
-          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-            <Upload className="w-4 h-4 mr-1" />
-            Import
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                  <Upload className="w-4 h-4 mr-1" />
+                  Import
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Import a previously exported JSON workflow file</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           <div className="w-px h-6 bg-border" />
 
@@ -577,6 +644,81 @@ const WorkflowBuilder = ({ onBuild, initialData }: WorkflowBuilderProps) => {
           <Workflow className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p className="text-sm">Start by adding steps or load a template</p>
           <p className="text-xs mt-1">Then connect them to visualize the flow</p>
+        </div>
+      )}
+
+      {/* Visual Preview Mini-diagram */}
+      {nodes.length > 0 && (
+        <Card className="bg-card/50 border-border/50">
+          <CardHeader className="py-3 px-4">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Workflow className="w-4 h-4 text-primary" />
+              Workflow Preview
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <div className="relative bg-secondary/30 rounded-lg p-4 min-h-[150px] overflow-x-auto">
+              <div className="flex items-center gap-3 flex-wrap">
+                {nodes.map((node, index) => {
+                  const hasOutgoingLink = links.some(l => l.source === node.id);
+                  const hasIncomingLink = links.some(l => l.target === node.id);
+                  const isConnected = hasOutgoingLink || hasIncomingLink;
+                  
+                  return (
+                    <div key={node.id} className="flex items-center gap-2">
+                      <div 
+                        className={`relative px-3 py-2 rounded-lg border-2 transition-all ${
+                          isConnected 
+                            ? 'border-primary bg-primary/10' 
+                            : 'border-dashed border-muted-foreground/30 bg-muted/20'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full ${CATEGORY_COLORS[node.category] || CATEGORY_COLORS.Custom}`} />
+                          <span className="text-xs font-medium whitespace-nowrap">{node.label}</span>
+                        </div>
+                        <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground">
+                          {node.category}
+                        </span>
+                      </div>
+                      {index < nodes.length - 1 && links.some(l => l.source === node.id) && (
+                        <ArrowRight className="w-4 h-4 text-primary flex-shrink-0" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              {links.length === 0 && nodes.length > 1 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-secondary/50 rounded-lg">
+                  <p className="text-xs text-muted-foreground text-center px-4">
+                    Add connections between nodes to see the flow
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="mt-4 flex items-start gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+              <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+              <div className="text-xs text-blue-600 dark:text-blue-400">
+                <p className="font-medium mb-1">How to use the Workflow Builder:</p>
+                <ol className="list-decimal list-inside space-y-0.5">
+                  <li>Add steps (nodes) using the form above or load a template</li>
+                  <li>Create connections between steps</li>
+                  <li>Click "Build Workflow" to visualize in 3D/2D below</li>
+                  <li>Use "Custom" toggle to view your built workflow</li>
+                </ol>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Build Status Indicator */}
+      {hasBuilt && nodes.length > 0 && (
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          <span className="text-xs text-green-600 dark:text-green-400">
+            Workflow built! Scroll down to see the visualization. Make sure "Custom" is selected in the data source toggle.
+          </span>
         </div>
       )}
     </div>
