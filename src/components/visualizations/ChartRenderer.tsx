@@ -12,6 +12,7 @@ import SankeyChart from "./SankeyChart";
 import WordCloud from "./WordCloud";
 import Workflow3DChart from "./Workflow3DChart";
 import Workflow2DFallback from "./Workflow2DFallback";
+import CustomWorkflow2D from "./CustomWorkflow2D";
 import WorkflowBuilder, { WorkflowData } from "./WorkflowBuilder";
 import ChartControls from "./ChartControls";
 import ChartAnnotations, { Annotation } from "./ChartAnnotations";
@@ -226,7 +227,9 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
   const handleWorkflowBuild = useCallback((workflowData: WorkflowData) => {
     setCustomWorkflowData(workflowData);
     setWorkflowDataSource("custom");
+    setWorkflowRenderMode("2d"); // Default to 2D for custom workflows - more reliable
     setSelectedChart('workflow3d');
+    toast.success(`Workflow built! ${workflowData.nodes.length} nodes, ${workflowData.links.length} connections.`);
     // Don't close builder so user can see both the builder and visualization
   }, []);
 
@@ -375,7 +378,15 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
         case 'wordcloud':
           return <WordCloud {...commonProps} />;
         case 'workflow3d':
-          // Render 2D fallback if user selected 2D mode
+          // For custom workflows, use the dedicated CustomWorkflow2D component in 2D mode
+          if (workflowDataSource === "custom" && customWorkflowData && customWorkflowData.nodes.length > 0) {
+            if (workflowRenderMode === "2d") {
+              return <CustomWorkflow2D workflowData={customWorkflowData} zoom={zoom} />;
+            }
+            // For 3D, pass the converted data
+            return <Workflow3DChart {...commonProps} />;
+          }
+          // For uploaded data
           if (workflowRenderMode === "2d") {
             return <Workflow2DFallback {...commonProps} isManualMode={true} />;
           }
