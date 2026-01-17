@@ -233,6 +233,18 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
     // Don't close builder so user can see both the builder and visualization
   }, []);
 
+  // Preview updates (no toast) – used for live preview while editing
+  const handleWorkflowPreview = useCallback((workflowData: WorkflowData) => {
+    if (!workflowData || workflowData.nodes.length === 0) {
+      setCustomWorkflowData(null);
+      return;
+    }
+    setCustomWorkflowData(workflowData);
+    setWorkflowDataSource("custom");
+    setWorkflowRenderMode("2d");
+    setSelectedChart('workflow3d');
+  }, []);
+
   // Export workflow as image
   const handleExportWorkflowImage = useCallback(async () => {
     const chartContainer = workflowChartRef.current;
@@ -378,6 +390,22 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
         case 'wordcloud':
           return <WordCloud {...commonProps} />;
         case 'workflow3d':
+          // If user selected Custom but hasn't created anything yet, show a clear empty state
+          if (workflowDataSource === "custom" && (!customWorkflowData || customWorkflowData.nodes.length === 0)) {
+            return (
+              <div className="w-full h-[400px] flex items-center justify-center bg-secondary/30 rounded-xl border border-border/30">
+                <div className="text-center text-muted-foreground max-w-md px-6">
+                  <Wrench className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm font-medium text-foreground">No custom workflow yet</p>
+                  <p className="text-xs mt-1">
+                    Open <span className="font-medium">Builder</span>, add nodes + connections, and keep
+                    <span className="font-medium"> Live preview</span> ON (or click “Build Workflow”).
+                  </p>
+                </div>
+              </div>
+            );
+          }
+
           // For custom workflows, use the dedicated CustomWorkflow2D component in 2D mode
           if (workflowDataSource === "custom" && customWorkflowData && customWorkflowData.nodes.length > 0) {
             if (workflowRenderMode === "2d") {
@@ -386,6 +414,7 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
             // For 3D, pass the converted data
             return <Workflow3DChart {...commonProps} />;
           }
+
           // For uploaded data
           if (workflowRenderMode === "2d") {
             return <Workflow2DFallback {...commonProps} isManualMode={true} />;
@@ -560,7 +589,8 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
         {showWorkflowBuilder && activeChart === 'workflow3d' && (
           <div className="mb-4 p-4 bg-card/50 rounded-xl border border-border/50">
             <WorkflowBuilder 
-              onBuild={handleWorkflowBuild} 
+              onBuild={handleWorkflowBuild}
+              onPreview={handleWorkflowPreview}
               initialData={customWorkflowData || undefined}
               onExportImage={handleExportWorkflowImage}
               canExportImage={customWorkflowData !== null && customWorkflowData.nodes.length > 0}
