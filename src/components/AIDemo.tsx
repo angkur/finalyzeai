@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, LineChart, FileText, Database, Shield, Sparkles, Send, Loader2, Upload, X, FileSpreadsheet, BarChart3 } from "lucide-react";
+import { Brain, LineChart, FileText, Database, Shield, Sparkles, Send, Loader2, Upload, X, FileSpreadsheet, BarChart3, Copy } from "lucide-react";
 import { toast } from "sonner";
 import ChartRenderer, { ChartData } from "./visualizations/ChartRenderer";
 import DocumentUpload from "./DocumentUpload";
@@ -596,10 +596,24 @@ const AIDemo = () => {
                 </div>
 
                 <TabsContent value="analysis" className="mt-0">
-                  <div className="min-h-[280px] max-h-[400px] bg-secondary/30 rounded-xl p-4 border border-border/30 overflow-auto">
+                  <div className="min-h-[280px] max-h-[400px] bg-secondary/30 rounded-xl p-4 border border-border/30 overflow-auto relative">
                     {response ? (
                       <div className="space-y-4">
-                        <div className="prose prose-invert prose-sm max-w-none">
+                        <div className="absolute top-2 right-2 z-10">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 bg-secondary/80 hover:bg-secondary border border-border/50"
+                            onClick={() => {
+                              navigator.clipboard.writeText(response);
+                              toast.success("Analysis copied to clipboard!");
+                            }}
+                          >
+                            <Copy className="w-4 h-4 mr-1" />
+                            Copy
+                          </Button>
+                        </div>
+                        <div className="prose prose-invert prose-sm max-w-none pt-6">
                           <pre className="whitespace-pre-wrap text-sm text-foreground/90 font-sans leading-relaxed">
                             {response}
                           </pre>
