@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +43,8 @@ export interface WorkflowData {
 
 interface WorkflowBuilderProps {
   onBuild: (data: WorkflowData) => void;
+  /** Live-preview updates (no “Build” click required). */
+  onPreview?: (data: WorkflowData) => void;
   initialData?: WorkflowData;
   onExportImage?: () => void;
   canExportImage?: boolean;
@@ -166,12 +169,19 @@ const WORKFLOW_TEMPLATES: Record<string, WorkflowData> = {
   },
 };
 
-const WorkflowBuilder = ({ onBuild, initialData, onExportImage, canExportImage }: WorkflowBuilderProps) => {
+const WorkflowBuilder = ({
+  onBuild,
+  onPreview,
+  initialData,
+  onExportImage,
+  canExportImage,
+}: WorkflowBuilderProps) => {
   const [nodes, setNodes] = useState<WorkflowNode[]>(initialData?.nodes || []);
   const [links, setLinks] = useState<WorkflowLink[]>(initialData?.links || []);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [hasBuilt, setHasBuilt] = useState(false);
-  
+  const [livePreview, setLivePreview] = useState(true);
+
   // New node form state
   const [newNodeLabel, setNewNodeLabel] = useState("");
   const [newNodeValue, setNewNodeValue] = useState(50);
@@ -184,7 +194,19 @@ const WorkflowBuilder = ({ onBuild, initialData, onExportImage, canExportImage }
       setLinks(initialData.links);
     }
   }, [initialData]);
-  
+
+  // Live preview (updates visualization without requiring “Build Workflow”)
+  useEffect(() => {
+    if (!onPreview || !livePreview) return;
+
+    // Allow clearing preview on reset
+    const timeout = window.setTimeout(() => {
+      onPreview({ nodes, links });
+    }, 120);
+
+    return () => window.clearTimeout(timeout);
+  }, [nodes, links, livePreview, onPreview]);
+
   // New link form state
   const [linkSource, setLinkSource] = useState("");
   const [linkTarget, setLinkTarget] = useState("");
@@ -273,8 +295,9 @@ const WorkflowBuilder = ({ onBuild, initialData, onExportImage, canExportImage }
     setLinkSource("");
     setLinkTarget("");
     setHasBuilt(false);
+    onPreview?.({ nodes: [], links: [] });
     toast.info("Workflow reset");
-  }, []);
+  }, [onPreview]);
 
   // Template loading - auto-build after loading
   const handleLoadTemplate = useCallback((templateKey: string) => {
@@ -398,6 +421,21 @@ const WorkflowBuilder = ({ onBuild, initialData, onExportImage, canExportImage }
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Live preview toggle */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-secondary/30 border border-border/30">
+                  <span className="text-xs text-muted-foreground">Live preview</span>
+                  <Switch checked={livePreview} onCheckedChange={setLivePreview} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>When enabled, manual nodes/connections render immediately in the canvas</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           {/* Export Dropdown */}
           <TooltipProvider>
