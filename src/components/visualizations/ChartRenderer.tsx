@@ -87,6 +87,7 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
   const [workflowRenderMode, setWorkflowRenderMode] = useState<"3d" | "2d">("3d");
   const [workflowDataSource, setWorkflowDataSource] = useState<"uploaded" | "custom">("uploaded");
   const containerRef = useRef<HTMLDivElement>(null);
+  const chartContentRef = useRef<HTMLDivElement>(null);
   const workflowChartRef = useRef<HTMLDivElement>(null);
   
   // Forward the ref to the container
@@ -499,6 +500,7 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
               onFullscreenToggle={toggleFullscreen}
               chartType={activeChart}
               chartData={chartData.data}
+              containerRef={chartContentRef}
             />
             {/* Workflow Builder Toggle and Controls */}
             {activeChart === 'workflow3d' && (
@@ -598,7 +600,7 @@ const ChartRenderer = forwardRef<HTMLDivElement, ChartRendererProps>(({ chartDat
           </div>
         )}
 
-        <div className={`bg-secondary/30 rounded-xl border border-border/30 p-4 min-h-[400px] relative ${isCompareMode && comparisonDatasets.filter(d => d.visible).length > 0 ? 'grid grid-cols-1 lg:grid-cols-2 gap-4' : ''}`}>
+        <div ref={chartContentRef} className={`bg-secondary/30 rounded-xl border border-border/30 p-4 min-h-[400px] relative ${isCompareMode && comparisonDatasets.filter(d => d.visible).length > 0 ? 'grid grid-cols-1 lg:grid-cols-2 gap-4' : ''}`}>
           {isCompareMode && comparisonDatasets.filter(d => d.visible).length > 0 ? (
             <>
               {/* Primary dataset */}

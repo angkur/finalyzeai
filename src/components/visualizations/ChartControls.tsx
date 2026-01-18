@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, RefObject } from "react";
 import { ZoomIn, ZoomOut, Maximize2, Minimize2, Download, RotateCcw, FileJson, FileSpreadsheet, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +18,7 @@ interface ChartControlsProps {
   onFullscreenToggle: () => void;
   chartType: string;
   chartData?: any[];
+  containerRef?: RefObject<HTMLDivElement>;
 }
 
 const ChartControls = ({ 
@@ -26,7 +27,8 @@ const ChartControls = ({
   isFullscreen, 
   onFullscreenToggle,
   chartType,
-  chartData = []
+  chartData = [],
+  containerRef
 }: ChartControlsProps) => {
   
   const handleZoomIn = () => {
@@ -117,19 +119,89 @@ const ChartControls = ({
     }
   };
 
-  const exportAsImage = () => {
-    // Find the chart container and export as PNG/SVG
-    const chartElement = document.querySelector('.recharts-wrapper, canvas');
-    if (!chartElement) {
-      toast.error("Unable to export chart image");
-      return;
+  const exportAsImage = async () => {
+    // Use containerRef if provided, otherwise search the document
+    const searchRoot = containerRef?.current || document;
+    
+    // Try to find chart elements in order of priority
+    // 1. Canvas for 3D charts (Three.js)
+    const canvas = searchRoot.querySelector('canvas') as HTMLCanvasElement;
+    if (canvas) {
+      try {
+        const url = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${chartType}-chart-${new Date().toISOString().slice(0, 10)}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("Chart exported as PNG");
+        return;
+      } catch (error) {
+        console.error('Canvas export error:', error);
+      }
     }
 
-    // For SVG-based charts (Recharts)
-    if (chartElement.classList.contains('recharts-wrapper')) {
-      const svgElement = chartElement.querySelector('svg');
-      if (svgElement) {
-        const svgData = new XMLSerializer().serializeToString(svgElement);
+    // 2. SVG elements for D3-based charts (Network, Sankey, Word Cloud)
+    const svgElement = searchRoot.querySelector('svg') as SVGSVGElement;
+    if (svgElement) {
+      try {
+        // Clone the SVG and add necessary styles
+        const clonedSvg = svgElement.cloneNode(true) as SVGSVGElement;
+        
+        // Get computed styles and embed them
+        const svgData = new XMLSerializer().serializeToString(clonedSvg);
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+        
+        // Convert SVG to PNG for better compatibility
+        const img = new window.Image();
+        img.onload = () => {
+          const tempCanvas = document.createElement('canvas');
+          const width = svgElement.clientWidth || svgElement.getBoundingClientRect().width || 800;
+          const height = svgElement.clientHeight || svgElement.getBoundingClientRect().height || 600;
+          tempCanvas.width = width * 2; // 2x for retina
+          tempCanvas.height = height * 2;
+          const ctx = tempCanvas.getContext('2d');
+          if (ctx) {
+            // Fill with dark background for visibility
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            ctx.scale(2, 2);
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = tempCanvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `${chartType}-chart-${new Date().toISOString().slice(0, 10)}.png`;
+            link.href = dataUrl;
+            link.click();
+            toast.success("Chart exported as PNG");
+          }
+          URL.revokeObjectURL(url);
+        };
+        img.onerror = () => {
+          // Fallback: export as SVG if PNG conversion fails
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `${chartType}-chart-${new Date().toISOString().slice(0, 10)}.svg`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          toast.success("Chart exported as SVG");
+        };
+        img.src = url;
+        return;
+      } catch (error) {
+        console.error('SVG export error:', error);
+      }
+    }
+
+    // 3. Recharts wrapper
+    const rechartsElement = searchRoot.querySelector('.recharts-wrapper');
+    if (rechartsElement) {
+      const rechartsSvg = rechartsElement.querySelector('svg');
+      if (rechartsSvg) {
+        const svgData = new XMLSerializer().serializeToString(rechartsSvg);
         const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
         const url = URL.createObjectURL(svgBlob);
         
@@ -146,23 +218,7 @@ const ChartControls = ({
       }
     }
 
-    // For Canvas-based charts (3D)
-    if (chartElement.tagName === 'CANVAS') {
-      const canvas = chartElement as HTMLCanvasElement;
-      const url = canvas.toDataURL('image/png');
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${chartType}-chart-${new Date().toISOString().slice(0, 10)}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast.success("Chart exported as PNG");
-      return;
-    }
-
-    toast.error("Image export not available for this chart type");
+    toast.error("Unable to export chart image. Please try again.");
   };
 
   return (
