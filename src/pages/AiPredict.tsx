@@ -19,7 +19,8 @@ import {
   Bot,
   Paperclip,
   File,
-  CheckCircle
+  CheckCircle,
+  Copy
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -698,7 +699,7 @@ const AiPredict = () => {
             <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
               <div className="space-y-4 sm:space-y-6">
                 {messages.map((message) => (
-                  <div key={message.id} className="flex gap-2 sm:gap-4">
+                  <div key={message.id} className="flex gap-2 sm:gap-4 group">
                     <div className={cn(
                       "w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0",
                       message.role === 'user' 
@@ -712,9 +713,25 @@ const AiPredict = () => {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-1">
-                        {message.role === 'user' ? 'You' : 'FinanceAI'}
-                      </p>
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">
+                          {message.role === 'user' ? 'You' : 'FinanceAI'}
+                        </p>
+                        {message.role === 'assistant' && message.content && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                              navigator.clipboard.writeText(message.content);
+                              toast.success("Copied to clipboard!");
+                            }}
+                          >
+                            <Copy className="w-3 h-3 mr-1" />
+                            <span className="text-[10px] sm:text-xs">Copy</span>
+                          </Button>
+                        )}
+                      </div>
                       <div className="text-foreground whitespace-pre-wrap text-xs sm:text-sm leading-relaxed">
                         {message.content || (
                           <span className="flex items-center gap-2 text-muted-foreground">
