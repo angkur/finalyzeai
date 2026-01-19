@@ -37,6 +37,8 @@ interface AttachedFile {
   status: 'uploading' | 'processing' | 'ready' | 'error';
 }
 
+import { ShieldAlert } from "lucide-react";
+
 const suggestionChips = [
   { icon: TrendingUp, label: "Market Analysis", query: "Analyze current market trends and provide investment insights" },
   { icon: PieChart, label: "Portfolio Review", query: "Review my portfolio allocation and suggest optimizations" },
@@ -44,6 +46,7 @@ const suggestionChips = [
   { icon: Target, label: "Financial Planning", query: "Help me create a financial plan for my goals" },
   { icon: FileText, label: "Document Analysis", query: "Analyze my uploaded financial documents" },
   { icon: Sparkles, label: "AI Predictions", query: "What are your predictions for the market this quarter?" },
+  { icon: ShieldAlert, label: "Fraud Analysis", query: "Analyze my uploaded financial documents for potential fraud indicators, anomalies, and suspicious patterns. Provide a fraud risk assessment with confidence levels." },
 ];
 
 const AiPredict = () => {
