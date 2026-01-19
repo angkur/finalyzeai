@@ -8,11 +8,17 @@ import ChartRenderer, { ChartData } from "./visualizations/ChartRenderer";
 import DocumentUpload from "./DocumentUpload";
 import RAGChat from "./RAGChat";
 import FeedbackRating from "./FeedbackRating";
+import FraudRiskGauge from "./FraudRiskGauge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 type AnalysisType = 'data-analysis' | 'report-generation' | 'predictive-modeling' | 'rag-query' | 'credit-scoring' | 'data-visualization' | 'fraud-analysis';
+
+interface FraudAnalysisResult {
+  percentage: number;
+  confidence: "low" | "medium" | "high";
+}
 
 const analysisTypes = [
   { id: 'data-analysis' as AnalysisType, label: 'Data Analysis', icon: LineChart, description: 'Analyze financial data for insights' },
@@ -89,6 +95,7 @@ const AIDemo = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<{ name: string; content: string } | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
+  const [fraudResult, setFraudResult] = useState<FraudAnalysisResult | null>(null);
   const [activeTab, setActiveTab] = useState<'analysis' | 'visualization'>('analysis');
   const [interactionId, setInteractionId] = useState<string | null>(null);
   const [isBlocked, setIsBlocked] = useState(false);
@@ -173,6 +180,7 @@ const AIDemo = () => {
     setResponse('');
     setUploadedFile(null);
     setChartData(null);
+    setFraudResult(null);
     setInteractionId(null);
     setActiveTab(type === 'data-visualization' ? 'visualization' : 'analysis');
   };
@@ -311,6 +319,7 @@ const AIDemo = () => {
     setIsLoading(true);
     setResponse('');
     setChartData(null);
+    setFraudResult(null);
     setInteractionId(null);
 
     try {
@@ -393,6 +402,11 @@ const AIDemo = () => {
         }
       }
 
+      // Parse fraud analysis results if applicable
+      if (fullResponse && selectedType === 'fraud-analysis') {
+        parseFraudResult(fullResponse);
+      }
+
       // Log the completed interaction
       if (fullResponse) {
         logInteraction(input, fullResponse, selectedType);
@@ -435,7 +449,40 @@ const AIDemo = () => {
     }
   };
 
+  // Parse fraud percentage from AI response
+  const parseFraudResult = (text: string) => {
+    // Look for percentage patterns like "65%", "Fraud Risk: 75%", etc.
+    const percentagePatterns = [
+      /fraud\s*(?:risk|probability|likelihood|score)?[:\s]*(\d{1,3})%/i,
+      /(\d{1,3})%\s*(?:fraud|risk|probability)/i,
+      /overall\s*(?:fraud\s*)?risk[:\s]*(\d{1,3})%/i,
+      /risk\s*assessment[:\s]*(\d{1,3})%/i,
+    ];
+
+    let percentage: number | null = null;
+    for (const pattern of percentagePatterns) {
+      const match = text.match(pattern);
+      if (match) {
+        percentage = parseInt(match[1], 10);
+        break;
+      }
+    }
+
+    if (percentage !== null && percentage >= 0 && percentage <= 100) {
+      // Determine confidence level from text
+      let confidence: "low" | "medium" | "high" = "medium";
+      if (/high\s*confidence/i.test(text) || /confidence[:\s]*high/i.test(text)) {
+        confidence = "high";
+      } else if (/low\s*confidence/i.test(text) || /confidence[:\s]*low/i.test(text)) {
+        confidence = "low";
+      }
+
+      setFraudResult({ percentage, confidence });
+    }
+  };
+
   const isVisualization = selectedType === 'data-visualization';
+  const isFraudAnalysis = selectedType === 'fraud-analysis';
 
   return (
     <section id="ai-demo" className="py-32 relative overflow-hidden bg-secondary/20">
@@ -615,6 +662,17 @@ const AIDemo = () => {
                             Copy
                           </Button>
                         </div>
+                        
+                        {/* Fraud Risk Gauge - shown when fraud analysis returns a percentage */}
+                        {isFraudAnalysis && fraudResult && (
+                          <div className="mb-4">
+                            <FraudRiskGauge 
+                              percentage={fraudResult.percentage} 
+                              confidence={fraudResult.confidence}
+                            />
+                          </div>
+                        )}
+                        
                         <div className="prose prose-invert prose-sm max-w-none pt-6">
                           <pre className="whitespace-pre-wrap text-sm text-foreground/90 font-sans leading-relaxed">
                             {response}
