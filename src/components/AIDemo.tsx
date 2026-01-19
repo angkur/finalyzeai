@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, LineChart, FileText, Database, Shield, Sparkles, Send, Loader2, Upload, X, FileSpreadsheet, BarChart3, Copy } from "lucide-react";
+import { Brain, LineChart, FileText, Database, Shield, Sparkles, Send, Loader2, Upload, X, FileSpreadsheet, BarChart3, Copy, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import ChartRenderer, { ChartData } from "./visualizations/ChartRenderer";
 import DocumentUpload from "./DocumentUpload";
@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
-type AnalysisType = 'data-analysis' | 'report-generation' | 'predictive-modeling' | 'rag-query' | 'credit-scoring' | 'data-visualization';
+type AnalysisType = 'data-analysis' | 'report-generation' | 'predictive-modeling' | 'rag-query' | 'credit-scoring' | 'data-visualization' | 'fraud-analysis';
 
 const analysisTypes = [
   { id: 'data-analysis' as AnalysisType, label: 'Data Analysis', icon: LineChart, description: 'Analyze financial data for insights' },
@@ -21,6 +21,7 @@ const analysisTypes = [
   { id: 'rag-query' as AnalysisType, label: 'Knowledge Query', icon: Database, description: 'Query financial knowledge base' },
   { id: 'credit-scoring' as AnalysisType, label: 'Credit Scoring', icon: Shield, description: 'Assess creditworthiness' },
   { id: 'data-visualization' as AnalysisType, label: 'Data Visualization', icon: BarChart3, description: 'Create interactive charts' },
+  { id: 'fraud-analysis' as AnalysisType, label: 'Fraud Analysis', icon: AlertTriangle, description: 'Detect fraud & anomalies' },
 ];
 
 const samplePrompts: Record<AnalysisType, string> = {
@@ -30,6 +31,7 @@ const samplePrompts: Record<AnalysisType, string> = {
   'rag-query': 'Explain the key differences between Basel III and Basel IV regulations and their impact on bank capital requirements.',
   'credit-scoring': 'Assess credit risk for:\n- Business age: 5 years\n- Annual revenue: $500K\n- Debt-to-equity: 1.2\n- Payment history: 2 late payments in 3 years\n- Industry: SaaS',
   'data-visualization': 'Visualize this sales data by region:\nNorth America: $4.5M, Europe: $3.2M, Asia Pacific: $2.8M, Latin America: $1.5M, Middle East: $0.9M\n\nAlso show quarterly trends:\nQ1: $2.5M, Q2: $3.1M, Q3: $3.8M, Q4: $3.5M',
+  'fraud-analysis': 'Analyze this transaction data for potential fraud:\nTransaction 1: $5,000 transfer, 2:30 AM, New device, Location: Nigeria\nTransaction 2: $3,500 purchase, Same day, Regular device, Location: Home city\nTransaction 3: $8,200 wire transfer, Weekend, VPN detected, Recipient: Offshore account\nTransaction 4: $150 grocery store, Regular pattern, Known location',
 };
 
 const parseCSV = (text: string): string => {
