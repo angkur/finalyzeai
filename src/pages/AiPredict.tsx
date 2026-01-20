@@ -818,6 +818,21 @@ const AiPredict = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onPaste={(e) => {
+                  const pastedText = e.clipboardData.getData('text');
+                  if (pastedText) {
+                    e.preventDefault();
+                    const target = e.currentTarget;
+                    const start = target.selectionStart || 0;
+                    const end = target.selectionEnd || 0;
+                    const newValue = input.substring(0, start) + pastedText + input.substring(end);
+                    setInput(newValue);
+                    // Set cursor position after paste
+                    setTimeout(() => {
+                      target.selectionStart = target.selectionEnd = start + pastedText.length;
+                    }, 0);
+                  }
+                }}
                 placeholder="Ask anything about your finances..."
                 className="min-h-[40px] sm:min-h-[44px] max-h-[150px] sm:max-h-[200px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 py-2.5 sm:py-3 px-1.5 sm:px-2 text-sm"
                 disabled={isLoading || !user}
