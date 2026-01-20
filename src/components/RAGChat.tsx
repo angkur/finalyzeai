@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Loader2, MessageSquare, Plus, Trash2, History, Lightbulb, FileText, TrendingUp, Search, BarChart3 } from "lucide-react";
+import { Send, Loader2, MessageSquare, Plus, Trash2, History, Lightbulb, FileText, TrendingUp, Search, BarChart3, Sparkles, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -100,6 +100,8 @@ const RAGChat = ({ className }: RAGChatProps) => {
   const [input, setInput] = useState('');
   const [showHistory, setShowHistory] = useState(false);
   const [documents, setDocuments] = useState<DocumentInfo[]>([]);
+  const [aiQuestions, setAiQuestions] = useState<string[]>([]);
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -109,6 +111,13 @@ const RAGChat = ({ className }: RAGChatProps) => {
       fetchDocuments();
     }
   }, [user]);
+
+  // Fetch AI-generated questions when documents change
+  useEffect(() => {
+    if (documents.length > 0 && messages.length === 0) {
+      fetchAIQuestions();
+    }
+  }, [documents, messages.length]);
 
   const fetchDocuments = async () => {
     if (!user) return;
@@ -121,6 +130,36 @@ const RAGChat = ({ className }: RAGChatProps) => {
       .limit(10);
     
     if (data) setDocuments(data);
+  };
+
+  const fetchAIQuestions = async () => {
+    if (!user || loadingQuestions) return;
+    
+    setLoadingQuestions(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-doc-questions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ userId: user.id }),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.questions && data.questions.length > 0) {
+          setAiQuestions(data.questions);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch AI questions:", error);
+    } finally {
+      setLoadingQuestions(false);
+    }
   };
 
   // Auto-scroll to bottom when messages change
@@ -374,28 +413,77 @@ const RAGChat = ({ className }: RAGChatProps) => {
             
             {/* Example prompts based on uploaded documents */}
             {documents.length > 0 && (
-              <div className="w-full max-w-md mt-4">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-                  <Lightbulb className="w-3.5 h-3.5" />
-                  <span>Try asking:</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {getExamplePrompts(documents).map((prompt, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handlePromptClick(prompt.query)}
-                      className="flex items-center gap-2 p-2.5 rounded-lg bg-secondary/50 hover:bg-secondary border border-border/30 hover:border-primary/30 transition-all text-left group"
-                    >
-                      <span className="text-primary/70 group-hover:text-primary transition-colors">
-                        {prompt.icon}
-                      </span>
-                      <span className="text-xs text-foreground/80 group-hover:text-foreground truncate">
-                        {prompt.text}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-                <p className="text-[10px] text-muted-foreground/70 mt-3">
+              <div className="w-full max-w-md mt-4 space-y-4">
+                {/* AI-Generated Questions */}
+                {(aiQuestions.length > 0 || loadingQuestions) && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5 text-xs text-primary">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span className="font-medium">AI-Suggested Questions</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={fetchAIQuestions}
+                        disabled={loadingQuestions}
+                        className="h-6 w-6"
+                        title="Refresh suggestions"
+                      >
+                        <RefreshCw className={cn("w-3 h-3", loadingQuestions && "animate-spin")} />
+                      </Button>
+                    </div>
+                    {loadingQuestions ? (
+                      <div className="flex items-center justify-center p-4 rounded-lg bg-primary/5 border border-primary/10">
+                        <Loader2 className="w-4 h-4 animate-spin text-primary mr-2" />
+                        <span className="text-xs text-muted-foreground">Analyzing your documents...</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {aiQuestions.slice(0, 4).map((question, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handlePromptClick(question)}
+                            className="w-full flex items-start gap-2 p-2.5 rounded-lg bg-primary/5 hover:bg-primary/10 border border-primary/10 hover:border-primary/30 transition-all text-left group"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
+                            <span className="text-xs text-foreground/90 group-hover:text-foreground line-clamp-2">
+                              {question}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Fallback: Type-based prompts */}
+                {aiQuestions.length === 0 && !loadingQuestions && (
+                  <>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+                      <Lightbulb className="w-3.5 h-3.5" />
+                      <span>Try asking:</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {getExamplePrompts(documents).map((prompt, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handlePromptClick(prompt.query)}
+                          className="flex items-center gap-2 p-2.5 rounded-lg bg-secondary/50 hover:bg-secondary border border-border/30 hover:border-primary/30 transition-all text-left group"
+                        >
+                          <span className="text-primary/70 group-hover:text-primary transition-colors">
+                            {prompt.icon}
+                          </span>
+                          <span className="text-xs text-foreground/80 group-hover:text-foreground truncate">
+                            {prompt.text}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                <p className="text-[10px] text-muted-foreground/70 text-center">
                   Based on {documents.length} document{documents.length > 1 ? 's' : ''} in your knowledge base
                 </p>
               </div>
