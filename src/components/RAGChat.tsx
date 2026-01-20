@@ -2,16 +2,82 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Loader2, MessageSquare, Plus, Trash2, History } from "lucide-react";
+import { Send, Loader2, MessageSquare, Plus, Trash2, History, Lightbulb, FileText, TrendingUp, Search, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useConversation, Message } from "@/hooks/useConversation";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RAGChatProps {
   className?: string;
 }
+
+interface DocumentInfo {
+  id: string;
+  name: string;
+  file_type: string;
+  status: string;
+}
+
+// Generate smart example prompts based on document types
+const getExamplePrompts = (documents: DocumentInfo[]) => {
+  const hasCSV = documents.some(d => d.file_type === '.csv');
+  const hasPDF = documents.some(d => d.file_type === '.pdf');
+  const hasJSON = documents.some(d => d.file_type === '.json');
+  const docNames = documents.map(d => d.name.replace(/\.[^/.]+$/, '')).slice(0, 2);
+  
+  const prompts: { icon: React.ReactNode; text: string; query: string }[] = [];
+  
+  if (hasCSV) {
+    prompts.push(
+      { icon: <BarChart3 className="w-3.5 h-3.5" />, text: "Summarize key metrics", query: "What are the key metrics and statistics from my CSV data? Show me the main trends and patterns." },
+      { icon: <TrendingUp className="w-3.5 h-3.5" />, text: "Find trends", query: "Analyze the trends in my data. What patterns do you see over time?" }
+    );
+  }
+  
+  if (hasPDF) {
+    prompts.push(
+      { icon: <FileText className="w-3.5 h-3.5" />, text: "Summarize document", query: "Give me a comprehensive summary of the main points from my uploaded documents." },
+      { icon: <Search className="w-3.5 h-3.5" />, text: "Extract key insights", query: "What are the most important insights and takeaways from my documents?" }
+    );
+  }
+  
+  if (hasJSON) {
+    prompts.push(
+      { icon: <BarChart3 className="w-3.5 h-3.5" />, text: "Analyze structure", query: "Analyze the structure and key data points from my JSON files." }
+    );
+  }
+  
+  // Default prompts if no specific types or to fill gaps
+  if (prompts.length < 4) {
+    const defaults = [
+      { icon: <FileText className="w-3.5 h-3.5" />, text: "What's in my docs?", query: "Give me an overview of what information is contained in my uploaded documents." },
+      { icon: <TrendingUp className="w-3.5 h-3.5" />, text: "Find financial data", query: "What financial figures, revenue, or cost data can you find in my documents?" },
+      { icon: <Search className="w-3.5 h-3.5" />, text: "Key takeaways", query: "What are the most important takeaways from my uploaded documents?" },
+      { icon: <BarChart3 className="w-3.5 h-3.5" />, text: "Compare data", query: "Compare and contrast the key information across my uploaded documents." },
+    ];
+    
+    for (const d of defaults) {
+      if (prompts.length >= 4) break;
+      if (!prompts.some(p => p.text === d.text)) {
+        prompts.push(d);
+      }
+    }
+  }
+  
+  // Add document-specific prompt if we have names
+  if (docNames.length > 0 && prompts.length < 4) {
+    prompts.push({
+      icon: <Lightbulb className="w-3.5 h-3.5" />,
+      text: `About ${docNames[0]}`,
+      query: `Tell me the key information from the "${docNames[0]}" document.`
+    });
+  }
+  
+  return prompts.slice(0, 4);
+};
 
 const RAGChat = ({ className }: RAGChatProps) => {
   const { user } = useAuth();
@@ -33,13 +99,39 @@ const RAGChat = ({ className }: RAGChatProps) => {
 
   const [input, setInput] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  const [documents, setDocuments] = useState<DocumentInfo[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Fetch user's documents
+  useEffect(() => {
+    if (user) {
+      fetchDocuments();
+    }
+  }, [user]);
+
+  const fetchDocuments = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('documents')
+      .select('id, name, file_type, status')
+      .eq('user_id', user.id)
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(10);
+    
+    if (data) setDocuments(data);
+  };
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const handlePromptClick = (query: string) => {
+    setInput(query);
+    textareaRef.current?.focus();
+  };
 
   const handleSend = async () => {
     if (!user) {
@@ -271,14 +363,51 @@ const RAGChat = ({ className }: RAGChatProps) => {
       {/* Messages */}
       <ScrollArea className="flex-1 p-4">
         {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center py-12">
+          <div className="h-full flex flex-col items-center justify-center text-center py-8">
             <MessageSquare className="w-10 h-10 text-muted-foreground/50 mb-3" />
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mb-1">
               Ask questions about your uploaded documents
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mb-4">
               Follow-up questions will use conversation context
             </p>
+            
+            {/* Example prompts based on uploaded documents */}
+            {documents.length > 0 && (
+              <div className="w-full max-w-md mt-4">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
+                  <Lightbulb className="w-3.5 h-3.5" />
+                  <span>Try asking:</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {getExamplePrompts(documents).map((prompt, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handlePromptClick(prompt.query)}
+                      className="flex items-center gap-2 p-2.5 rounded-lg bg-secondary/50 hover:bg-secondary border border-border/30 hover:border-primary/30 transition-all text-left group"
+                    >
+                      <span className="text-primary/70 group-hover:text-primary transition-colors">
+                        {prompt.icon}
+                      </span>
+                      <span className="text-xs text-foreground/80 group-hover:text-foreground truncate">
+                        {prompt.text}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground/70 mt-3">
+                  Based on {documents.length} document{documents.length > 1 ? 's' : ''} in your knowledge base
+                </p>
+              </div>
+            )}
+            
+            {documents.length === 0 && (
+              <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 max-w-xs">
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  Upload documents first to ask questions about them
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
