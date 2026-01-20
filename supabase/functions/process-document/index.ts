@@ -144,12 +144,16 @@ function extractEntities(content: string): string[] {
   return Array.from(entities).slice(0, 10);
 }
 
-// Generate embedding with exponential backoff retry
-async function generateEmbedding(text: string, openaiApiKey: string, maxRetries = 3): Promise<number[] | null> {
-  const truncatedText = text.slice(0, 32000);
+// Generate embedding with faster retry strategy
+async function generateEmbedding(text: string, openaiApiKey: string, maxRetries = 2): Promise<number[] | null> {
+  // Truncate to 8000 chars for faster processing
+  const truncatedText = text.slice(0, 8000);
   
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      
       const response = await fetch('https://api.openai.com/v1/embeddings', {
         method: 'POST',
         headers: {
@@ -160,11 +164,14 @@ async function generateEmbedding(text: string, openaiApiKey: string, maxRetries 
           model: 'text-embedding-3-small',
           input: truncatedText,
         }),
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
 
       if (response.status === 429) {
-        // Rate limited - exponential backoff
-        const waitTime = Math.pow(2, attempt + 1) * 1000; // 2s, 4s, 8s
+        // Rate limited - shorter backoff
+        const waitTime = Math.pow(2, attempt) * 500; // 500ms, 1s
         console.log(`Rate limited, waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
         continue;
@@ -177,11 +184,15 @@ async function generateEmbedding(text: string, openaiApiKey: string, maxRetries 
 
       const data = await response.json();
       return data.data[0].embedding;
-    } catch (error) {
-      console.error('Error generating embedding:', error);
+    } catch (error: unknown) {
+      const err = error as Error;
+      if (err.name === 'AbortError') {
+        console.error('Embedding request timed out');
+      } else {
+        console.error('Error generating embedding:', error);
+      }
       if (attempt < maxRetries - 1) {
-        const waitTime = Math.pow(2, attempt + 1) * 1000;
-        await new Promise(resolve => setTimeout(resolve, waitTime));
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
   }
@@ -189,12 +200,12 @@ async function generateEmbedding(text: string, openaiApiKey: string, maxRetries 
   return null;
 }
 
-// Process embeddings in batches with rate limiting
+// Process embeddings in batches with optimized rate limiting
 async function processEmbeddingsInBatches(
   chunks: { content: string; index: number }[],
   openaiApiKey: string,
-  batchSize = 5,
-  delayBetweenBatches = 2000
+  batchSize = 10,
+  delayBetweenBatches = 500
 ): Promise<Map<number, number[]>> {
   const embeddings = new Map<number, number[]>();
   
@@ -202,21 +213,21 @@ async function processEmbeddingsInBatches(
     const batch = chunks.slice(i, i + batchSize);
     console.log(`Processing embedding batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(chunks.length / batchSize)}`);
     
-    // Process batch in parallel
-    const batchResults = await Promise.all(
+    // Process batch in parallel with Promise.allSettled for resilience
+    const batchResults = await Promise.allSettled(
       batch.map(async (chunk) => {
-        const embedding = await generateEmbedding(chunk.content, openaiApiKey);
+        const embedding = await generateEmbedding(chunk.content, openaiApiKey, 2);
         return { index: chunk.index, embedding };
       })
     );
     
     for (const result of batchResults) {
-      if (result.embedding) {
-        embeddings.set(result.index, result.embedding);
+      if (result.status === 'fulfilled' && result.value.embedding) {
+        embeddings.set(result.value.index, result.value.embedding);
       }
     }
     
-    // Delay between batches to avoid rate limiting
+    // Shorter delay between batches
     if (i + batchSize < chunks.length) {
       await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
     }
@@ -262,26 +273,32 @@ serve(async (req) => {
     
     console.log(`Created ${chunks.length} semantic chunks`);
 
-    // Limit chunks for very large documents
-    const maxChunks = 40; // Keep small to prevent request timeouts
+    // Limit chunks for very large documents - increased limit for faster processing
+    const maxChunks = 50;
     const chunksToProcess = chunks.slice(0, maxChunks);
     if (chunks.length > maxChunks) {
       console.log(`Document too large, processing first ${maxChunks} chunks out of ${chunks.length}`);
     }
 
-    // Generate embeddings if API key is available and not skipped
+    // Generate embeddings only for first few chunks to speed up initial processing
+    // Skip embeddings entirely for faster upload (can be generated later on-demand)
     let embeddingsMap = new Map<number, number[]>();
-    if (openaiApiKey && !skipEmbeddings) {
-      const maxEmbeddingChunks = 20;
-      const chunksForEmbedding = chunksToProcess
-        .slice(0, maxEmbeddingChunks)
-        .map((chunk, index) => ({
-          content: chunk.content,
-          index,
-        }));
-
-      // Keep this fast to avoid request timeouts
-      embeddingsMap = await processEmbeddingsInBatches(chunksForEmbedding, openaiApiKey, 5, 750);
+    const generateEmbeddingsNow = openaiApiKey && !skipEmbeddings && chunksToProcess.length <= 10;
+    
+    if (generateEmbeddingsNow) {
+      // Only generate embeddings for small documents (fast path)
+      const chunksForEmbedding = chunksToProcess.map((chunk, index) => ({
+        content: chunk.content,
+        index,
+      }));
+      embeddingsMap = await processEmbeddingsInBatches(chunksForEmbedding, openaiApiKey, 10, 300);
+    } else if (openaiApiKey && !skipEmbeddings) {
+      // For large documents, only embed first 5 chunks for quick search capability
+      const quickEmbedChunks = chunksToProcess.slice(0, 5).map((chunk, index) => ({
+        content: chunk.content,
+        index,
+      }));
+      embeddingsMap = await processEmbeddingsInBatches(quickEmbedChunks, openaiApiKey, 5, 200);
     }
 
     // Prepare chunk inserts
