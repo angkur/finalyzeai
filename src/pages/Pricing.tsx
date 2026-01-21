@@ -10,13 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-// Stripe price IDs for each plan
-const STRIPE_PRICES = {
-  "mini-pro": "price_1SnNzFGj42kzuAASjkxZfEvI",
-  "mini": "price_1SnNzYGj42kzuAASdZ3S0PwS",
-  "starter": "price_1SnO0KGj42kzuAASMuvVqTrS",
-  "pro": "price_1SnO1NGj42kzuAASLZ9votZm",
-};
+import { STRIPE_PRICES, PLAN_LIMITS } from "@/config/plans";
 
 interface Plan {
   name: string;
@@ -49,12 +43,7 @@ const plans: Plan[] = [
       "7-day analysis history",
       "Community support",
     ],
-    limits: {
-      daily_limit: 5,
-      monthly_limit: 5,
-      upload_limit_mb: 5,
-      history_retention_days: 7,
-    },
+    limits: PLAN_LIMITS.free,
     popular: false,
   },
   {
@@ -70,12 +59,7 @@ const plans: Plan[] = [
       "14-day analysis history",
       "Basic email support",
     ],
-    limits: {
-      daily_limit: 7,
-      monthly_limit: 15,
-      upload_limit_mb: 8,
-      history_retention_days: 14,
-    },
+    limits: PLAN_LIMITS["mini-pro"],
     popular: false,
     stripePrice: STRIPE_PRICES["mini-pro"],
   },
@@ -92,12 +76,7 @@ const plans: Plan[] = [
       "30-day analysis history",
       "Email support",
     ],
-    limits: {
-      daily_limit: 10,
-      monthly_limit: 25,
-      upload_limit_mb: 10,
-      history_retention_days: 30,
-    },
+    limits: PLAN_LIMITS.mini,
     popular: false,
     stripePrice: STRIPE_PRICES["mini"],
   },
@@ -115,12 +94,7 @@ const plans: Plan[] = [
       "Priority support",
       "Data visualization exports",
     ],
-    limits: {
-      daily_limit: 25,
-      monthly_limit: 100,
-      upload_limit_mb: 25,
-      history_retention_days: 90,
-    },
+    limits: PLAN_LIMITS.starter,
     popular: true,
     stripePrice: STRIPE_PRICES["starter"],
   },
@@ -140,12 +114,7 @@ const plans: Plan[] = [
       "Custom report templates",
       "Team collaboration (coming soon)",
     ],
-    limits: {
-      daily_limit: 50,
-      monthly_limit: 500,
-      upload_limit_mb: 50,
-      history_retention_days: null,
-    },
+    limits: PLAN_LIMITS.pro,
     popular: false,
     stripePrice: STRIPE_PRICES["pro"],
   },
@@ -154,13 +123,15 @@ const plans: Plan[] = [
 const Pricing = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, userPlan, refreshPlan } = useAuth();
   const { toast } = useToast();
-  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+
+  // Get current plan from AuthContext
+  const currentPlan = userPlan?.planName || null;
+  const subscriptionEnd = userPlan?.subscriptionEnd || null;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -179,7 +150,7 @@ const Pricing = () => {
       });
       // Clear URL params and refresh subscription
       window.history.replaceState({}, "", "/pricing");
-      checkSubscription();
+      handleRefreshPlan();
     } else if (canceled === "true") {
       toast({
         title: "Checkout canceled",
@@ -190,62 +161,14 @@ const Pricing = () => {
     }
   }, [searchParams]);
 
-  const checkSubscription = async () => {
-    if (!user) {
-      setCurrentPlan(null);
-      setSubscriptionEnd(null);
-      return;
-    }
-
+  const handleRefreshPlan = async () => {
     setIsRefreshing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("check-subscription");
-      
-      if (error) throw error;
-      
-      if (data) {
-        setCurrentPlan(data.plan_name || "free");
-        setSubscriptionEnd(data.subscription_end);
-        
-        // Update local user_plans table to sync with Stripe
-        if (data.plan_name && data.plan_name !== "free") {
-          const plan = plans.find(p => p.name === data.plan_name);
-          if (plan) {
-            await supabase
-              .from("user_plans")
-              .update({
-                plan_name: data.plan_name,
-                daily_limit: plan.limits.daily_limit,
-                monthly_limit: plan.limits.monthly_limit,
-                upload_limit_mb: plan.limits.upload_limit_mb,
-                history_retention_days: plan.limits.history_retention_days ?? 36500,
-                stripe_customer_id: data.stripe_customer_id,
-                stripe_subscription_id: data.stripe_subscription_id,
-              })
-              .eq("user_id", user.id);
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error checking subscription:", error);
-      // Fall back to database
-      const { data, error: dbError } = await supabase
-        .from("user_plans")
-        .select("plan_name")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (!dbError && data) {
-        setCurrentPlan(data.plan_name);
-      }
+      await refreshPlan();
     } finally {
       setIsRefreshing(false);
     }
   };
-
-  useEffect(() => {
-    checkSubscription();
-  }, [user]);
 
   const handleCheckout = async (planName: string, priceId: string) => {
     if (!user) {
@@ -385,7 +308,7 @@ const Pricing = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={checkSubscription}
+                  onClick={handleRefreshPlan}
                   disabled={isRefreshing}
                 >
                   <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
