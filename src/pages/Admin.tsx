@@ -16,9 +16,10 @@ import { toast } from "sonner";
 import { 
   Shield, Users, BarChart3, FileText, Brain, 
   ArrowLeft, Settings, Activity, Ban, Check,
-  Eye, Loader2, MessageSquare, Trash2, Mail, CheckCheck, Search
+  Eye, Loader2, MessageSquare, Trash2, Mail, CheckCheck, Search, Database
 } from "lucide-react";
 import SEOMonitor from "@/components/admin/SEOMonitor";
+import DataCleanupPanel from "@/components/admin/DataCleanupPanel";
 
 interface AdminStats {
   totalUsers: number;
@@ -217,7 +218,7 @@ const Admin = () => {
 
       <main className="container mx-auto px-6 py-8">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-flex">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-flex">
             <TabsTrigger value="dashboard" className="gap-2">
               <BarChart3 className="w-4 h-4" />
               Dashboard
@@ -233,6 +234,10 @@ const Admin = () => {
             <TabsTrigger value="activity" className="gap-2">
               <Activity className="w-4 h-4" />
               AI Usage
+            </TabsTrigger>
+            <TabsTrigger value="cleanup" className="gap-2">
+              <Database className="w-4 h-4" />
+              Cleanup
             </TabsTrigger>
             <TabsTrigger value="seo" className="gap-2">
               <Search className="w-4 h-4" />
@@ -495,6 +500,11 @@ const Admin = () => {
                 <RecentActivityList />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Cleanup Tab */}
+          <TabsContent value="cleanup">
+            <DataCleanupPanel />
           </TabsContent>
 
           {/* SEO Tab */}
