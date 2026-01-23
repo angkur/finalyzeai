@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
+import SplashScreen from "@/components/SplashScreen";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -27,12 +28,34 @@ import SubscriptionManagement from "./pages/SubscriptionManagement";
 
 const App = () => {
   const [queryClient] = useState(() => new QueryClient());
+  const [showSplash, setShowSplash] = useState(true);
+  const [isFirstVisit, setIsFirstVisit] = useState(false);
+
+  useEffect(() => {
+    // Only show splash on first visit or PWA launch
+    const hasVisited = sessionStorage.getItem("app_loaded");
+    const isPWA = window.matchMedia("(display-mode: standalone)").matches;
+    
+    if (!hasVisited || isPWA) {
+      setIsFirstVisit(true);
+      sessionStorage.setItem("app_loaded", "true");
+    } else {
+      setShowSplash(false);
+    }
+  }, []);
+
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+  };
   
   return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      {showSplash && isFirstVisit && (
+        <SplashScreen onComplete={handleSplashComplete} minDuration={2200} />
+      )}
       <BrowserRouter>
         <AuthProvider>
           <AnalyticsProvider>
