@@ -29,6 +29,7 @@ const analysisTypes = [
   { id: 'credit-scoring' as AnalysisType, label: 'Credit Scoring', icon: Shield, description: 'Assess creditworthiness' },
   { id: 'data-visualization' as AnalysisType, label: 'Data Visualization', icon: BarChart3, description: 'Create interactive charts' },
   { id: 'fraud-analysis' as AnalysisType, label: 'Fraud Analysis', icon: AlertTriangle, description: 'Detect fraud & anomalies' },
+  { id: 'financial-statement' as AnalysisType, label: 'Statement Analysis', icon: ClipboardList, description: 'Financial ratio scoring' },
 ];
 
 const samplePrompts: Record<AnalysisType, string> = {
