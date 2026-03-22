@@ -605,6 +605,65 @@ const AIDemo = () => {
               />
               
               <div className="flex flex-col gap-3">
+                {/* Demo Button for Statement Analysis */}
+                {selectedType === 'financial-statement' && !response && !isLoading && (
+                  <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 mb-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ClipboardList className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium text-foreground">New to Statement Analysis?</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Try our demo with a sample financial statement to see how ratio scoring and eligibility assessment works.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full border-primary/30 text-primary hover:bg-primary/10"
+                      onClick={() => {
+                        setInput(`Analyze this financial statement for ABC Manufacturing Corp (FY 2025):
+
+INCOME STATEMENT:
+Revenue: $25,400,000
+Cost of Goods Sold: $15,240,000
+Gross Profit: $10,160,000
+Operating Expenses: $6,350,000
+Operating Income: $3,810,000
+Interest Expense: $720,000
+Net Income Before Tax: $3,090,000
+Income Tax: $771,000
+Net Income: $2,319,000
+
+BALANCE SHEET:
+Cash & Equivalents: $3,200,000
+Accounts Receivable: $4,100,000
+Inventory: $3,800,000
+Total Current Assets: $11,100,000
+Property & Equipment: $8,500,000
+Total Assets: $22,600,000
+
+Accounts Payable: $2,900,000
+Short-term Debt: $1,500,000
+Total Current Liabilities: $5,400,000
+Long-term Debt: $7,200,000
+Total Liabilities: $12,600,000
+Shareholders' Equity: $10,000,000
+
+CASH FLOW STATEMENT:
+Operating Cash Flow: $4,200,000
+Capital Expenditures: $1,800,000
+Free Cash Flow: $2,400,000
+Dividends Paid: $600,000
+
+Evaluate eligibility for a self-insured insurance program. Score all ratios and provide recommendation.`);
+                        toast.info("Demo data loaded! Click 'Run Analysis' to see results.");
+                      }}
+                    >
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Load Demo Financial Statement
+                    </Button>
+                  </div>
+                )}
+
                 <Button
                   variant="hero"
                   className="w-full"
@@ -625,7 +684,9 @@ const AIDemo = () => {
                 </Button>
                 
                 <p className="text-xs text-muted-foreground text-center">
-                  Supports CSV, TXT, and JSON files up to 5MB
+                  {selectedType === 'financial-statement' 
+                    ? 'Upload a PDF financial statement or paste data above, then click Run Analysis'
+                    : 'Supports CSV, TXT, and JSON files up to 5MB'}
                 </p>
               </div>
             </div>
