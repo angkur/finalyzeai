@@ -47,6 +47,7 @@ const suggestionChips = [
   { icon: FileText, label: "Document Analysis", query: "Analyze my uploaded financial documents" },
   { icon: Sparkles, label: "AI Predictions", query: "What are your predictions for the market this quarter?" },
   { icon: ShieldAlert, label: "Fraud Analysis", query: "Analyze my uploaded financial documents for potential fraud indicators, anomalies, and suspicious patterns. Provide a fraud risk assessment with confidence levels." },
+  { icon: FileText, label: "Statement Analysis", query: "Analyze the uploaded financial statements. Extract key financial data, calculate profitability ratios (gross margin, net margin, ROE), solvency ratios (debt-to-equity, interest coverage), and cash flow ratios. Score each category and provide an eligibility recommendation." },
 ];
 
 const AiPredict = () => {

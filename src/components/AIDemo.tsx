@@ -675,6 +675,13 @@ const AIDemo = () => {
                             />
                           </div>
                         )}
+
+                        {/* Financial Scorecard - shown for statement analysis */}
+                        {activeTab === 'financial-statement' && response && (
+                          <div className="mb-4">
+                            <FinancialScorecard analysisText={response} />
+                          </div>
+                        )}
                         
                         <div className="prose prose-invert prose-sm max-w-none pt-6">
                           <pre className="whitespace-pre-wrap text-sm text-foreground/90 font-sans leading-relaxed">
