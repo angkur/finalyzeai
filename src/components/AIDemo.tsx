@@ -677,7 +677,7 @@ const AIDemo = () => {
                         )}
 
                         {/* Financial Scorecard - shown for statement analysis */}
-                        {activeTab === 'financial-statement' && response && (
+                        {selectedType === 'financial-statement' && response && (
                           <div className="mb-4">
                             <FinancialScorecard analysisText={response} />
                           </div>
