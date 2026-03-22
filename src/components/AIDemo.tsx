@@ -9,6 +9,7 @@ import DocumentUpload from "./DocumentUpload";
 import RAGChat from "./RAGChat";
 import FeedbackRating from "./FeedbackRating";
 import FraudRiskGauge from "./FraudRiskGauge";
+import FinancialScorecard from "./FinancialScorecard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
