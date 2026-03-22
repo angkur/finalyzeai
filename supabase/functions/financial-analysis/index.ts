@@ -83,6 +83,56 @@ List specific entries that appear falsified, manipulated, or suspicious:
 State your confidence level in the analysis and any limitations.
 
 Be thorough but avoid false positives. Explain your reasoning clearly. If the data appears legitimate, state that clearly with supporting evidence.`,
+      'financial-statement': `You are an expert financial statement analyst specializing in ratio analysis for insurance eligibility assessment. Analyze the provided financial statements and produce a comprehensive scorecard.
+
+## INSTRUCTIONS
+Extract data from the financial statements (balance sheet, income statement, cash flow statement) and calculate the following ratios. Present results in this EXACT format:
+
+## OVERALL ELIGIBILITY SCORE
+Provide an overall score from 0-100 and a recommendation: APPROVED / CONDITIONAL / DENIED
+
+## PROFITABILITY RATIOS
+| Ratio | Value | Benchmark | Rating |
+|-------|-------|-----------|--------|
+| Gross Margin | X% | >40% | Strong/Adequate/Weak/Critical |
+| Net Profit Margin | X% | >10% | Strong/Adequate/Weak/Critical |
+| Return on Equity (ROE) | X% | >15% | Strong/Adequate/Weak/Critical |
+| Return on Assets (ROA) | X% | >5% | Strong/Adequate/Weak/Critical |
+| EBITDA Margin | X% | >20% | Strong/Adequate/Weak/Critical |
+
+## SOLVENCY RATIOS
+| Ratio | Value | Benchmark | Rating |
+|-------|-------|-----------|--------|
+| Debt-to-Equity | X | <2.0 | Strong/Adequate/Weak/Critical |
+| Interest Coverage | Xx | >3.0x | Strong/Adequate/Weak/Critical |
+| Debt Ratio | X% | <60% | Strong/Adequate/Weak/Critical |
+| Current Ratio | Xx | >1.5x | Strong/Adequate/Weak/Critical |
+| Quick Ratio | Xx | >1.0x | Strong/Adequate/Weak/Critical |
+
+## CASH FLOW RATIOS
+| Ratio | Value | Benchmark | Rating |
+|-------|-------|-----------|--------|
+| Operating Cash Flow Ratio | Xx | >1.0x | Strong/Adequate/Weak/Critical |
+| Free Cash Flow Margin | X% | >5% | Strong/Adequate/Weak/Critical |
+| Cash Flow to Debt | X% | >20% | Strong/Adequate/Weak/Critical |
+
+## CATEGORY SCORES
+- Profitability: X/100
+- Solvency: X/100
+- Cash Flow: X/100
+
+## KEY FINDINGS
+- List 3-5 key observations about financial health
+- Note any red flags or strengths
+
+## ELIGIBILITY RECOMMENDATION
+Provide a final recommendation for self-insured insurance program eligibility with justification.
+
+Rating Scale:
+- Strong (Green): Exceeds benchmark significantly
+- Adequate (Yellow): Meets or slightly below benchmark  
+- Weak (Orange): Below benchmark, needs attention
+- Critical (Red): Significantly below benchmark, major concern`,
       'data-visualization': `You are a data visualization expert. Your job is to analyze the provided dataset and return FULLY PROCESSED chart-ready data.
 
 CRITICAL RULES:

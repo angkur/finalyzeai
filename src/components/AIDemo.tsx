@@ -2,18 +2,19 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, LineChart, FileText, Database, Shield, Sparkles, Send, Loader2, Upload, X, FileSpreadsheet, BarChart3, Copy, AlertTriangle } from "lucide-react";
+import { Brain, LineChart, FileText, Database, Shield, Sparkles, Send, Loader2, Upload, X, FileSpreadsheet, BarChart3, Copy, AlertTriangle, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import ChartRenderer, { ChartData } from "./visualizations/ChartRenderer";
 import DocumentUpload from "./DocumentUpload";
 import RAGChat from "./RAGChat";
 import FeedbackRating from "./FeedbackRating";
 import FraudRiskGauge from "./FraudRiskGauge";
+import FinancialScorecard from "./FinancialScorecard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
-type AnalysisType = 'data-analysis' | 'report-generation' | 'predictive-modeling' | 'rag-query' | 'credit-scoring' | 'data-visualization' | 'fraud-analysis';
+type AnalysisType = 'data-analysis' | 'report-generation' | 'predictive-modeling' | 'rag-query' | 'credit-scoring' | 'data-visualization' | 'fraud-analysis' | 'financial-statement';
 
 interface FraudAnalysisResult {
   percentage: number;
@@ -28,6 +29,7 @@ const analysisTypes = [
   { id: 'credit-scoring' as AnalysisType, label: 'Credit Scoring', icon: Shield, description: 'Assess creditworthiness' },
   { id: 'data-visualization' as AnalysisType, label: 'Data Visualization', icon: BarChart3, description: 'Create interactive charts' },
   { id: 'fraud-analysis' as AnalysisType, label: 'Fraud Analysis', icon: AlertTriangle, description: 'Detect fraud & anomalies' },
+  { id: 'financial-statement' as AnalysisType, label: 'Statement Analysis', icon: ClipboardList, description: 'Financial ratio scoring' },
 ];
 
 const samplePrompts: Record<AnalysisType, string> = {
@@ -38,6 +40,7 @@ const samplePrompts: Record<AnalysisType, string> = {
   'credit-scoring': 'Assess credit risk for:\n- Business age: 5 years\n- Annual revenue: $500K\n- Debt-to-equity: 1.2\n- Payment history: 2 late payments in 3 years\n- Industry: SaaS',
   'data-visualization': 'Visualize this sales data by region:\nNorth America: $4.5M, Europe: $3.2M, Asia Pacific: $2.8M, Latin America: $1.5M, Middle East: $0.9M\n\nAlso show quarterly trends:\nQ1: $2.5M, Q2: $3.1M, Q3: $3.8M, Q4: $3.5M',
   'fraud-analysis': 'Analyze this transaction data for potential fraud:\nTransaction 1: $5,000 transfer, 2:30 AM, New device, Location: Nigeria\nTransaction 2: $3,500 purchase, Same day, Regular device, Location: Home city\nTransaction 3: $8,200 wire transfer, Weekend, VPN detected, Recipient: Offshore account\nTransaction 4: $150 grocery store, Regular pattern, Known location',
+  'financial-statement': 'Analyze this financial statement:\n\nIncome Statement:\nRevenue: $12,500,000\nCOGS: $7,200,000\nOperating Expenses: $3,100,000\nInterest Expense: $400,000\nNet Income: $1,350,000\n\nBalance Sheet:\nTotal Assets: $18,000,000\nTotal Liabilities: $10,800,000\nShareholders Equity: $7,200,000\nCurrent Assets: $6,500,000\nCurrent Liabilities: $3,800,000\nInventory: $2,100,000\n\nCash Flow:\nOperating Cash Flow: $2,800,000\nCapital Expenditures: $1,200,000\nFree Cash Flow: $1,600,000',
 };
 
 const parseCSV = (text: string): string => {
@@ -670,6 +673,13 @@ const AIDemo = () => {
                               percentage={fraudResult.percentage} 
                               confidence={fraudResult.confidence}
                             />
+                          </div>
+                        )}
+
+                        {/* Financial Scorecard - shown for statement analysis */}
+                        {selectedType === 'financial-statement' && response && (
+                          <div className="mb-4">
+                            <FinancialScorecard analysisText={response} />
                           </div>
                         )}
                         

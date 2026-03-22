@@ -16,7 +16,7 @@ const getSessionId = () => {
 export const useAnalytics = () => {
   const location = useLocation();
   const { user } = useAuth();
-  const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
+  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionId = useRef(getSessionId());
   const lastPath = useRef<string | null>(null);
 
