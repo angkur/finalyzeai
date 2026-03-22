@@ -28,7 +28,7 @@ export const useRealtimeChart = (
     streamDuration: 0,
   });
   
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<Date | null>(null);
   const dataPointCountRef = useRef(0);
   const timeSeriesIndexRef = useRef(0);
