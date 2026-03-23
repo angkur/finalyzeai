@@ -709,13 +709,23 @@ Evaluate eligibility for a self-insured insurance program. Score all ratios and 
                       <TabsTrigger value="visualization" className="text-xs">Charts</TabsTrigger>
                     </TabsList>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      className="h-8 w-8 p-0 hover:bg-secondary"
+                      className="h-8 gap-1.5 px-2.5 text-xs font-medium"
                       onClick={() => setIsFullscreen(!isFullscreen)}
                       title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
                     >
-                      {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                      {isFullscreen ? (
+                        <>
+                          <Minimize2 className="w-4 h-4" />
+                          <span className="hidden sm:inline">Minimize</span>
+                        </>
+                      ) : (
+                        <>
+                          <Maximize2 className="w-4 h-4" />
+                          <span className="hidden sm:inline">Fullscreen</span>
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
