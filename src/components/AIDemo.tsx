@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, LineChart, FileText, Database, Shield, Sparkles, Send, Loader2, Upload, X, FileSpreadsheet, BarChart3, Copy, AlertTriangle, ClipboardList } from "lucide-react";
+import { Brain, LineChart, FileText, Database, Shield, Sparkles, Send, Loader2, Upload, X, FileSpreadsheet, BarChart3, Copy, AlertTriangle, ClipboardList, Maximize2, Minimize2 } from "lucide-react";
 import { toast } from "sonner";
 import ChartRenderer, { ChartData } from "./visualizations/ChartRenderer";
 import DocumentUpload from "./DocumentUpload";
@@ -102,6 +102,7 @@ const AIDemo = () => {
   const [activeTab, setActiveTab] = useState<'analysis' | 'visualization'>('analysis');
   const [interactionId, setInteractionId] = useState<string | null>(null);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [usageLimitMessage, setUsageLimitMessage] = useState<string | null>(null);
   const [usageStats, setUsageStats] = useState<{ used: number; limit: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -692,7 +693,7 @@ Evaluate eligibility for a self-insured insurance program. Score all ratios and 
             </div>
 
             {/* Output Panel */}
-            <div className="bg-gradient-card rounded-2xl border border-border/50 p-6">
+            <div className={`bg-gradient-card rounded-2xl border border-border/50 p-6 ${isFullscreen ? 'fixed inset-0 z-50 bg-background overflow-auto rounded-none' : ''}`}>
               <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'analysis' | 'visualization')}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -702,14 +703,25 @@ Evaluate eligibility for a self-insured insurance program. Score all ratios and 
                     <h3 className="font-display font-semibold text-foreground">Results</h3>
                   </div>
                   
-                  <TabsList className="bg-secondary/50">
-                    <TabsTrigger value="analysis" className="text-xs">Analysis</TabsTrigger>
-                    <TabsTrigger value="visualization" className="text-xs">Charts</TabsTrigger>
-                  </TabsList>
+                  <div className="flex items-center gap-2">
+                    <TabsList className="bg-secondary/50">
+                      <TabsTrigger value="analysis" className="text-xs">Analysis</TabsTrigger>
+                      <TabsTrigger value="visualization" className="text-xs">Charts</TabsTrigger>
+                    </TabsList>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 hover:bg-secondary"
+                      onClick={() => setIsFullscreen(!isFullscreen)}
+                      title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                    >
+                      {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                    </Button>
+                  </div>
                 </div>
 
                 <TabsContent value="analysis" className="mt-0">
-                  <div className="min-h-[280px] max-h-[400px] bg-secondary/30 rounded-xl p-4 border border-border/30 overflow-auto relative">
+                  <div className={`${isFullscreen ? 'min-h-[calc(100vh-120px)]' : 'min-h-[280px] max-h-[400px]'} bg-secondary/30 rounded-xl p-4 border border-border/30 overflow-auto relative`}>
                     {response ? (
                       <div className="space-y-4">
                         <div className="absolute top-2 right-2 z-10">

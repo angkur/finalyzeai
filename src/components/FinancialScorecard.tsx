@@ -94,22 +94,22 @@ function RatioTable({ title, icon: Icon, ratios }: { title: string; icon: React.
           {title}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-0">
         {ratios.map((ratio, i) => {
           const config = ratingConfig[ratio.rating];
           const RatingIcon = config.icon;
           return (
-            <div key={i} className="py-2.5 border-b border-border/30 last:border-0 space-y-1.5">
+            <div key={i} className="py-3 border-b border-border/30 last:border-0">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <p className="text-sm font-medium leading-tight flex-1 min-w-0">{ratio.name}</p>
+                <span className="font-mono font-bold text-foreground text-sm shrink-0">{ratio.value}</span>
+              </div>
               <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-medium">{ratio.name}</p>
-                <Badge className={`text-xs shrink-0 ${config.color}`}>
-                  <RatingIcon className="w-3 h-3 mr-1" />
+                <span className="text-xs text-muted-foreground">Benchmark: {ratio.benchmark}</span>
+                <Badge className={`text-[10px] px-1.5 py-0.5 shrink-0 ${config.color}`}>
+                  <RatingIcon className="w-3 h-3 mr-0.5" />
                   {ratio.rating}
                 </Badge>
-              </div>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Benchmark: {ratio.benchmark}</span>
-                <span className="font-mono font-semibold text-foreground text-sm">{ratio.value}</span>
               </div>
             </div>
           );
