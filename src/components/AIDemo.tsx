@@ -102,6 +102,7 @@ const AIDemo = () => {
   const [activeTab, setActiveTab] = useState<'analysis' | 'visualization'>('analysis');
   const [interactionId, setInteractionId] = useState<string | null>(null);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [usageLimitMessage, setUsageLimitMessage] = useState<string | null>(null);
   const [usageStats, setUsageStats] = useState<{ used: number; limit: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
