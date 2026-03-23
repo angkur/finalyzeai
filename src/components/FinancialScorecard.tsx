@@ -99,17 +99,17 @@ function RatioTable({ title, icon: Icon, ratios }: { title: string; icon: React.
           const config = ratingConfig[ratio.rating];
           const RatingIcon = config.icon;
           return (
-            <div key={i} className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{ratio.name}</p>
-                <p className="text-xs text-muted-foreground">Benchmark: {ratio.benchmark}</p>
-              </div>
-              <div className="flex items-center gap-2 ml-2">
-                <span className="text-sm font-mono font-semibold">{ratio.value}</span>
-                <Badge className={`text-xs ${config.color}`}>
+            <div key={i} className="py-2.5 border-b border-border/30 last:border-0 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-medium">{ratio.name}</p>
+                <Badge className={`text-xs shrink-0 ${config.color}`}>
                   <RatingIcon className="w-3 h-3 mr-1" />
                   {ratio.rating}
                 </Badge>
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Benchmark: {ratio.benchmark}</span>
+                <span className="font-mono font-semibold text-foreground text-sm">{ratio.value}</span>
               </div>
             </div>
           );
