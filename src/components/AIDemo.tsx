@@ -708,27 +708,33 @@ Evaluate eligibility for a self-insured insurance program. Score all ratios and 
                       <TabsTrigger value="analysis" className="text-xs">Analysis</TabsTrigger>
                       <TabsTrigger value="visualization" className="text-xs">Charts</TabsTrigger>
                     </TabsList>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 gap-1.5 px-2.5 text-xs font-medium"
-                      onClick={() => setIsFullscreen(!isFullscreen)}
-                      title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-                    >
-                      {isFullscreen ? (
-                        <>
-                          <Minimize2 className="w-4 h-4" />
-                          <span className="hidden sm:inline">Minimize</span>
-                        </>
-                      ) : (
-                        <>
-                          <Maximize2 className="w-4 h-4" />
-                          <span className="hidden sm:inline">Fullscreen</span>
-                        </>
-                      )}
-                    </Button>
+                    {!isFullscreen && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-1.5 px-2.5 text-xs font-medium"
+                        onClick={() => setIsFullscreen(true)}
+                        title="Fullscreen"
+                      >
+                        <Maximize2 className="w-4 h-4" />
+                        <span className="hidden sm:inline">Fullscreen</span>
+                      </Button>
+                    )}
                   </div>
                 </div>
+
+                {isFullscreen && (
+                  <Button
+                    variant="glass"
+                    size="sm"
+                    className="fixed bottom-4 right-4 z-[110] h-10 gap-2 rounded-full border-border/60 px-4 shadow-lg"
+                    onClick={() => setIsFullscreen(false)}
+                    title="Minimize"
+                  >
+                    <Minimize2 className="w-4 h-4" />
+                    <span>Minimize</span>
+                  </Button>
+                )}
 
                 <TabsContent value="analysis" className="mt-0">
                   <div className={`${isFullscreen ? 'min-h-[calc(100vh-120px)]' : 'min-h-[280px] max-h-[400px]'} bg-secondary/30 rounded-xl p-4 border border-border/30 overflow-auto relative`}>
