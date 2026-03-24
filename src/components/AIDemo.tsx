@@ -693,7 +693,7 @@ Evaluate eligibility for a self-insured insurance program. Score all ratios and 
             </div>
 
             {/* Output Panel */}
-            <div className={`bg-gradient-card rounded-2xl border border-border/50 p-6 ${isFullscreen ? 'fixed inset-0 z-50 bg-background overflow-auto rounded-none' : ''}`}>
+            <div className={`bg-gradient-card rounded-2xl border border-border/50 p-6 ${isFullscreen ? 'fixed inset-0 z-[100] bg-background overflow-auto rounded-none pt-4' : ''}`}>
               <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'analysis' | 'visualization')}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
