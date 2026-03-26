@@ -1,8 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
@@ -11,6 +12,94 @@ serve(async (req) => {
   }
 
   try {
+    // --- Auth: validate JWT ---
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Invalid or expired token' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const userId = claimsData.claims.sub;
+
+    // --- Server-side usage limit enforcement ---
+    const serviceClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    // Check if user is blocked
+    const { data: usageLimits } = await serviceClient
+      .from('ai_usage_limits')
+      .select('is_blocked')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (usageLimits?.is_blocked) {
+      return new Response(JSON.stringify({ error: 'Your account has been blocked from AI usage. Contact support.' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Get user plan limits
+    const { data: userPlan } = await serviceClient
+      .from('user_plans')
+      .select('daily_limit, monthly_limit')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    const dailyLimit = userPlan?.daily_limit ?? 5;
+    const monthlyLimit = userPlan?.monthly_limit ?? 5;
+
+    // Count today's usage
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const { count: dailyCount } = await serviceClient
+      .from('interactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gte('created_at', todayStart.toISOString());
+
+    if ((dailyCount ?? 0) >= dailyLimit) {
+      return new Response(JSON.stringify({ error: 'Daily usage limit reached. Please upgrade your plan or try again tomorrow.' }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Count this month's usage
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const { count: monthlyCount } = await serviceClient
+      .from('interactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gte('created_at', monthStart.toISOString());
+
+    if ((monthlyCount ?? 0) >= monthlyLimit) {
+      return new Response(JSON.stringify({ error: 'Monthly usage limit reached. Please upgrade your plan.' }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { messages, analysisType } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     

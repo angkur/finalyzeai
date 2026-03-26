@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Users can insert their own plan" ON public.user_plans;

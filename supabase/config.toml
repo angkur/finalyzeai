@@ -1,5 +1,11 @@
 project_id = "ddbpzfchbihvzqsoybsx"
 
+[auth]
+min_password_length = 8
+
+[auth.password]
+hibp_enabled = true
+
 [functions.financial-analysis]
 verify_jwt = false
 
