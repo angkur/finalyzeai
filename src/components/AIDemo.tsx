@@ -771,8 +771,19 @@ Evaluate eligibility for a self-insured insurance program. Score all ratios and 
 
                         {/* Financial Scorecard - shown for statement analysis */}
                         {selectedType === 'financial-statement' && response && (
-                          <div className="mb-4">
+                          <div className="space-y-4 mb-4">
                             <FinancialScorecard analysisText={response} />
+                            <BenchmarkComparison analysisText={response} />
+                            <WhatIfModeling analysisText={response} />
+                            <TrendAnalysis analysisText={response} />
+                            <ReportExport analysisText={response} analysisType={selectedType} />
+                          </div>
+                        )}
+
+                        {/* Report Export for non-statement analyses */}
+                        {selectedType !== 'financial-statement' && response && !isLoading && (
+                          <div className="mb-4">
+                            <ReportExport analysisText={response} analysisType={selectedType} />
                           </div>
                         )}
                         
