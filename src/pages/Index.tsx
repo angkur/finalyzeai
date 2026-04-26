@@ -6,8 +6,10 @@ import TechStack from "@/components/TechStack";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import ScrollSection from "@/components/ScrollSection";
+import { useAdSense } from "@/hooks/useAdSense";
 
 const Index = () => {
+  useAdSense();
   return (
     <main className="min-h-screen bg-background">
       <Navbar />

@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { blogPosts } from "./Blog";
 import { ArrowLeft, Calendar, Clock, Tag, Share2, Play, Video } from "lucide-react";
+import { useAdSense } from "@/hooks/useAdSense";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -109,6 +110,7 @@ const VideoEmbed = ({ id, title, description, duration }: { id: string; title: s
 };
 
 const BlogPost = () => {
+  useAdSense();
   const { slug } = useParams();
   const navigate = useNavigate();
   
