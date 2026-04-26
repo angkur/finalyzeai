@@ -1062,7 +1062,7 @@ Master these 15 and you'll be able to evaluate any business in under 30 minutes.
     slug: "detecting-financial-fraud-with-ai",
     title: "How AI Detects Financial Statement Fraud (And Why It's Better Than Humans)",
     excerpt: "From the Beneish M-Score to modern transformer models, discover how AI catches earnings manipulation that human auditors miss.",
-    content: `Financial statement fraud costs the global economy an estimated $5 trillion annually, according to the Association of Certified Fraud Examiners. The most damaging frauds — Enron, Wirecard, Luckin Coffee — went undetected by auditors for years. AI is changing that.
+    content: `Financial statement fraud costs the global economy an estimated \$5 trillion annually, according to the Association of Certified Fraud Examiners. The most damaging frauds — Enron, Wirecard, Luckin Coffee — went undetected by auditors for years. AI is changing that.
 
 This article explains how modern fraud detection systems work, what red flags they look for, and how FinanceAI's Fraud Risk Gauge uses these techniques to score any uploaded financial statement.
 
@@ -1132,7 +1132,7 @@ When you upload a financial statement to Fin Predict, our Fraud Risk Gauge evalu
 
 **Wirecard (2020)** — A trillion-euro scandal. Cash that didn't exist. Modern fraud models flagged the company's cash conversion ratio anomalies as early as 2018.
 
-**Luckin Coffee (2020)** — Fabricated $310M in sales. Per-store revenue figures violated Benford's Law and were inconsistent with verifiable point-of-sale data.
+**Luckin Coffee (2020)** — Fabricated \$310M in sales. Per-store revenue figures violated Benford's Law and were inconsistent with verifiable point-of-sale data.
 
 **Wells Fargo (2016)** — 2 million fake accounts. Network analysis of account-opening patterns would have flagged it instantly.
 
@@ -1203,7 +1203,7 @@ This is the workhorse. Built weekly, it tracks every dollar in and out across:
 4. Calculate weekly net cash flow and ending balance
 5. Update every Friday
 
-A common mistake is to forecast revenue rather than collections. **Cash forecasting is about timing, not accruals.** A $100K invoice booked in March that pays in May affects cash in May.
+A common mistake is to forecast revenue rather than collections. **Cash forecasting is about timing, not accruals.** A \$100K invoice booked in March that pays in May affects cash in May.
 
 ### 2. The Monthly Cash Flow Forecast (Tactical)
 
@@ -1263,9 +1263,9 @@ FinanceAI's What-If Modeling lets you stress-test your forecast in real time —
 
 Week | Beg Cash | Collections | Payroll | Vendors | Other | End Cash
 -----|----------|-------------|---------|---------|-------|----------
-1 | $480K | $185K | ($120K) | ($45K) | ($15K) | $485K
-2 | $485K | $92K | $0 | ($60K) | ($8K) | $509K
-3 | $509K | $210K | ($120K) | ($55K) | ($22K) | $522K
+1 | \$480K | \$185K | (\$120K) | (\$45K) | (\$15K) | \$485K
+2 | \$485K | \$92K | \$0 | (\$60K) | (\$8K) | \$509K
+3 | \$509K | \$210K | (\$120K) | (\$55K) | (\$22K) | \$522K
 
 The pattern that emerges from week-to-week tracking is what reveals hidden risk: a 4-week stretch with no large collections coinciding with quarterly tax payments and an annual insurance renewal.
 
@@ -1440,13 +1440,13 @@ This guide explains the structured approach institutional investors use to build
 
 ## Why Single-Point Forecasts Fail
 
-Every forecast is a probability distribution disguised as a single number. When you say "we'll do $50M next year," you really mean something like:
+Every forecast is a probability distribution disguised as a single number. When you say "we'll do \$50M next year," you really mean something like:
 
-- 10% chance of <$40M
-- 30% chance of $40–48M
-- 40% chance of $48–55M
-- 15% chance of $55–62M
-- 5% chance of >$62M
+- 10% chance of <\$40M
+- 30% chance of \$40–48M
+- 40% chance of \$48–55M
+- 15% chance of \$55–62M
+- 5% chance of >\$62M
 
 Treating that distribution as a point estimate leads to:
 
@@ -1564,11 +1564,11 @@ Within seconds you can answer questions like:
 
 Metric | Bear | Base | Bull
 -------|------|------|-----
-Revenue | $42M | $52M | $61M
+Revenue | \$42M | \$52M | \$61M
 Gross Margin | 58% | 64% | 67%
-EBITDA | $4M | $11M | $17M
-Operating Cash Flow | $2M | $9M | $14M
-Year-End Cash | $8M | $18M | $26M
+EBITDA | \$4M | \$11M | \$17M
+Operating Cash Flow | \$2M | \$9M | \$14M
+Year-End Cash | \$8M | \$18M | \$26M
 Runway (months) | 8 | 22 | Infinite
 
 The right way to read this table: in 100 simulated years, you'd run out of cash in roughly 1 in 5. That's a real risk that demands a contingency plan, not a footnote.
@@ -1587,7 +1587,7 @@ Every scenario should have specific triggers and actions:
 - Initiate RIF planning
 - Begin emergency financing conversations
 
-**If cash falls below $X:**
+**If cash falls below \$X:**
 - Draw revolver
 - Activate bridge financing terms
 
@@ -1636,7 +1636,7 @@ The single most important decision in benchmarking is choosing your peer set. Ba
 - Same geography or comparable markets
 - Similar capital structure (public, PE-backed, founder-owned)
 
-A common mistake is comparing a $50M ARR startup to public companies doing $5B. Their economics are fundamentally different.
+A common mistake is comparing a \$50M ARR startup to public companies doing \$5B. Their economics are fundamentally different.
 
 ## Benchmarks That Actually Matter
 
@@ -1736,7 +1736,7 @@ Benchmarks become powerful when they drive decisions:
 
 **Identify the largest gaps.** Where are you most below benchmark? That's where the biggest improvement opportunity lies.
 
-**Quantify the financial impact.** "Closing our gross margin gap to median would generate $4M in additional gross profit." This justifies investment.
+**Quantify the financial impact.** "Closing our gross margin gap to median would generate \$4M in additional gross profit." This justifies investment.
 
 **Track progress quarterly.** Benchmark improvement is the most defensible measure of operational progress.
 
@@ -1803,7 +1803,7 @@ Knowing the characters isn't enough. The system must understand structure:
 - How do columns relate to rows?
 - Where do footnotes belong?
 
-Modern systems use vision transformers (LayoutLMv3, DocFormer) trained specifically on document layouts. These models understand that "$1,234" in row 5 column 3 of Table 2 represents "Operating Income, FY2024."
+Modern systems use vision transformers (LayoutLMv3, DocFormer) trained specifically on document layouts. These models understand that "\$1,234" in row 5 column 3 of Table 2 represents "Operating Income, FY2024."
 
 ### 4. Information Extraction
 With structure understood, large language models extract specific entities:
@@ -1844,7 +1844,7 @@ Financial statements use parentheses for negatives: "(1,234)" means −1,234. OC
 Many tables rely on whitespace alignment, not visible borders. OCR + layout analysis must reconstruct the implicit grid.
 
 **Challenge 4: Footnote Cross-References**
-"Includes $234M of restructuring charges (see Note 12)" — the system must link the line item to its footnote and surface the context.
+"Includes \$234M of restructuring charges (see Note 12)" — the system must link the line item to its footnote and surface the context.
 
 **Challenge 5: Multi-Page Tables**
 A balance sheet that spans pages requires merging logic that preserves row identities across page breaks.
@@ -1900,15 +1900,15 @@ For these cases, a human-in-the-loop workflow remains essential.
 ## The Time and Cost Savings
 
 Manual extraction of a single 10-K typically takes:
-- Junior analyst: 6–10 hours at $50–$80/hr = $300–$800
-- Senior analyst: 3–5 hours at $150–$250/hr = $450–$1,250
+- Junior analyst: 6–10 hours at \$50–\$80/hr = \$300–\$800
+- Senior analyst: 3–5 hours at \$150–\$250/hr = \$450–\$1,250
 
 AI extraction:
-- Cost per document: $0.50–$2.00
+- Cost per document: \$0.50–\$2.00
 - Time: 30–60 seconds
 - Accuracy: comparable to or better than manual entry
 
-Across a portfolio of 50 companies tracked quarterly, that's $60,000–$250,000 in annual labor savings — and a dramatic improvement in turnaround time.
+Across a portfolio of 50 companies tracked quarterly, that's \$60,000–\$250,000 in annual labor savings — and a dramatic improvement in turnaround time.
 
 ## Conclusion
 
@@ -1931,7 +1931,7 @@ This guide walks through the metrics that actually predict SaaS success — the 
 
 ## Why SaaS Metrics Are Different
 
-In a traditional business, you sell a widget for $100, recognize $100 of revenue, and that's it. In SaaS, you sell a $100/month subscription that may last 5 years — generating $6,000 in lifetime revenue but recognized over 60 months.
+In a traditional business, you sell a widget for \$100, recognize \$100 of revenue, and that's it. In SaaS, you sell a \$100/month subscription that may last 5 years — generating \$6,000 in lifetime revenue but recognized over 60 months.
 
 This temporal mismatch creates the central challenge of SaaS analysis: short-term financials understate the value being created. The companies investing aggressively in growth often look the worst on traditional GAAP metrics while building the most enduring businesses.
 
@@ -1945,10 +1945,10 @@ The annualized value of all active subscriptions. This is the headline number fo
 **ARR ≠ Revenue.** ARR is forward-looking; revenue is backward-looking.
 
 **Healthy ARR growth by stage:**
-- $1M ARR: 3x year-over-year
-- $10M ARR: 2x year-over-year
-- $100M ARR: 50%+ year-over-year
-- $1B ARR: 25%+ year-over-year
+- \$1M ARR: 3x year-over-year
+- \$10M ARR: 2x year-over-year
+- \$100M ARR: 50%+ year-over-year
+- \$1B ARR: 25%+ year-over-year
 
 ### 2. Net Revenue Retention (NRR)
 Of last year's customer cohort, how much revenue do they generate this year?
@@ -2075,7 +2075,7 @@ Create a quarterly scorecard with these 10 metrics:
 
 | Metric | This Q | Last Q | Target | Status |
 |--------|--------|--------|--------|--------|
-| ARR | $42M | $38M | $40M | ✓ |
+| ARR | \$42M | \$38M | \$40M | ✓ |
 | NRR | 118% | 121% | 120% | ⚠ |
 | GRR | 92% | 93% | 90% | ✓ |
 | Magic Number | 0.85 | 0.78 | 0.75 | ✓ |
@@ -2083,7 +2083,7 @@ Create a quarterly scorecard with these 10 metrics:
 | LTV/CAC | 4.2x | 3.9x | 3.0x | ✓ |
 | Rule of 40 | 52 | 48 | 40 | ✓ |
 | Burn Multiple | 1.2 | 1.4 | 1.5 | ✓ |
-| Net New ARR | $4M | $3.2M | $3.5M | ✓ |
+| Net New ARR | \$4M | \$3.2M | \$3.5M | ✓ |
 | Logo Churn | 2.1% | 2.3% | 2.5% | ✓ |
 
 This single page tells you more about a SaaS business than 50 pages of GAAP financials.
@@ -2143,17 +2143,17 @@ This section shows how the business is funded and how it allocates capital among
 
 A typical operating cash flow section looks like:
 
-```
-Net Income                          $100
-Plus: Depreciation & Amortization   $40
-Plus: Stock-Based Compensation      $25
-Plus: Deferred Taxes                $5
-Less: Increase in AR               ($30)
-Plus: Decrease in Inventory         $10
-Less: Decrease in AP               ($15)
-Plus: Increase in Deferred Revenue  $20
-Operating Cash Flow                 $155
-```
+\`\`\`
+Net Income                          \$100
+Plus: Depreciation & Amortization   \$40
+Plus: Stock-Based Compensation      \$25
+Plus: Deferred Taxes                \$5
+Less: Increase in AR               (\$30)
+Plus: Decrease in Inventory         \$10
+Less: Decrease in AP               (\$15)
+Plus: Increase in Deferred Revenue  \$20
+Operating Cash Flow                 \$155
+\`\`\`
 
 Each line tells a story. Reading them carefully reveals everything you need to know about earnings quality.
 
@@ -2324,9 +2324,9 @@ But AI is not a wholesale replacement for human judgment. The future of financia
 
 ## Cost: AI Wins by Orders of Magnitude
 
-**Traditional**: A team of 5 analysts at $100K-$200K each = $500K-$1M/year for ~500 deep analyses.
+**Traditional**: A team of 5 analysts at \$100K-\$200K each = \$500K-\$1M/year for ~500 deep analyses.
 
-**AI**: $50/month subscription + occasional human review = $5K-$50K/year for unlimited analyses.
+**AI**: \$50/month subscription + occasional human review = \$5K-\$50K/year for unlimited analyses.
 
 **Verdict**: AI reduces analytical cost by 90-99%.
 
@@ -2361,8 +2361,8 @@ This is transformative for portfolio managers and credit analysts who previously
 ## Specific Task Comparisons
 
 ### Document Extraction
-- **AI**: 60 seconds, 99.5% accuracy, $0.50 per document
-- **Human**: 4-8 hours, 95-98% accuracy, $200-$800 per document
+- **AI**: 60 seconds, 99.5% accuracy, \$0.50 per document
+- **Human**: 4-8 hours, 95-98% accuracy, \$200-\$800 per document
 - **Winner**: AI by 1000x on cost and speed
 
 ### Financial Modeling
