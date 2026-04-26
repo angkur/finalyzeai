@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useAdSense } from "@/hooks/useAdSense";
 import { 
   FileText, 
   Upload, 
@@ -18,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 const UserGuide = () => {
+  useAdSense();
   const sections = [
     {
       id: "getting-started",

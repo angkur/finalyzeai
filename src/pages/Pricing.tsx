@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAdSense } from "@/hooks/useAdSense";
 import { Check, Sparkles, Star, Zap, Crown, Loader2, ExternalLink, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -121,6 +122,7 @@ const plans: Plan[] = [
 ];
 
 const Pricing = () => {
+  useAdSense();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, userPlan, refreshPlan } = useAuth();

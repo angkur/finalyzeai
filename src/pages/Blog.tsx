@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useAdSense } from "@/hooks/useAdSense";
 import { 
   Calendar, 
   Clock, 
@@ -972,6 +973,7 @@ Stay ahead of the curve with FinanceAI.`,
 ];
 
 const Blog = () => {
+  useAdSense();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const navigate = useNavigate();
