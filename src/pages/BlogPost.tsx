@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useState } from "react";
+import AdSlot from "@/components/AdSlot";
 
 // Video embed component for tutorials - supports YouTube and placeholder videos
 const VideoEmbed = ({ id, title, description, duration }: { id: string; title: string; description: string; duration: string }) => {
@@ -264,10 +265,16 @@ const BlogPost = () => {
               </div>
             </div>
 
+            {/* Ad slot - top of article (replace slot ID with your real AdSense unit) */}
+            <AdSlot slot="1234567890" format="auto" />
+
             {/* Article Content */}
             <article className="prose prose-lg max-w-none">
               {renderContent(post.content)}
             </article>
+
+            {/* Ad slot - bottom of article */}
+            <AdSlot slot="0987654321" format="auto" />
 
             {/* Tags */}
             <div className="flex items-center gap-2 mt-8 pt-8 border-t border-border">
