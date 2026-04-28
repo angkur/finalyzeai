@@ -1,77 +1,34 @@
+## Why the Lovable favicon is still showing
 
+Two reasons:
 
-## Plan: Add Financial Statement Analysis Feature & Reply to Client
+1. **`public/favicon.ico` still exists** and is the old Lovable default. Browsers automatically request `/favicon.ico` at the site root regardless of what's in `<link rel="icon">`, and that file wins.
+2. **Browser/Google cache** — favicons are cached aggressively (often for days or weeks). Even after fixing the file, you'll see the old one until cache is cleared.
 
-This plan addresses two things: (1) adding a "Financial Statement Analysis" feature that extracts ratios from PDF financial statements, and (2) how to reply to the potential client.
+## Fix
 
----
+### 1. Delete the old favicon.ico
+Remove `public/favicon.ico` so only your FinalyzeAI `favicon.png` is served.
 
-### How to Reply to Eric Pach
+### 2. Add an explicit `.ico` fallback pointing to the PNG (optional but safer)
+Some crawlers strictly request `.ico`. We'll keep the PNG as the source of truth and add proper sizes.
 
-Send him a professional email like this:
+### 3. Add cache-busting query string in `index.html`
+Change favicon links to `/favicon.png?v=2` so browsers re-fetch.
 
-> **Subject:** FinalyzeAI — Financial Statement Analysis Tool for Insurance Programs
->
-> Hi Eric,
->
-> Thank you for reaching out! Your use case aligns well with what FinalyzeAI offers.
->
-> We have a financial analysis platform that can:
-> - **Accept PDF financial statements** in various formats
-> - **Extract key financial data** (revenue, assets, liabilities, cash flow, etc.)
-> - **Automatically calculate financial ratios** — profitability (ROI, net margin, gross margin), solvency (debt-to-equity, interest coverage), and liquidity/cash flow ratios
-> - **Score and rate** each category with clear pass/fail indicators
-> - **Generate a summary report** with an overall recommendation for program eligibility
->
-> I'd love to give you a demo or set up a trial account. Would you be available for a quick call this week?
->
-> Best regards,
-> [Your Name]
-> FinalyzeAI — https://finalyzeai.lovable.app
+### 4. Update `index.html` favicon block
+```html
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=2" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon.png?v=2" />
+<link rel="apple-touch-icon" href="/favicon.png?v=2" />
+<link rel="shortcut icon" href="/favicon.png?v=2" />
+```
 
----
+## Files changed
+- delete `public/favicon.ico`
+- edit `index.html` (favicon links with `?v=2`)
 
-### Feature Implementation Plan
-
-#### 1. Add "Financial Statement Analysis" system prompt to edge function
-
-Update `supabase/functions/financial-analysis/index.ts` to add a new `financial-statement` analysis type with a specialized prompt that instructs the AI to:
-- Extract balance sheet, income statement, and cash flow data from uploaded documents
-- Calculate ratios: **Profitability** (gross margin, net margin, ROE, ROA), **Solvency** (debt-to-equity, interest coverage, debt ratio), **Cash Flow** (operating cash flow ratio, free cash flow margin)
-- Score each ratio on a scale (Strong / Adequate / Weak / Critical)
-- Provide an overall eligibility recommendation
-
-#### 2. Add new analysis type to AIDemo (Fin Predict)
-
-In `src/components/AIDemo.tsx`:
-- Add `'financial-statement'` to the `AnalysisType` union
-- Add a new tab entry with a `FileText` icon labeled "Statement Analysis"
-- Add a sample prompt showing example financial statement data
-- Display results with a structured scorecard component
-
-#### 3. Create a Financial Scorecard component
-
-New file `src/components/FinancialScorecard.tsx`:
-- Parses the AI response to extract ratio categories and scores
-- Displays a visual scorecard with color-coded ratings (green/yellow/orange/red)
-- Shows three sections: Profitability, Solvency, Cash Flow
-- Each ratio shows: name, calculated value, industry benchmark, and rating
-- Overall score/recommendation at the top
-
-#### 4. Add suggestion chip to AI Predict page
-
-In `src/pages/AiPredict.tsx`:
-- Add a "Statement Analysis" suggestion chip that prompts: "Analyze the uploaded financial statements. Extract key financial data, calculate profitability ratios (gross margin, net margin, ROE), solvency ratios (debt-to-equity, interest coverage), and cash flow ratios. Score each category and provide an eligibility recommendation."
-
-#### 5. Update the Fin Predict page prompt guidance
-
-Add contextual help text when "Statement Analysis" tab is selected, guiding users to upload a PDF financial statement first, then click analyze.
-
-### Technical Details
-
-- No database changes needed — uses existing document upload and AI analysis pipeline
-- The AI prompt will handle ratio extraction and scoring via structured instructions
-- The scorecard component will parse markdown tables from the AI response
-- File upload already supports PDF via the existing document processing pipeline
-- Edge function deployment needed after prompt update
-
+## After deploying
+- **Hard refresh** the preview/site: Ctrl+Shift+R (or clear cache)
+- For Google Search results: Google re-crawls favicons on its own schedule (days–weeks). You can request re-indexing in Google Search Console to speed it up.
+- The browser tab and bookmarks will update once the cache is cleared.
