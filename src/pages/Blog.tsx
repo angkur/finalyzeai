@@ -2,6 +2,7 @@ import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAdSense } from "@/hooks/useAdSense";
+import AdSlot from "@/components/AdSlot";
 import { 
   Calendar, 
   Clock, 
@@ -2613,6 +2614,9 @@ const Blog = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* Ad slot - between featured and grid */}
+          <AdSlot slot="1234567890" format="auto" />
 
           {/* Posts Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
