@@ -2616,7 +2616,7 @@ const Blog = () => {
           )}
 
           {/* Ad slot - between featured and grid */}
-          <AdSlot slot="1234567890" format="auto" />
+          <AdSlot slot="3345503198" format="auto" />
 
           {/* Posts Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

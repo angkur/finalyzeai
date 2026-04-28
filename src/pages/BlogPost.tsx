@@ -266,7 +266,7 @@ const BlogPost = () => {
             </div>
 
             {/* Ad slot - top of article (replace slot ID with your real AdSense unit) */}
-            <AdSlot slot="1234567890" format="auto" />
+            <AdSlot slot="3345503198" format="auto" />
 
             {/* Article Content */}
             <article className="prose prose-lg max-w-none">
@@ -274,7 +274,7 @@ const BlogPost = () => {
             </article>
 
             {/* Ad slot - bottom of article */}
-            <AdSlot slot="0987654321" format="auto" />
+            <AdSlot slot="3345503198" format="auto" />
 
             {/* Tags */}
             <div className="flex items-center gap-2 mt-8 pt-8 border-t border-border">
