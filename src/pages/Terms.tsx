@@ -1,10 +1,8 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useAdSense } from "@/hooks/useAdSense";
 import { FileText } from "lucide-react";
 
 const Terms = () => {
-  useAdSense();
   return (
     <main className="min-h-screen bg-background">
       <Navbar />
