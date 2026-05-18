@@ -1,8 +1,6 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useAdSense } from "@/hooks/useAdSense";
-import AdSlot from "@/components/AdSlot";
 import { 
   Calendar, 
   Clock, 
@@ -2510,7 +2508,6 @@ Start using AI tools today. The analysts who wait will find themselves outpaced 
 ];
 
 const Blog = () => {
-  useAdSense();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -2614,9 +2611,6 @@ const Blog = () => {
               </CardContent>
             </Card>
           )}
-
-          {/* Ad slot - between featured and grid */}
-          <AdSlot slot="3345503198" format="auto" />
 
           {/* Posts Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
