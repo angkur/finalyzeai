@@ -12,7 +12,7 @@ const Footer = () => {
               <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-primary">
                 <Brain className="w-3 h-3 sm:w-4 sm:h-4 text-primary-foreground" />
               </div>
-              <span className="font-display font-bold text-base sm:text-lg text-foreground">FinanceAI</span>
+              <span className="font-display font-bold text-base sm:text-lg text-foreground">FinalyzeAI</span>
             </Link>
             <p className="text-sm text-muted-foreground max-w-xs">
               AI-powered financial analysis, forecasting, and fraud detection for analysts, founders, and investors.
@@ -62,7 +62,7 @@ const Footer = () => {
 
         <div className="pt-8 border-t border-border/30 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs sm:text-sm text-muted-foreground">
-            © {new Date().getFullYear()} FinanceAI. All rights reserved.
+            © {new Date().getFullYear()} FinalyzeAI. All rights reserved.
           </p>
           <p className="text-xs text-muted-foreground">
             Built with ❤ for analysts, founders, and investors.

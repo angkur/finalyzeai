@@ -280,7 +280,7 @@ const BlogPost = () => {
             <div className="flex items-center gap-2 mt-8 pt-8 border-t border-border">
               <Tag className="w-4 h-4 text-muted-foreground" />
               <Badge variant="outline">{post.category}</Badge>
-              <Badge variant="outline">FinanceAI</Badge>
+              <Badge variant="outline">FinalyzeAI</Badge>
               <Badge variant="outline">Financial Analysis</Badge>
             </div>
 
@@ -311,7 +311,7 @@ const BlogPost = () => {
             {/* CTA */}
             <Card className="mt-16 bg-gradient-to-br from-primary/10 via-card to-card border-primary/20">
               <CardContent className="p-8 text-center">
-                <h3 className="text-xl font-display font-bold mb-2">Ready to Try FinanceAI?</h3>
+                <h3 className="text-xl font-display font-bold mb-2">Ready to Try FinalyzeAI?</h3>
                 <p className="text-muted-foreground mb-4">
                   Experience AI-powered financial analysis for yourself.
                 </p>

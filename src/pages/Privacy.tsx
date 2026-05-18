@@ -20,7 +20,7 @@ const Privacy = () => {
           <section>
             <h2 className="text-2xl font-semibold mb-3">1. Introduction</h2>
             <p>
-              FinanceAI ("we", "us", "our") operates finalyzeai.com (the "Service"). This Privacy Policy
+              FinalyzeAI ("we", "us", "our") operates finalyzeai.com (the "Service"). This Privacy Policy
               explains how we collect, use, disclose, and safeguard your information when you visit our
               website and use our AI-powered financial analysis services. By using the Service, you
               consent to the practices described in this policy.
