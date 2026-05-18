@@ -1,8 +1,6 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useAdSense } from "@/hooks/useAdSense";
-import AdSlot from "@/components/AdSlot";
 import { 
   Calendar, 
   Clock, 
@@ -43,13 +41,13 @@ export const blogPosts: BlogPost[] = [
   {
     id: "100",
     slug: "complete-guide-financeai-platform-features",
-    title: "The Complete Guide to FinanceAI: All Platform Features Explained",
-    excerpt: "Explore every feature of FinanceAI - from AI-powered analysis and document intelligence to interactive visualizations, secure authentication, and subscription management.",
-    content: `FinanceAI is a comprehensive AI-powered financial analysis platform designed to transform how businesses and individuals interact with financial data. This guide covers every feature available on our platform.
+    title: "The Complete Guide to FinalyzeAI: All Platform Features Explained",
+    excerpt: "Explore every feature of FinalyzeAI - from AI-powered analysis and document intelligence to interactive visualizations, secure authentication, and subscription management.",
+    content: `FinalyzeAI is a comprehensive AI-powered financial analysis platform designed to transform how businesses and individuals interact with financial data. This guide covers every feature available on our platform.
 
 ## 🏠 Homepage & Navigation
 
-Our sleek, modern homepage introduces you to FinanceAI with:
+Our sleek, modern homepage introduces you to FinalyzeAI with:
 - **Hero Section**: Eye-catching introduction with call-to-action buttons
 - **Services Overview**: Quick look at what we offer
 - **Process Explanation**: How our AI analysis works
@@ -172,7 +170,7 @@ For administrators:
 
 ## 📱 Progressive Web App (PWA)
 
-Install FinanceAI on any device:
+Install FinalyzeAI on any device:
 - **Desktop Installation**: Add to taskbar/dock
 - **Mobile Installation**: Home screen icon
 - **Offline Capability**: Basic features work offline
@@ -213,9 +211,9 @@ Built on robust technology:
 
 ## 🎬 Video Walkthroughs
 
-Learn FinanceAI through our comprehensive video tutorials. Each video is designed to help you master specific features quickly.
+Learn FinalyzeAI through our comprehensive video tutorials. Each video is designed to help you master specific features quickly.
 
-[VIDEO:getting-started:Getting Started with FinanceAI:A complete introduction to the platform - from signing up to your first AI analysis. Perfect for new users.:5 min]
+[VIDEO:getting-started:Getting Started with FinalyzeAI:A complete introduction to the platform - from signing up to your first AI analysis. Perfect for new users.:5 min]
 
 [VIDEO:ai-predict-deep-dive:AI Predict Deep Dive:Master conversational financial analysis with pro tips, real examples, and advanced query techniques.:8 min]
 
@@ -225,7 +223,7 @@ Learn FinanceAI through our comprehensive video tutorials. Each video is designe
 
 [VIDEO:advanced-features:Advanced Features & Power Tips:Power user techniques including keyboard shortcuts, batch processing, and API integration.:6 min]
 
-[VIDEO:mobile-pwa:Mobile & PWA Installation:Install FinanceAI on your phone or desktop for quick access. Works offline too!:3 min]
+[VIDEO:mobile-pwa:Mobile & PWA Installation:Install FinalyzeAI on your phone or desktop for quick access. Works offline too!:3 min]
 
 ## Getting Started
 
@@ -236,9 +234,9 @@ Learn FinanceAI through our comprehensive video tutorials. Each video is designe
 5. **Visualize**: Use Fin Predict for forecasts
 6. **Upgrade**: Choose a plan that fits your needs
 
-FinanceAI combines the power of artificial intelligence with intuitive design to make financial analysis accessible to everyone. Whether you're a solo entrepreneur, financial analyst, or enterprise team, our platform scales to meet your needs.
+FinalyzeAI combines the power of artificial intelligence with intuitive design to make financial analysis accessible to everyone. Whether you're a solo entrepreneur, financial analyst, or enterprise team, our platform scales to meet your needs.
 
-Start your journey with FinanceAI today and transform how you understand financial data!`,
+Start your journey with FinalyzeAI today and transform how you understand financial data!`,
     category: "Platform Overview",
     readTime: "12 min read",
     date: "January 11, 2026",
@@ -455,7 +453,7 @@ The real power comes from using both tools in combination:
 - Model scenarios
 - Present data visually
 
-Both tools are included in your FinanceAI subscription, so use them freely based on your needs!`,
+Both tools are included in your FinalyzeAI subscription, so use them freely based on your needs!`,
     category: "Product Guide",
     readTime: "7 min read",
     date: "January 1, 2026",
@@ -466,7 +464,7 @@ Both tools are included in your FinanceAI subscription, so use them freely based
     slug: "introduction-to-ai-financial-analysis",
     title: "Introduction to AI-Powered Financial Analysis",
     excerpt: "Discover how artificial intelligence is revolutionizing the way businesses analyze financial data and make strategic decisions.",
-    content: `Artificial Intelligence has transformed nearly every industry, and financial analysis is no exception. At FinanceAI, we leverage cutting-edge machine learning algorithms to provide insights that would take human analysts hours or even days to compile.
+    content: `Artificial Intelligence has transformed nearly every industry, and financial analysis is no exception. At FinalyzeAI, we leverage cutting-edge machine learning algorithms to provide insights that would take human analysts hours or even days to compile.
 
 ## What is AI Financial Analysis?
 
@@ -482,7 +480,7 @@ AI financial analysis uses machine learning models to process large volumes of f
 
 **Scalability**: Whether you're analyzing a single report or thousands of documents, AI handles it with equal efficiency.
 
-## How FinanceAI Works
+## How FinalyzeAI Works
 
 Our platform combines natural language processing with advanced financial models. Simply upload your documents, ask questions in plain English, and receive comprehensive analysis complete with visualizations.
 
@@ -498,11 +496,11 @@ The future of financial analysis is here, and it's powered by AI.`,
     slug: "document-processing-guide",
     title: "A Complete Guide to Financial Document Processing",
     excerpt: "Learn how to efficiently upload and process various financial documents including balance sheets, income statements, and annual reports.",
-    content: `Efficient document processing is the foundation of good financial analysis. In this guide, we'll walk you through everything you need to know about uploading and processing financial documents with FinanceAI.
+    content: `Efficient document processing is the foundation of good financial analysis. In this guide, we'll walk you through everything you need to know about uploading and processing financial documents with FinalyzeAI.
 
 ## Supported Document Types
 
-FinanceAI supports a wide range of financial documents:
+FinalyzeAI supports a wide range of financial documents:
 
 - **Balance Sheets**: Analyze assets, liabilities, and equity positions
 - **Income Statements**: Track revenue, expenses, and profitability
@@ -543,8 +541,8 @@ Start uploading your documents today and unlock powerful financial insights.`,
     id: "3",
     slug: "data-security-best-practices",
     title: "Data Security: Protecting Your Financial Information",
-    excerpt: "Understanding how FinanceAI protects your sensitive financial data with enterprise-grade security measures.",
-    content: `When dealing with financial data, security isn't optional—it's essential. At FinanceAI, we've implemented comprehensive security measures to ensure your data remains protected at all times.
+    excerpt: "Understanding how FinalyzeAI protects your sensitive financial data with enterprise-grade security measures.",
+    content: `When dealing with financial data, security isn't optional—it's essential. At FinalyzeAI, we've implemented comprehensive security measures to ensure your data remains protected at all times.
 
 ## Our Security Framework
 
@@ -581,7 +579,7 @@ Your financial data is sensitive. Trust it only to platforms that take security 
     slug: "understanding-financial-visualizations",
     title: "Understanding Financial Visualizations and Charts",
     excerpt: "Master the art of interpreting financial charts and graphs generated by our AI analysis platform.",
-    content: `Visualizations transform complex financial data into understandable insights. Learn how to read and interpret the various charts and graphs generated by FinanceAI.
+    content: `Visualizations transform complex financial data into understandable insights. Learn how to read and interpret the various charts and graphs generated by FinalyzeAI.
 
 ## Types of Visualizations
 
@@ -606,7 +604,7 @@ When analyzing any visualization:
 
 ## Customization Options
 
-FinanceAI allows you to customize visualizations:
+FinalyzeAI allows you to customize visualizations:
 - Adjust time ranges
 - Filter by specific metrics
 - Change chart types
@@ -629,8 +627,8 @@ Effective visualization is key to communicating financial insights. Master these
     id: "5",
     slug: "maximizing-ai-analysis-efficiency",
     title: "5 Tips for Maximizing Your AI Analysis Efficiency",
-    excerpt: "Get the most out of FinanceAI with these expert tips for faster, more accurate financial analysis.",
-    content: `Want to supercharge your financial analysis workflow? Here are five proven tips to maximize efficiency with FinanceAI.
+    excerpt: "Get the most out of FinalyzeAI with these expert tips for faster, more accurate financial analysis.",
+    content: `Want to supercharge your financial analysis workflow? Here are five proven tips to maximize efficiency with FinalyzeAI.
 
 ## 1. Prepare Your Data
 
@@ -724,7 +722,7 @@ Forecast accuracy depends on:
 
 ## Getting Started
 
-To generate forecasts with FinanceAI:
+To generate forecasts with FinalyzeAI:
 1. Upload at least 12 months of historical data
 2. Request a forecast analysis
 3. Review the projections and confidence intervals
@@ -740,8 +738,8 @@ Start forecasting smarter today.`,
     id: "7",
     slug: "team-collaboration-features",
     title: "Collaborating on Financial Analysis with Your Team",
-    excerpt: "Discover how to work together on financial projects using FinanceAI's collaboration features.",
-    content: `Financial analysis is often a team effort. FinanceAI provides powerful collaboration features to help teams work together effectively.
+    excerpt: "Discover how to work together on financial projects using FinalyzeAI's collaboration features.",
+    content: `Financial analysis is often a team effort. FinalyzeAI provides powerful collaboration features to help teams work together effectively.
 
 ## Collaboration Features
 
@@ -955,7 +953,7 @@ AI won't replace financial professionals—it will augment them:
 
 ## Our Roadmap
 
-At FinanceAI, we're continuously improving:
+At FinalyzeAI, we're continuously improving:
 - Enhanced forecasting models
 - More industry-specific analysis
 - Deeper integrations
@@ -965,7 +963,7 @@ At FinanceAI, we're continuously improving:
 
 The future of finance is AI-powered. Those who embrace this technology today will have a significant advantage tomorrow.
 
-Stay ahead of the curve with FinanceAI.`,
+Stay ahead of the curve with FinalyzeAI.`,
     category: "Industry Trends",
     readTime: "8 min read",
     date: "November 28, 2025",
@@ -1044,7 +1042,7 @@ Single ratios are nearly useless. Always:
 3. **Cross-reference with cash flow** — Profitable companies can still go bankrupt. Always check that earnings translate to cash.
 4. **Adjust for one-time items** — Restructuring charges, asset sales, and tax credits can distort a single year.
 
-## How FinanceAI Automates This
+## How FinalyzeAI Automates This
 
 Inside Fin Predict, you can upload any financial statement and instantly receive all 15 ratios computed, color-coded against industry benchmarks, and trended across multiple periods. Our Benchmark Comparison feature even shows where you rank against the top 25% of peers in your sector.
 
@@ -1065,7 +1063,7 @@ Master these 15 and you'll be able to evaluate any business in under 30 minutes.
     excerpt: "From the Beneish M-Score to modern transformer models, discover how AI catches earnings manipulation that human auditors miss.",
     content: `Financial statement fraud costs the global economy an estimated \$5 trillion annually, according to the Association of Certified Fraud Examiners. The most damaging frauds — Enron, Wirecard, Luckin Coffee — went undetected by auditors for years. AI is changing that.
 
-This article explains how modern fraud detection systems work, what red flags they look for, and how FinanceAI's Fraud Risk Gauge uses these techniques to score any uploaded financial statement.
+This article explains how modern fraud detection systems work, what red flags they look for, and how FinalyzeAI's Fraud Risk Gauge uses these techniques to score any uploaded financial statement.
 
 ## Why Humans Miss Fraud
 
@@ -1114,7 +1112,7 @@ Today's fraud detection systems combine classical statistics with deep learning:
 
 **Sequence Models**: LSTMs and transformers trained on time-series financial data identify subtle deviations in revenue smoothing, cookie-jar reserves, and channel stuffing.
 
-## Red Flags FinanceAI Looks For
+## Red Flags FinalyzeAI Looks For
 
 When you upload a financial statement to Fin Predict, our Fraud Risk Gauge evaluates:
 
@@ -1147,7 +1145,7 @@ AI is not a silver bullet:
 
 The right approach combines AI screening with human forensic expertise.
 
-## How to Use FinanceAI's Fraud Detection
+## How to Use FinalyzeAI's Fraud Detection
 
 1. Upload a 10-K or annual report to Fin Predict
 2. Review the Fraud Risk Gauge score (0–100, lower is safer)
@@ -1258,7 +1256,7 @@ Traditional cash forecasting is painful: dozens of spreadsheets, manual data pul
 
 **3. Scenario simulation** — Adjust a slider to see runway under any combination of revenue, hiring, and burn assumptions instantly.
 
-FinanceAI's What-If Modeling lets you stress-test your forecast in real time — drop revenue 30%, freeze hiring, delay capex — and immediately see the impact on runway and key ratios.
+FinalyzeAI's What-If Modeling lets you stress-test your forecast in real time — drop revenue 30%, freeze hiring, delay capex — and immediately see the impact on runway and key ratios.
 
 ## A Sample 13-Week Template
 
@@ -1394,7 +1392,7 @@ When evaluating a 10-K, an institutional analyst runs through:
 
 ## How AI Compresses 10-K Analysis
 
-FinanceAI's AI Predict can:
+FinalyzeAI's AI Predict can:
 
 1. **Summarize each section** in 200 words
 2. **Diff this year's risk factors against last year's** to surface what's new
@@ -1424,7 +1422,7 @@ The 10-K is where companies tell the truth — because they have to. Investors w
 
 Pick a company you're considering investing in. Block 4 hours this weekend. Read its 10-K cover to cover with this guide in hand. You'll never look at financial markets the same way again.
 
-Or upload it to FinanceAI and have the analysis done in 15 minutes.`,
+Or upload it to FinalyzeAI and have the analysis done in 15 minutes.`,
     category: "Education",
     readTime: "13 min read",
     date: "February 22, 2026",
@@ -1546,9 +1544,9 @@ Run sensitivity first to find the 3–5 variables that matter most, then build s
 
 **Mistake 5: No actions tied to scenarios.** A scenario without a triggering action plan is just a number on a page.
 
-## Interactive Modeling with FinanceAI
+## Interactive Modeling with FinalyzeAI
 
-Traditional scenario modeling means duplicating a spreadsheet, changing inputs, comparing outputs across tabs, and praying you don't break a formula. FinanceAI's What-If Modeling tool replaces this with interactive sliders:
+Traditional scenario modeling means duplicating a spreadsheet, changing inputs, comparing outputs across tabs, and praying you don't break a formula. FinalyzeAI's What-If Modeling tool replaces this with interactive sliders:
 
 - Adjust revenue ± 50%
 - Change COGS ± 30%
@@ -1688,7 +1686,7 @@ Different industries demand different benchmark sets. Here are the metrics that 
 
 **Specialized Data Providers** — OPEXEngine for SaaS, RMA for banking, Dun & Bradstreet for general industry.
 
-**FinanceAI's Benchmark Comparison** — Built-in benchmarks across 50+ industries, automatically applied to any financial statement you upload.
+**FinalyzeAI's Benchmark Comparison** — Built-in benchmarks across 50+ industries, automatically applied to any financial statement you upload.
 
 ## Interpreting Benchmark Results
 
@@ -1741,7 +1739,7 @@ Benchmarks become powerful when they drive decisions:
 
 **Track progress quarterly.** Benchmark improvement is the most defensible measure of operational progress.
 
-## How FinanceAI's Benchmarking Works
+## How FinalyzeAI's Benchmarking Works
 
 When you upload financial statements to Fin Predict, our Benchmark Comparison tool:
 
@@ -1865,9 +1863,9 @@ Large language models can hallucinate — generating plausible but incorrect num
 
 A system that confidently outputs wrong numbers is more dangerous than one that admits uncertainty.
 
-## What FinanceAI Does Differently
+## What FinalyzeAI Does Differently
 
-FinanceAI's document processing pipeline:
+FinalyzeAI's document processing pipeline:
 
 1. Detects document type (10-K, 10-Q, audit report, management accounts)
 2. Routes to specialized extraction models
@@ -1915,7 +1913,7 @@ Across a portfolio of 50 companies tracked quarterly, that's \$60,000–\$250,00
 
 AI document extraction has crossed the threshold from "interesting demo" to "production-ready infrastructure." For any analyst, accountant, or investor working with financial documents, it's no longer a question of whether to adopt AI extraction — it's a question of how quickly you can integrate it into your workflow.
 
-Upload a financial PDF to FinanceAI and see the difference in 60 seconds.`,
+Upload a financial PDF to FinalyzeAI and see the difference in 60 seconds.`,
     category: "Technology",
     readTime: "11 min read",
     date: "January 31, 2026",
@@ -2089,9 +2087,9 @@ Create a quarterly scorecard with these 10 metrics:
 
 This single page tells you more about a SaaS business than 50 pages of GAAP financials.
 
-## How FinanceAI Helps SaaS Analysis
+## How FinalyzeAI Helps SaaS Analysis
 
-Upload your subscription billing data, and FinanceAI's Fin Predict will:
+Upload your subscription billing data, and FinalyzeAI's Fin Predict will:
 
 - Compute every SaaS metric automatically
 - Build cohort analyses by signup month and customer segment
@@ -2264,7 +2262,7 @@ A "no" answer to any of these warrants investigation.
 **5. Dividends covered by FCF with comfortable margin**
 **6. Debt maturity ladder spread out**
 
-## How FinanceAI Analyzes Cash Flow
+## How FinalyzeAI Analyzes Cash Flow
 
 Upload any cash flow statement to Fin Predict and you'll get:
 
@@ -2481,9 +2479,9 @@ The analyst of 2026 looks different from the analyst of 2020:
 
 The result: same analyst can cover 5x more companies with deeper insights on each.
 
-## How FinanceAI Embodies the Hybrid Approach
+## How FinalyzeAI Embodies the Hybrid Approach
 
-FinanceAI is built explicitly as a tool that augments analysts, not replaces them:
+FinalyzeAI is built explicitly as a tool that augments analysts, not replaces them:
 
 - **AI Predict** — Conversational interface for exploring documents
 - **Fin Predict** — Automated metric extraction and analysis
@@ -2510,7 +2508,6 @@ Start using AI tools today. The analysts who wait will find themselves outpaced 
 ];
 
 const Blog = () => {
-  useAdSense();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -2614,9 +2611,6 @@ const Blog = () => {
               </CardContent>
             </Card>
           )}
-
-          {/* Ad slot - between featured and grid */}
-          <AdSlot slot="3345503198" format="auto" />
 
           {/* Posts Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

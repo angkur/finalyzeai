@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
 import SplashScreen from "@/components/SplashScreen";
+import RouteMeta from "@/components/RouteMeta";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -60,6 +61,7 @@ const App = () => {
         <SplashScreen onComplete={handleSplashComplete} minDuration={2200} />
       )}
       <BrowserRouter>
+        <RouteMeta />
         <AuthProvider>
           <AnalyticsProvider>
             <PWAInstallBanner />

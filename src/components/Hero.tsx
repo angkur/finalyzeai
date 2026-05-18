@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Brain, Database, TrendingUp } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Hero = () => {
   return (
@@ -45,17 +46,36 @@ const Hero = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-            <Button variant="hero" size="lg" className="w-full sm:w-auto">
-              Explore Services
-              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+            <Button asChild variant="hero" size="lg" className="w-full sm:w-auto">
+              <Link to="/ai-predict">
+                Try AI Predict
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+              </Link>
             </Button>
-            <Button variant="glass" size="lg" className="w-full sm:w-auto">
-              View Case Studies
+            <Button asChild variant="glass" size="lg" className="w-full sm:w-auto">
+              <Link to="/blog">
+                Read Finance Guides
+              </Link>
             </Button>
           </div>
 
+          <div className="mt-10 sm:mt-12 grid gap-4 text-left md:grid-cols-3 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+            <div className="rounded-2xl border border-border/40 bg-card/45 p-5 backdrop-blur-sm">
+              <h2 className="mb-2 font-display text-lg font-semibold text-foreground">Financial document intelligence</h2>
+              <p className="text-sm leading-relaxed text-muted-foreground">Upload statements, investor decks, and reports to extract ratios, risks, anomalies, and executive-ready summaries with AI Predict.</p>
+            </div>
+            <div className="rounded-2xl border border-border/40 bg-card/45 p-5 backdrop-blur-sm">
+              <h2 className="mb-2 font-display text-lg font-semibold text-foreground">Forecasting and scenario analysis</h2>
+              <p className="text-sm leading-relaxed text-muted-foreground">Model revenue, expenses, cash flow, fraud signals, and what-if scenarios using structured analysis built for business decisions.</p>
+            </div>
+            <div className="rounded-2xl border border-border/40 bg-card/45 p-5 backdrop-blur-sm">
+              <h2 className="mb-2 font-display text-lg font-semibold text-foreground">Guides for analysts and founders</h2>
+              <p className="text-sm leading-relaxed text-muted-foreground">Explore practical finance articles on cash-flow reading, SaaS metrics, benchmarking, fraud detection, and AI-assisted reporting.</p>
+            </div>
+          </div>
+
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-3 sm:gap-8 mt-12 sm:mt-20 pt-6 sm:pt-10 border-t border-border/30 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+          <div className="grid grid-cols-3 gap-3 sm:gap-8 mt-12 sm:mt-16 pt-6 sm:pt-10 border-t border-border/30 animate-fade-in" style={{ animationDelay: '0.6s' }}>
             <div className="text-center">
               <div className="font-display text-2xl sm:text-4xl font-bold text-gradient-primary">50+</div>
               <div className="text-xs sm:text-sm text-muted-foreground mt-1">Models Deployed</div>

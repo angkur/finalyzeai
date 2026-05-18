@@ -5,6 +5,9 @@ User-agent: Googlebot
 Allow: /
 Crawl-delay: 1
 
+User-agent: Mediapartners-Google
+Allow: /
+
 User-agent: Bingbot
 Allow: /
 Crawl-delay: 1
@@ -30,6 +33,10 @@ Disallow: /usage
 Disallow: /analytics
 Disallow: /documents
 Disallow: /reset-password
+Disallow: /auth
+Disallow: /ai-predict
+Disallow: /fin-predict
+Disallow: /subscription-success
 
 # Sitemap location
 Sitemap: https://finalyzeai.com/sitemap.xml

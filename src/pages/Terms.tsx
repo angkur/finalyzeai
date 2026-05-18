@@ -1,10 +1,8 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useAdSense } from "@/hooks/useAdSense";
 import { FileText } from "lucide-react";
 
 const Terms = () => {
-  useAdSense();
   return (
     <main className="min-h-screen bg-background">
       <Navbar />
@@ -22,7 +20,7 @@ const Terms = () => {
           <section>
             <h2 className="text-2xl font-semibold mb-3">1. Acceptance of Terms</h2>
             <p>
-              By accessing or using FinanceAI ("the Service") at finalyzeai.com, you agree to be bound by
+              By accessing or using FinalyzeAI ("the Service") at finalyzeai.com, you agree to be bound by
               these Terms of Service. If you do not agree, do not use the Service.
             </p>
           </section>
@@ -30,7 +28,7 @@ const Terms = () => {
           <section>
             <h2 className="text-2xl font-semibold mb-3">2. Description of Service</h2>
             <p>
-              FinanceAI provides AI-powered financial analysis tools, including document intelligence,
+              FinalyzeAI provides AI-powered financial analysis tools, including document intelligence,
               forecasting, fraud detection, benchmark comparison, and interactive visualizations. Features
               vary by subscription plan.
             </p>
@@ -75,7 +73,7 @@ const Terms = () => {
           <section>
             <h2 className="text-2xl font-semibold mb-3">7. Intellectual Property</h2>
             <p>
-              The Service, including its design, code, and AI models, is owned by FinanceAI and protected by
+              The Service, including its design, code, and AI models, is owned by FinalyzeAI and protected by
               copyright, trademark, and other laws. You retain ownership of documents and data you upload.
               By uploading content, you grant us a limited license to process it solely to deliver the Service.
             </p>
@@ -84,7 +82,7 @@ const Terms = () => {
           <section>
             <h2 className="text-2xl font-semibold mb-3">8. AI-Generated Content Disclaimer</h2>
             <p>
-              <strong>FinanceAI provides analytical tools, not financial advice.</strong> AI-generated insights,
+              <strong>FinalyzeAI provides analytical tools, not financial advice.</strong> AI-generated insights,
               forecasts, ratios, and recommendations are for informational purposes only and may contain
               errors or inaccuracies. You are solely responsible for verifying outputs and consulting
               qualified financial professionals before making decisions. We make no warranty of accuracy,
@@ -95,7 +93,7 @@ const Terms = () => {
           <section>
             <h2 className="text-2xl font-semibold mb-3">9. Limitation of Liability</h2>
             <p>
-              To the maximum extent permitted by law, FinanceAI shall not be liable for any indirect,
+              To the maximum extent permitted by law, FinalyzeAI shall not be liable for any indirect,
               incidental, consequential, or punitive damages arising from your use of the Service. Our
               total liability is limited to the amount you paid us in the 12 months preceding the claim.
             </p>

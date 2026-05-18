@@ -1,11 +1,9 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useAdSense } from "@/hooks/useAdSense";
 import { Brain, Target, Heart, Users, Award, Rocket, Globe, Shield } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const About = () => {
-  useAdSense();
   const values = [
     { icon: <Target className="w-6 h-6" />, title: "Accuracy First", desc: "Every model, every metric, every insight is engineered to be reliable and explainable." },
     { icon: <Shield className="w-6 h-6" />, title: "Privacy by Design", desc: "Your financial data is encrypted end-to-end and never used to train third-party models." },
@@ -20,13 +18,13 @@ const About = () => {
         <header className="mb-16 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary mb-4">
             <Brain className="w-4 h-4" />
-            <span className="text-sm font-medium">About FinanceAI</span>
+            <span className="text-sm font-medium">About FinalyzeAI</span>
           </div>
           <h1 className="text-4xl sm:text-6xl font-display font-bold mb-6">
             Reimagining financial analysis with AI
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
-            FinanceAI is the AI-native platform that turns raw financial documents into clear,
+            FinalyzeAI is the AI-native platform that turns raw financial documents into clear,
             actionable intelligence — in seconds, not weeks.
           </p>
         </header>
@@ -35,7 +33,7 @@ const About = () => {
           <h2 className="text-3xl font-display font-bold mb-6">Our Story</h2>
           <div className="space-y-4 text-foreground/90 leading-relaxed">
             <p>
-              FinanceAI was founded in 2024 by a team of financial analysts, data scientists, and engineers
+              FinalyzeAI was founded in 2024 by a team of financial analysts, data scientists, and engineers
               who shared a frustration: financial analysis was stuck in spreadsheets while every other
               industry was racing ahead with AI.
             </p>
@@ -46,7 +44,7 @@ const About = () => {
               traditional finance with the speed and intelligence of modern AI.
             </p>
             <p>
-              So we built it. FinanceAI launched with a single mission: give every analyst, founder, lender,
+              So we built it. FinalyzeAI launched with a single mission: give every analyst, founder, lender,
               and investor the same caliber of financial intelligence that only Wall Street institutions
               could afford. Today, our platform processes thousands of documents every month, helping users
               uncover risk, model scenarios, detect fraud, and make better decisions.

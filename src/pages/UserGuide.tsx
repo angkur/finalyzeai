@@ -1,6 +1,5 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useAdSense } from "@/hooks/useAdSense";
 import { 
   FileText, 
   Upload, 
@@ -19,7 +18,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 const UserGuide = () => {
-  useAdSense();
   const sections = [
     {
       id: "getting-started",
@@ -32,7 +30,7 @@ const UserGuide = () => {
         },
         {
           title: "Verify Your Email",
-          description: "After registration, you'll receive a verification email. Click the link to activate your account and start using FinanceAI."
+          description: "After registration, you'll receive a verification email. Click the link to activate your account and start using FinalyzeAI."
         },
         {
           title: "Complete Your Profile",
@@ -176,7 +174,7 @@ const UserGuide = () => {
               User <span className="text-gradient">Guide</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Everything you need to know to get the most out of FinanceAI. 
+              Everything you need to know to get the most out of FinalyzeAI. 
               Learn how to upload documents, run analyses, and leverage AI-powered insights.
             </p>
           </div>
