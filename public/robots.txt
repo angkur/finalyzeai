@@ -30,6 +30,10 @@ Disallow: /usage
 Disallow: /analytics
 Disallow: /documents
 Disallow: /reset-password
+Disallow: /auth
+Disallow: /ai-predict
+Disallow: /fin-predict
+Disallow: /subscription-success
 
 # Sitemap location
 Sitemap: https://finalyzeai.com/sitemap.xml
