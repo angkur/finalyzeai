@@ -1,11 +1,9 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useAdSense } from "@/hooks/useAdSense";
 import { Brain, Target, Heart, Users, Award, Rocket, Globe, Shield } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const About = () => {
-  useAdSense();
   const values = [
     { icon: <Target className="w-6 h-6" />, title: "Accuracy First", desc: "Every model, every metric, every insight is engineered to be reliable and explainable." },
     { icon: <Shield className="w-6 h-6" />, title: "Privacy by Design", desc: "Your financial data is encrypted end-to-end and never used to train third-party models." },
