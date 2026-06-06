@@ -68,6 +68,7 @@ const Navbar = () => {
   const resourceLinks = [
     { href: "/blog", label: "Blog", icon: FileText },
     { href: "/user-guide", label: "User Guide", icon: BookOpen },
+    { href: "/ai-tools", label: "AI Tools Directory", icon: Sparkles },
   ];
 
   return (
