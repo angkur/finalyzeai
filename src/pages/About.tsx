@@ -1,9 +1,38 @@
+import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Brain, Target, Heart, Users, Award, Rocket, Globe, Shield } from "lucide-react";
+import { Brain, Target, Heart, Users, Award, Rocket, Globe, Shield, Linkedin, Mail } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const About = () => {
+  // Inject Organization + Person JSON-LD for E-E-A-T
+  useEffect(() => {
+    const scriptId = "about-jsonld";
+    document.getElementById(scriptId)?.remove();
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = scriptId;
+    script.text = JSON.stringify([
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        name: "FinalyzeAI",
+        url: "https://finalyzeai.com",
+        logo: "https://finalyzeai.com/logo.png",
+        email: "hello@finalyzeai.com",
+        sameAs: ["https://www.linkedin.com/company/finalyzeai/"],
+        founder: {
+          "@type": "Person",
+          name: "Mazharul Huq Ankur",
+          jobTitle: "Founder",
+          url: "https://www.linkedin.com/company/finalyzeai/",
+        },
+      },
+    ]);
+    document.head.appendChild(script);
+    return () => { document.getElementById(scriptId)?.remove(); };
+  }, []);
+
   const values = [
     { icon: <Target className="w-6 h-6" />, title: "Accuracy First", desc: "Every model, every metric, every insight is engineered to be reliable and explainable." },
     { icon: <Shield className="w-6 h-6" />, title: "Privacy by Design", desc: "Your financial data is encrypted end-to-end and never used to train third-party models." },
@@ -50,6 +79,45 @@ const About = () => {
               uncover risk, model scenarios, detect fraud, and make better decisions.
             </p>
           </div>
+        </section>
+
+        <section className="mb-16">
+          <h2 className="text-3xl font-display font-bold mb-6">Meet the Founder</h2>
+          <Card className="bg-card/50 border-border/50">
+            <CardContent className="p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start">
+              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground font-display font-bold text-4xl shrink-0">
+                MH
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-semibold">Mazharul Huq Ankur</h3>
+                <p className="text-sm text-primary font-medium mb-3">Founder &amp; CEO, FinalyzeAI</p>
+                <p className="text-foreground/90 leading-relaxed mb-4">
+                  Mazharul founded FinalyzeAI in 2024 after years of frustration watching
+                  capable analysts waste days on tasks AI could finish in seconds. With a
+                  background spanning financial analysis, software engineering, and applied
+                  machine learning, he built FinalyzeAI to give every analyst, founder, and
+                  investor the same caliber of intelligence that only Wall Street institutions
+                  could previously afford.
+                </p>
+                <div className="flex items-center gap-4 flex-wrap">
+                  <a
+                    href="https://www.linkedin.com/company/finalyzeai/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary"
+                  >
+                    <Linkedin className="w-4 h-4" /> LinkedIn
+                  </a>
+                  <a
+                    href="mailto:hello@finalyzeai.com"
+                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary"
+                  >
+                    <Mail className="w-4 h-4" /> hello@finalyzeai.com
+                  </a>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </section>
 
         <section className="mb-16">
