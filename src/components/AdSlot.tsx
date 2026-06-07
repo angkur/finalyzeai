@@ -51,7 +51,10 @@ export const AdSlot = ({
   }, []);
 
   return (
-    <div className={`my-8 flex justify-center w-full ${className}`}>
+    <div className={`my-8 flex flex-col items-center w-full ${className}`}>
+      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-1">
+        Advertisement
+      </span>
       <ins
         ref={insRef}
         className="adsbygoogle"

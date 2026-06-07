@@ -63,7 +63,7 @@ const Navbar = () => {
     { href: "/#process", label: "Process", isExternal: true },
     { href: "/#tech", label: "Technology", isExternal: true },
     { href: "/pricing", label: "Pricing", isExternal: false },
-    { href: "/#contact", label: "Contact", isExternal: true },
+    { href: "/contact", label: "Contact", isExternal: false },
   ];
 
   const resourceLinks = [
@@ -117,9 +117,9 @@ const Navbar = () => {
             <Link to="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Pricing
             </Link>
-            <a href="/#contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Contact
-            </a>
+            </Link>
           </div>
 
           {/* Right Side: Theme Toggle, Auth & Mobile Menu */}

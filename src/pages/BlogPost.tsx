@@ -10,6 +10,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useState } from "react";
 import AdSlot from "@/components/AdSlot";
+import AuthorByline from "@/components/blog/AuthorByline";
+import AuthorBioCard from "@/components/blog/AuthorBioCard";
+import { useEffect } from "react";
 
 // Video embed component for tutorials - supports YouTube and placeholder videos
 const VideoEmbed = ({ id, title, description, duration }: { id: string; title: string; description: string; duration: string }) => {
@@ -116,6 +119,38 @@ const BlogPost = () => {
   const navigate = useNavigate();
   
   const post = blogPosts.find(p => p.slug === slug);
+
+  // Inject Article JSON-LD for SEO + AdSense E-E-A-T signals
+  useEffect(() => {
+    if (!post) return;
+    const scriptId = "blog-article-jsonld";
+    document.getElementById(scriptId)?.remove();
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = scriptId;
+    script.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: post.title,
+      description: post.excerpt,
+      author: {
+        "@type": "Person",
+        name: "Mazharul Huq Ankur",
+        url: "https://www.linkedin.com/company/finalyzeai/",
+      },
+      publisher: {
+        "@type": "Organization",
+        name: "FinalyzeAI",
+        logo: { "@type": "ImageObject", url: "https://finalyzeai.com/logo.png" },
+      },
+      datePublished: post.date,
+      dateModified: post.date,
+      mainEntityOfPage: `https://finalyzeai.com/blog/${post.slug}`,
+      articleSection: post.category,
+    });
+    document.head.appendChild(script);
+    return () => { document.getElementById(scriptId)?.remove(); };
+  }, [post]);
   
   if (!post) {
     return (
@@ -265,13 +300,19 @@ const BlogPost = () => {
               </div>
             </div>
 
-            {/* Ad slot - top of article (replace slot ID with your real AdSense unit) */}
+            {/* Author byline */}
+            <AuthorByline date={post.date} readTime={post.readTime} />
+
+            {/* Ad slot - top of article */}
             <AdSlot slot="3345503198" format="auto" />
 
             {/* Article Content */}
             <article className="prose prose-lg max-w-none">
               {renderContent(post.content)}
             </article>
+
+            {/* Author bio card - bottom of article */}
+            <AuthorBioCard />
 
             {/* Ad slot - bottom of article */}
             <AdSlot slot="3345503198" format="auto" />
