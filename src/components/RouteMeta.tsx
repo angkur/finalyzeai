@@ -11,6 +11,8 @@ const publicContentRoutes = [
   "/pricing",
   "/privacy",
   "/terms",
+  "/contact",
+  "/ai-tools",
 ];
 
 const isPublicContentRoute = (pathname: string) =>
@@ -54,6 +56,16 @@ const pageCopy = (pathname: string) => {
       return {
         title: "Terms of Service - FinalyzeAI",
         description: "Review the terms for using FinalyzeAI's AI Predict tools, financial analysis features, subscriptions, and document workflows.",
+      };
+    case "/contact":
+      return {
+        title: "Contact FinalyzeAI - Support, Sales, Press",
+        description: "Reach the FinalyzeAI team for support, partnerships, billing, press inquiries, and feedback. Email, phone, and LinkedIn contact details.",
+      };
+    case "/ai-tools":
+      return {
+        title: "AI Tools Directory - 70+ Best AI Tools - FinalyzeAI",
+        description: "Curated directory of 70+ AI tools across chat, presentations, writing, coding, image, video, audio, productivity, and research.",
       };
     default:
       return {
