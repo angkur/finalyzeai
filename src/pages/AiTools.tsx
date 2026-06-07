@@ -76,6 +76,47 @@ const TOOLS: Tool[] = [
   { name: "Elicit", url: "https://elicit.com", category: "Research & Data", description: "AI research assistant for systematic literature review.", bestFor: "Literature reviews", pricing: "Freemium" },
   { name: "NotebookLM", url: "https://notebooklm.google", category: "Research & Data", description: "Google's source-grounded notebook — upload docs and chat with them.", bestFor: "Studying your own sources", pricing: "Free" },
   { name: "FinalyzeAI", url: "https://finalyzeai.com", category: "Research & Data", description: "AI-powered financial document analysis, forecasting, and fraud detection.", bestFor: "Financial analysis", pricing: "Freemium" },
+
+  // ===== Hidden Gems / Lesser-Known AI Tools =====
+  { name: "Phind", url: "https://phind.com", category: "Coding & Dev", description: "AI search engine built specifically for developers — answers with code + sources.", bestFor: "Developer-focused AI search", pricing: "Freemium" },
+  { name: "Cody by Sourcegraph", url: "https://sourcegraph.com/cody", category: "Coding & Dev", description: "AI coding assistant that understands your entire codebase context.", bestFor: "Large codebase navigation", pricing: "Freemium" },
+  { name: "Continue.dev", url: "https://continue.dev", category: "Coding & Dev", description: "Open-source autopilot for VS Code & JetBrains — bring any LLM.", bestFor: "Customizable open-source Copilot", pricing: "Free" },
+  { name: "Aider", url: "https://aider.chat", category: "Coding & Dev", description: "Terminal-based AI pair programmer that edits files & commits to git.", bestFor: "CLI-first AI coding", pricing: "Free" },
+
+  { name: "Krisp", url: "https://krisp.ai", category: "Audio & Voice", description: "AI noise & echo cancellation that works on any call app.", bestFor: "Clean call audio anywhere", pricing: "Freemium" },
+  { name: "Adobe Podcast (Enhance)", url: "https://podcast.adobe.com", category: "Audio & Voice", description: "Free AI speech enhancer that makes any recording sound studio-quality.", bestFor: "Cleaning podcast/voice audio", pricing: "Free" },
+  { name: "Whisper Web", url: "https://huggingface.co/spaces/Xenova/whisper-web", category: "Audio & Voice", description: "Browser-based OpenAI Whisper transcription — no upload, runs locally.", bestFor: "Private transcription", pricing: "Free" },
+  { name: "PlayHT", url: "https://play.ht", category: "Audio & Voice", description: "Realistic AI voices and voice cloning for podcasts & IVR.", bestFor: "Long-form voice generation", pricing: "Freemium" },
+
+  { name: "Recraft", url: "https://recraft.ai", category: "Image Generation", description: "Vector + raster AI image gen with brand-style consistency.", bestFor: "Brand-consistent vectors & icons", pricing: "Freemium" },
+  { name: "Flux (BFK)", url: "https://blackforestlabs.ai", category: "Image Generation", description: "State-of-the-art open-weights image model from Black Forest Labs.", bestFor: "Open-source photorealism", pricing: "Free" },
+  { name: "Magnific", url: "https://magnific.ai", category: "Image Generation", description: "Insane AI image upscaler & enhancer with hallucinated detail.", bestFor: "Upscaling & detail enhancement", pricing: "Paid" },
+  { name: "Krea", url: "https://krea.ai", category: "Image Generation", description: "Real-time AI image & video generation with live canvas.", bestFor: "Real-time generative canvas", pricing: "Freemium" },
+  { name: "Clipdrop", url: "https://clipdrop.co", category: "Image Generation", description: "Suite of AI image utilities: remove bg, relight, uncrop, replace.", bestFor: "Quick photo edits", pricing: "Freemium" },
+
+  { name: "Kling AI", url: "https://klingai.com", category: "Video", description: "Chinese-built text/image-to-video model rivaling Sora in realism.", bestFor: "Cinematic AI video (free tier)", pricing: "Freemium" },
+  { name: "Hailuo (MiniMax)", url: "https://hailuoai.video", category: "Video", description: "Free high-quality text-to-video from MiniMax.", bestFor: "Free realistic short clips", pricing: "Free" },
+  { name: "LTX Studio", url: "https://ltx.studio", category: "Video", description: "AI-driven storyboarding & video production from a script.", bestFor: "Full storyboard-to-video workflow", pricing: "Freemium" },
+  { name: "Captions", url: "https://captions.ai", category: "Video", description: "AI video editor with eye contact, dubbing, and auto captions.", bestFor: "Talking-head creator videos", pricing: "Freemium" },
+
+  { name: "Granola", url: "https://granola.ai", category: "Productivity", description: "AI notepad that listens to your meetings and enhances your notes (no bot joins).", bestFor: "Private meeting notes", pricing: "Freemium" },
+  { name: "Mem", url: "https://mem.ai", category: "Productivity", description: "Self-organizing AI notes app that connects ideas automatically.", bestFor: "Second brain / smart notes", pricing: "Freemium" },
+  { name: "Reclaim.ai", url: "https://reclaim.ai", category: "Productivity", description: "AI calendar that auto-schedules tasks, habits, and meetings.", bestFor: "Smart calendar scheduling", pricing: "Freemium" },
+  { name: "Magical", url: "https://getmagical.com", category: "Productivity", description: "AI text-expander & autofill that automates repetitive typing across apps.", bestFor: "Eliminating repetitive typing", pricing: "Freemium" },
+  { name: "Bardeen", url: "https://bardeen.ai", category: "Productivity", description: "AI browser automation — scrape, fill, and move data without code.", bestFor: "No-code browser automation", pricing: "Freemium" },
+
+  { name: "Scite.ai", url: "https://scite.ai", category: "Research & Data", description: "Smart citations showing how papers support or contrast claims.", bestFor: "Citation-aware research", pricing: "Freemium" },
+  { name: "ResearchRabbit", url: "https://researchrabbitapp.com", category: "Research & Data", description: "Visual paper discovery — Spotify for academic literature.", bestFor: "Discovering related papers", pricing: "Free" },
+  { name: "SciSpace", url: "https://typeset.io", category: "Research & Data", description: "Chat with PDFs of research papers and decode jargon.", bestFor: "Understanding research papers", pricing: "Freemium" },
+  { name: "Julius AI", url: "https://julius.ai", category: "Research & Data", description: "Upload spreadsheets and analyze/visualize them via natural language.", bestFor: "AI data analysis on CSVs", pricing: "Freemium" },
+
+  { name: "Rytr", url: "https://rytr.me", category: "Writing", description: "Affordable AI writer for 40+ use cases & 30+ languages.", bestFor: "Budget AI writing", pricing: "Freemium" },
+  { name: "Lex", url: "https://lex.page", category: "Writing", description: "Writer-first doc editor with built-in AI for long-form prose.", bestFor: "Long-form writing flow", pricing: "Freemium" },
+  { name: "Sudowrite", url: "https://sudowrite.com", category: "Writing", description: "AI specifically tuned for fiction writers — brainstorm, expand, rewrite.", bestFor: "Fiction & novel writing", pricing: "Paid" },
+
+  { name: "Poe", url: "https://poe.com", category: "Chat & Reasoning", description: "Quora's hub for chatting with GPT, Claude, Gemini, Llama in one place.", bestFor: "Multi-model chat under one sub", pricing: "Freemium" },
+  { name: "You.com", url: "https://you.com", category: "Chat & Reasoning", description: "AI search + multi-model chat with custom agents.", bestFor: "AI search alternative", pricing: "Freemium" },
+  { name: "Kagi Assistant", url: "https://kagi.com/assistant", category: "Chat & Reasoning", description: "Privacy-first multi-LLM assistant from the Kagi search team.", bestFor: "Private multi-LLM chat", pricing: "Paid" },
 ];
 
 const CATEGORIES = ["All", ...Array.from(new Set(TOOLS.map((t) => t.category)))];
