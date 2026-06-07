@@ -26,7 +26,19 @@
   </url>
   <url>
     <loc>https://finalyzeai.com/pricing</loc>
-    <lastmod>2026-05-18</lastmod>
+    <lastmod>2026-06-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://finalyzeai.com/contact</loc>
+    <lastmod>2026-06-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://finalyzeai.com/ai-tools</loc>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -183,6 +195,42 @@
   <url>
     <loc>https://finalyzeai.com/blog/ai-vs-traditional-financial-analysis</loc>
     <lastmod>2026-05-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://finalyzeai.com/blog/how-to-read-a-balance-sheet-founders-guide</loc>
+    <lastmod>2026-06-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://finalyzeai.com/blog/ebitda-vs-net-income-vs-free-cash-flow</loc>
+    <lastmod>2026-06-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://finalyzeai.com/blog/working-capital-management-for-small-businesses</loc>
+    <lastmod>2026-06-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://finalyzeai.com/blog/financial-statement-red-flags-auditors-look-for</loc>
+    <lastmod>2026-06-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://finalyzeai.com/blog/building-three-statement-financial-model-from-scratch</loc>
+    <lastmod>2026-06-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://finalyzeai.com/blog/dcf-valuation-step-by-step</loc>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
