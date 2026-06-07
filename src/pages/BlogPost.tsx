@@ -300,9 +300,6 @@ const BlogPost = () => {
               </div>
             </div>
 
-              </div>
-            </div>
-
             {/* Author byline */}
             <AuthorByline date={post.date} readTime={post.readTime} />
 
@@ -316,13 +313,6 @@ const BlogPost = () => {
 
             {/* Author bio card - bottom of article */}
             <AuthorBioCard />
-
-            {/* Ad slot - bottom of article */}
-
-            {/* Article Content */}
-            <article className="prose prose-lg max-w-none">
-              {renderContent(post.content)}
-            </article>
 
             {/* Ad slot - bottom of article */}
             <AdSlot slot="3345503198" format="auto" />
