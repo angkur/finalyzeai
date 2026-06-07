@@ -182,15 +182,15 @@ const Navbar = () => {
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[280px] sm:w-[320px] p-0">
-                <SheetHeader className="p-4 border-b border-border">
+              <SheetContent side="right" className="w-[280px] sm:w-[320px] p-0 flex flex-col">
+                <SheetHeader className="p-4 border-b border-border shrink-0">
                   <SheetTitle className="flex items-center gap-2">
                     <img src={logoImage} alt="FinalyzeAI Logo" className="w-8 h-8 rounded-xl" />
                     <span className="font-display font-bold">FinalyzeAI</span>
                   </SheetTitle>
                 </SheetHeader>
                 
-                <div className="flex flex-col py-4">
+                <div className="flex flex-col py-4 overflow-y-auto flex-1">
                   {/* Navigation Links */}
                   <div className="px-4 pb-4 border-b border-border">
                     <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Navigation</p>
