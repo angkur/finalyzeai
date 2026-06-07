@@ -59,6 +59,7 @@ const Navbar = () => {
     { href: "/#services", label: "Services", isExternal: true },
     { href: "/ai-predict", label: "AI Predict", isExternal: false },
     { href: "/fin-predict", label: "Fin Predict", isExternal: false },
+    { href: "/ai-tools", label: "AI Tools", isExternal: false },
     { href: "/#process", label: "Process", isExternal: true },
     { href: "/#tech", label: "Technology", isExternal: true },
     { href: "/pricing", label: "Pricing", isExternal: false },
