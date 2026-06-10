@@ -19,6 +19,7 @@ import BlogPost from "./pages/BlogPost";
 import UserGuide from "./pages/UserGuide";
 import AiTools from "./pages/AiTools";
 import ContactPage from "./pages/Contact";
+import Calculators from "./pages/Calculators";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import About from "./pages/About";
@@ -78,6 +79,7 @@ const App = () => {
               <Route path="/user-guide" element={<UserGuide />} />
               <Route path="/ai-tools" element={<AiTools />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/calculators" element={<Calculators />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/about" element={<About />} />
