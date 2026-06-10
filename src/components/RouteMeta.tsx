@@ -13,6 +13,7 @@ const publicContentRoutes = [
   "/terms",
   "/contact",
   "/ai-tools",
+  "/calculators",
 ];
 
 const isPublicContentRoute = (pathname: string) =>
@@ -66,6 +67,11 @@ const pageCopy = (pathname: string) => {
       return {
         title: "AI Tools Directory - 70+ Best AI Tools - FinalyzeAI",
         description: "Curated directory of 70+ AI tools across chat, presentations, writing, coding, image, video, audio, productivity, and research.",
+      };
+    case "/calculators":
+      return {
+        title: "Free Financial Calculators - DCF, ROI, Loan, Runway - FinalyzeAI",
+        description: "Six free professional financial calculators: DCF valuation, ROI/CAGR, loan amortization, break-even, burn rate runway, and ratio analysis.",
       };
     default:
       return {
