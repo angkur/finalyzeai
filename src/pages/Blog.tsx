@@ -3299,6 +3299,8 @@ Notice terminal value is 78% of total. Tiny changes in growth assumptions move t
 
 Building a DCF in a spreadsheet takes hours and is error-prone. FinalyzeAI's Fin Predict module extracts historical statements, builds projection assumptions from trends, calculates WACC from comparable public companies, and produces sensitivity tables automatically. You stay in control of the assumptions — the platform handles the mechanical math.
 
+This guide walks through a complete DCF — from cash flow projections to terminal value to sensitivity analysis — in plain language.
+
 ## Conclusion
 
 DCF is powerful when used correctly and dangerous when used carelessly. The discount rate and terminal assumptions drive almost everything. Build the model, run the sensitivities, cross-check with multiples, and present a range — never a single point. Done right, a DCF gives you genuine insight into what a business is worth and what assumptions justify any given valuation.`,
@@ -3306,6 +3308,521 @@ DCF is powerful when used correctly and dangerous when used carelessly. The disc
     readTime: "15 min read",
     date: "June 6, 2026",
     icon: <Lightbulb className="w-6 h-6" />
+  },
+  {
+    id: "131",
+    slug: "saas-metrics-explained-mrr-arr-ltv-cac",
+    title: "SaaS Metrics Explained: MRR, ARR, LTV, CAC, and Why They Matter",
+    excerpt: "Master the six SaaS metrics every founder, operator, and investor obsesses over — with formulas, healthy benchmarks, and common reporting traps.",
+    content: `If you run, invest in, or analyze a SaaS business, six metrics matter more than all the others combined: MRR, ARR, LTV, CAC, payback period, and net revenue retention. Understand these and you can read any SaaS company's health in five minutes. Miss them and you'll get fooled by vanity numbers every time.
+
+## MRR — Monthly Recurring Revenue
+
+MRR is the predictable subscription revenue normalized to a monthly basis. A customer paying $1,200/year counts as $100 MRR.
+
+**Formula:** Sum of monthly subscription value across all active customers.
+
+MRR is decomposed into:
+- **New MRR** — from brand-new customers this month
+- **Expansion MRR** — existing customers upgrading
+- **Contraction MRR** — existing customers downgrading
+- **Churn MRR** — customers who cancelled
+
+**Net New MRR = New + Expansion − Contraction − Churn**
+
+Healthy SaaS businesses show consistent net new MRR growth quarter over quarter. A flat MRR line with high churn but high new sales is a leaky bucket — eventually growth stops because acquisition can't outpace churn.
+
+## ARR — Annual Recurring Revenue
+
+ARR is just MRR × 12. Investors and boards prefer ARR because it scales to a recognizable yearly number. A company at $500K MRR is at $6M ARR.
+
+**Gotcha:** ARR is not the same as revenue under GAAP. ARR is a forward-looking snapshot of contracted recurring revenue. Reported revenue is what you actually recognized during a period. They diverge for annual prepayments, mid-period adds, and one-time setup fees.
+
+## LTV — Customer Lifetime Value
+
+LTV is the total gross profit you'll earn from a customer over their lifetime.
+
+**Simple formula:** LTV = ARPU × Gross Margin × (1 / Monthly Churn Rate)
+
+Example: $100 ARPU, 80% gross margin, 2% monthly churn → LTV = $100 × 0.80 × 50 = **$4,000**
+
+The 1/churn part assumes constant churn — a simplification. For more accuracy, use a cohort-based LTV that tracks actual revenue retention over time.
+
+## CAC — Customer Acquisition Cost
+
+CAC is the fully-loaded cost to acquire one new customer.
+
+**Formula:** CAC = (Sales + Marketing spend in period) / (New customers acquired in period)
+
+Include salaries, ad spend, tools, commissions, content production, agency fees — everything sales and marketing touches. Excluding people costs to make CAC look better is the #1 reporting trap in SaaS.
+
+## The Holy Grail: LTV/CAC Ratio
+
+LTV/CAC tells you whether your unit economics work. Industry benchmarks:
+
+- **< 1.0** — losing money on every customer; the more you sell, the more you lose
+- **1.0–3.0** — marginal; you'll struggle to fund growth
+- **3.0+** — healthy SaaS; investors expect this
+- **5.0+** — exceptional; you're underspending on growth
+
+A ratio that's too high (8x+) usually means you should be spending more on marketing — you're leaving growth on the table.
+
+## CAC Payback Period
+
+How many months until a new customer pays back their acquisition cost?
+
+**Formula:** Payback = CAC / (ARPU × Gross Margin)
+
+Benchmarks: under 12 months is excellent, 12–18 months is healthy, 18+ months means you need significant capital to fund growth. Enterprise SaaS can run 24+ months and still work; consumer SaaS needs to be under 6 months.
+
+## Net Revenue Retention (NRR)
+
+NRR is the percentage of last year's recurring revenue that you still have today, including expansions but excluding new logos.
+
+**Formula:** NRR = (Starting ARR + Expansion − Contraction − Churn) / Starting ARR
+
+Best-in-class SaaS targets 120%+ NRR — meaning even with zero new customers, revenue grows 20% per year just from existing accounts expanding. A company at 90% NRR is bleeding; 100% is treading water; 110%+ is durable.
+
+NRR is the single best predictor of long-term SaaS value. Investors will pay massive premiums for high-NRR businesses because the growth is essentially free.
+
+## Common Reporting Traps
+
+**1. Counting one-time fees in MRR.** Setup fees, professional services, and usage overages aren't recurring. Exclude them or report them separately as "non-recurring revenue."
+
+**2. Annual contracts confusion.** A customer signing a $12,000 annual contract is $1,000 MRR, not $12,000. Don't conflate ARR with bookings.
+
+**3. Gross vs net churn.** Logo churn (customer count) tells a different story than revenue churn (dollars). A SaaS with 5% logo churn but 0% revenue churn is healthy — small customers leave, big ones stay and expand.
+
+**4. CAC excluding salaries.** If you don't load sales/marketing salaries into CAC, your ratio looks 2–3× better than reality.
+
+**5. LTV from total revenue instead of gross profit.** LTV must use gross margin. Otherwise you're counting cost of goods sold as profit.
+
+## What good looks like
+
+A reference profile for a healthy mid-stage SaaS:
+
+- ARR: $5M+
+- Net new MRR growth: 8–15% per month
+- Gross margin: 75%+
+- LTV/CAC: 3–5x
+- CAC payback: 12–18 months
+- Net revenue retention: 110%+
+- Logo churn: < 2% monthly
+- Rule of 40 (growth + margin): > 40
+
+Hit all of these and you're fundable, profitable, and durable. Miss two or three and you have a clear list of what to fix.
+
+## How AI helps
+
+Calculating these metrics by hand across hundreds of customers and dozens of months is painful. FinalyzeAI ingests your billing system exports, calculates MRR/ARR/NRR cohorts automatically, flags churn anomalies, and builds the standard SaaS dashboards in minutes. Use the dedicated SaaS template in AI Predict to skip the spreadsheet phase entirely.
+
+## Conclusion
+
+You can't improve what you don't measure. These six metrics — MRR, ARR, LTV, CAC, payback, and NRR — form the foundation of every SaaS conversation with investors, boards, and operators. Memorize the formulas. Calculate them monthly. Track the trends. Everything else in SaaS analysis builds on this base.`,
+    category: "SaaS",
+    readTime: "13 min read",
+    date: "June 8, 2026",
+    icon: <Rocket className="w-6 h-6" />
+  },
+  {
+    id: "132",
+    slug: "due-diligence-checklist-small-business-acquisition",
+    title: "The Complete Due Diligence Checklist for Buying a Small Business",
+    excerpt: "A practical, no-jargon checklist for vetting a small business before you buy — financials, legal, operations, customers, and the deal-killer questions most buyers skip.",
+    content: `Buying a small business is one of the highest-leverage moves you can make as an entrepreneur — and one of the easiest ways to lose everything. The difference is due diligence. This is the checklist sophisticated buyers run before signing a purchase agreement, condensed to what actually matters for deals under $10M.
+
+## Phase 1: Financial Due Diligence
+
+The seller's tax returns, P&Ls, and bank statements are the single most important data set. Demand three years of:
+
+- **Federal tax returns** (entity-level) — the closest thing to "audited" you'll get for an SMB
+- **Profit & Loss statements** by month
+- **Balance sheets** at year-end
+- **Bank statements** for the operating account
+- **AR and AP aging reports** as of the most recent month
+- **Sales tax filings** to verify revenue claims
+- **Payroll reports** (Form 941s) to verify employee count and cost
+
+**The reconciliation test:** Revenue on the tax return should match the P&L and approximately match deposits in the bank statement. If these three diverge by more than 5%, something's wrong. Either there's unreported cash, the books are sloppy, or the seller is misrepresenting numbers.
+
+**Add-backs scrutiny.** Sellers will present "adjusted EBITDA" with add-backs for owner salary, personal vehicles, "one-time" expenses, family member wages, and so on. Half are legitimate; half are bullshit. Common abuses:
+
+- "One-time" legal fees that happen every year
+- Owner salary add-back when no replacement manager is included
+- Personal travel coded as business
+- Family wages where the family member actually works in the business
+
+For every add-back over $5K, demand documentation and decide whether it's truly non-recurring.
+
+## Phase 2: Customer Concentration
+
+Pull the customer revenue list for the last 12 months. Calculate:
+
+- Revenue from top 1 customer
+- Revenue from top 5 customers
+- Revenue from top 10 customers
+
+**Red lines:**
+- Top customer > 20% of revenue: high risk
+- Top customer > 40%: deal-killer unless deeply contracted
+- Top 5 customers > 60%: medium risk
+
+Then check the **age** of those top customers. Customers acquired in the last 12 months are far less sticky than those held 5+ years. A business where the top 10 customers all started in the last 18 months is a different risk profile than one where they've been around a decade.
+
+## Phase 3: Legal & Corporate
+
+- Articles of incorporation, bylaws, operating agreement
+- Stock ledger / cap table — make sure the seller actually owns what they're selling
+- Litigation history (3 years) — pending, threatened, settled
+- IP ownership — patents, trademarks, copyrights, domain names
+- Insurance policies — coverage, claims history, premiums
+- Loan documents and security agreements
+- All material contracts (customers, suppliers, leases)
+
+**The key clauses to look for in customer/supplier contracts:**
+- Change-of-control provisions — does the contract terminate or require consent on sale?
+- Auto-renewal terms — when can the customer walk?
+- Exclusivity / non-compete obligations
+
+A change-of-control clause in a top-10 customer contract can torpedo a deal. You must know about it before you sign.
+
+## Phase 4: Operations & Team
+
+- **Org chart** with roles, tenure, and compensation
+- **Key person dependency** — what happens if the founder/sales lead/lead engineer quits?
+- **Standard operating procedures** — are processes documented or in someone's head?
+- **Software stack** — accounting, CRM, payroll, inventory; licenses transferable?
+- **Physical assets** — equipment age, condition, replacement cost
+- **Real estate** — lease terms, renewal options, fair market rent
+
+**Key person risk** is the silent deal-killer. If the founder personally services the top 5 customers and plans to retire after closing, you're not buying a business — you're buying a goodwill problem.
+
+## Phase 5: Quality of Earnings (QoE)
+
+For deals over $1M, commission a Quality of Earnings report from a CPA firm. A QoE goes deeper than financial review:
+
+- Revenue recognition timing
+- Customer/contract substantiation
+- Working capital normalization
+- Sustainable EBITDA after true-ups
+- Identification of one-time items
+- Cash vs accrual reconciliations
+
+A $5,000–$15,000 QoE has saved many buyers from $500K+ mistakes. It's the cheapest insurance in M&A.
+
+## Phase 6: Customer & Employee Interviews
+
+Once you're under LOI and in confirmatory diligence, ask permission to talk to:
+
+- 3–5 long-tenure customers (especially top 10)
+- 3–5 key employees (under NDA, not in front of the seller)
+- 1–2 lost customers if you can identify them
+
+Customer interviews tell you what the seller won't. Ask: "How would you describe the company? What would you change? Have you considered alternatives? What would make you leave?"
+
+Employee interviews tell you whether the team will stay post-close. If three out of five key employees are planning to quit when the founder leaves, the value of the business just dropped 40%.
+
+## Phase 7: The Deal-Killer Questions
+
+Save these for the seller, in person, near the end:
+
+1. **Why are you really selling?** (Listen for: health, exhaustion, declining trends they're hiding, market threat)
+2. **What would you do differently if you were staying?** (Reveals what's broken)
+3. **What's the worst-case scenario for this business?** (Tests their honesty)
+4. **Who's your biggest competitor and why are they better?** (Tests humility)
+5. **What customer would you be most worried about losing?** (Concentration risk reveal)
+6. **What employee, if they quit, would hurt the most?** (Key person risk)
+7. **What's not in the documents we should know?** (Open invitation to disclose)
+
+A seller who refuses to answer #1 and #7 honestly is hiding something.
+
+## Common SMB Deal Killers
+
+- Owner takes most revenue with them (personal goodwill)
+- Top customer has change-of-control clause and won't consent
+- Trailing 12 months declining > 15%
+- Unrecorded liabilities (sales tax, unpaid bonuses, vendor disputes)
+- Lease expires within 12 months with no renewal option
+- Software license is non-transferable
+- Customer concentration with single point of failure
+- Pending litigation the seller "forgot to mention"
+
+Each of these has killed deals at the closing table. Better to find them in week 2 of diligence than week 8.
+
+## Final advice
+
+Due diligence is not a checkbox exercise — it's the most important work you do as a buyer. Budget 60–90 days for thorough diligence. Spend $10K–$30K on a proper CPA and a transaction attorney. Talk to customers. Talk to employees. Walk the building. Sit in the office for a day. The number you pay for the business matters less than knowing what you're actually buying.
+
+A small business is the single largest financial commitment most acquirers will ever make. Treat the diligence accordingly.`,
+    category: "Strategy",
+    readTime: "14 min read",
+    date: "June 9, 2026",
+    icon: <Target className="w-6 h-6" />
+  },
+  {
+    id: "133",
+    slug: "understanding-wacc-cost-of-capital-explained",
+    title: "WACC and Cost of Capital Explained: The Number That Drives Every Valuation",
+    excerpt: "WACC is the single most important — and most misused — number in corporate finance. Learn what it really means, how to calculate it, and the mistakes that destroy valuations.",
+    content: `If you understand only one concept from corporate finance, make it the Weighted Average Cost of Capital (WACC). Every valuation, every capital allocation decision, every "is this project worth doing?" question ultimately runs through WACC. Misunderstand it, and your DCF is fiction. Understand it, and you have a tool that cuts through most financial noise.
+
+## What WACC Actually Represents
+
+WACC is the average annual return investors expect for funding a company, weighted by how the company is financed. Conceptually: if a business is funded 60% by equity costing 12% and 40% by debt costing 5% after tax, the blended hurdle rate is:
+
+**WACC = 60% × 12% + 40% × 5% = 9.2%**
+
+That 9.2% is the bar. Any project the company invests in must return more than 9.2% to create value for investors. Less than that, and the company is destroying value — even if the project is "profitable" on paper.
+
+## The Full Formula
+
+**WACC = (E/V × Re) + (D/V × Rd × (1 − Tc))**
+
+Where:
+- **E** = market value of equity
+- **D** = market value of debt
+- **V** = E + D (total capital)
+- **Re** = cost of equity
+- **Rd** = cost of debt
+- **Tc** = corporate tax rate
+
+The tax shield ((1 − Tc)) only applies to debt because interest payments are tax-deductible. This is one of the few legal tax advantages built into the corporate code, and it makes debt cheaper than equity for any profitable company.
+
+## Calculating Cost of Equity (Re)
+
+The standard approach is the Capital Asset Pricing Model (CAPM):
+
+**Re = Rf + β × (Rm − Rf)**
+
+Where:
+- **Rf** = risk-free rate (10-year Treasury yield, typically 4–5% recently)
+- **β (beta)** = how much the stock moves relative to the market
+- **(Rm − Rf)** = equity risk premium (historically 5–7% in US markets)
+
+Example: a stable software company with β = 1.2:
+
+Re = 4.5% + 1.2 × 6% = **11.7%**
+
+A higher-risk early-stage company with β = 1.8:
+
+Re = 4.5% + 1.8 × 6% = **15.3%**
+
+For private companies without observable beta, use the industry average beta from comparable public companies. Sources like Damodaran's data tables make this straightforward.
+
+## Calculating Cost of Debt (Rd)
+
+For public companies, use the yield to maturity on outstanding bonds. For private companies, use the interest rate the company would pay on new debt today — not the historical rate on existing loans.
+
+If the company is unrated, build it up:
+- Risk-free rate (4.5%)
+- + Credit spread based on financial strength (1–6%)
+- = Cost of debt (5.5–10.5%)
+
+Then apply the tax shield. If Rd = 7% and Tc = 25%:
+
+After-tax Rd = 7% × (1 − 0.25) = **5.25%**
+
+## Picking the Right Weights
+
+Use **market values**, not book values. The book value of equity (retained earnings + paid-in capital) is almost meaningless for valuation. Market cap (for public companies) or implied equity value (for private) is what matters.
+
+For debt, book value usually approximates market value closely enough — unless interest rates have moved dramatically since the debt was issued.
+
+For a private company, weights are usually targets, not current actuals. If a company is currently 90% equity / 10% debt but the industry norm is 60/40, use the target 60/40. Why? Because over time, capital structure will revert to industry norms, and the WACC reflects long-term cost.
+
+## A Worked Example
+
+Consider a mid-sized SaaS company:
+
+- Market cap: $400M (E)
+- Total debt: $100M (D)
+- Capital structure: 80% equity, 20% debt
+- Beta: 1.3
+- Risk-free rate: 4.5%
+- Equity risk premium: 6%
+- Cost of debt: 7%
+- Tax rate: 25%
+
+**Cost of equity:** 4.5% + 1.3 × 6% = 12.3%
+**After-tax cost of debt:** 7% × (1 − 0.25) = 5.25%
+
+**WACC = 0.80 × 12.3% + 0.20 × 5.25% = 9.84% + 1.05% = 10.89%**
+
+So any project this company evaluates needs to clear 10.89% to create value. Anything less destroys it.
+
+## What WACC Is NOT
+
+**WACC is not the company's actual interest rate.** That's just the cost of debt.
+
+**WACC is not a hurdle rate for project-level decisions in different risk categories.** A safe domestic project shouldn't be evaluated at the same WACC as a speculative international expansion. Use risk-adjusted discount rates for materially different projects.
+
+**WACC is not constant over time.** It changes with interest rates, equity premiums, leverage, and risk. Recalculate at least annually.
+
+**WACC is not the return shareholders receive.** It's the return they require. Whether they actually get it depends on company performance.
+
+## The 5 Biggest WACC Mistakes
+
+**1. Using book value weights.** Always use market values. Book values can understate equity by 5–10x for asset-light businesses.
+
+**2. Forgetting the tax shield.** Pre-tax cost of debt overstates the true cost. Always apply (1 − Tc).
+
+**3. Mismatched currencies / inflation.** Cash flows in nominal dollars must use a nominal discount rate. Real cash flows need a real rate.
+
+**4. Using historical betas blindly.** A 5-year beta during a bull market doesn't reflect current risk. Adjust for changes in capital structure and business model.
+
+**5. Treating WACC as more precise than it is.** Your WACC is at best ±1% accurate. A "10.7%" WACC is really "somewhere between 9.5% and 11.5%." Build sensitivity ranges accordingly.
+
+## WACC vs Cost of Equity vs Cost of Capital
+
+These get used interchangeably but mean different things:
+
+- **Cost of debt:** what lenders charge
+- **Cost of equity:** what shareholders require
+- **WACC:** the blended cost of all capital
+- **Cost of capital:** generic term, usually means WACC
+
+For valuing the entire enterprise (unlevered cash flows), use WACC. For valuing equity directly (levered cash flows after debt service), use cost of equity. Mixing these is the most common DCF error.
+
+## How WACC Drives Valuation
+
+Tiny changes in WACC produce huge swings in DCF value. A company with $50M in annual cash flows and 3% terminal growth:
+
+- WACC of 8% → enterprise value ≈ $1,000M
+- WACC of 10% → enterprise value ≈ $714M
+- WACC of 12% → enterprise value ≈ $556M
+
+A 4-point WACC swing nearly halves the value. This is why investment bankers spend so much time defending their WACC — it's the most important number in any valuation.
+
+## How AI Helps
+
+WACC requires pulling betas from comparable companies, current yields from debt markets, and the company's own capital structure. FinalyzeAI's Fin Predict module looks up beta data from comparable public companies, calculates current market values, builds the WACC calculation step by step, and then ties it into sensitivity tables for any DCF. You see the assumptions, you can override them, and you can compare WACC across scenarios in seconds.
+
+## Conclusion
+
+WACC sounds technical but the concept is simple: it's the minimum return that justifies investing in the business. Get the inputs right — market value weights, CAPM for equity, after-tax cost of debt — and you have a powerful tool for evaluating any investment. Get them wrong, and every downstream number (NPV, DCF, IRR comparisons) is corrupted. Spend the hour to do it properly. It will pay back for the rest of your career.`,
+    category: "Valuation",
+    readTime: "16 min read",
+    date: "June 10, 2026",
+    icon: <Brain className="w-6 h-6" />
+  },
+  {
+    id: "134",
+    slug: "fundraising-startup-financials-investors-actually-read",
+    title: "What Investors Actually Read in a Startup's Financials (Hint: Not What You Think)",
+    excerpt: "Founders obsess over the metrics in their pitch deck. Investors look at five completely different things. Here's exactly what professional investors check before writing a check.",
+    content: `Most founders think investors evaluate startups by reading the financial projections, MRR slide, and TAM number. They don't. Spend a day with a Series A partner or angel investor reviewing deals and you'll discover they spend 80% of the financial review on five specific things — most of which never make it into the pitch deck. Here's what they're actually checking, and what you should prepare.
+
+## What investors largely ignore
+
+Before the list of what matters, here's what gets glanced at and dismissed:
+
+- **5-year revenue projections.** Investors know your year-3 number is fiction. They might check year 1 plausibility, but year 5 is decoration.
+- **TAM slides.** Almost every TAM is calculated to be "$10B+". Investors apply heavy discounts and assume you'll address 0.1–1% of it at best.
+- **Detailed P&L line items.** Marketing spend by channel? They'll ask if they care; otherwise it's noise.
+- **Vanity hockey stick charts.** Every deck has them. They're ignored.
+
+What follows is the actual checklist.
+
+## 1. Burn Rate and Runway (in That Order)
+
+Before anything else: how much cash do you have, what's the monthly burn, how long until zero?
+
+**Specifically:**
+- Cash on hand today
+- Average monthly net burn over the last 6 months
+- Implied runway in months
+- Whether burn is increasing, flat, or declining
+- What the burn rate looks like *after* this round closes
+
+Investors map this against your fundraise. If you're raising for 18 months of runway but spending pattern says you'll need 24, the round is undersized. If you have 4 months of runway and are asking for "exploratory" discussions, you're already cooked and they'll lowball you.
+
+**The honest disclosure** wins: "We have 8 months of runway at current burn. The round buys us 18 months at planned spend, 24 months if growth lags."
+
+## 2. The Quality of Your Revenue
+
+Not revenue size — revenue *quality*. Two companies with $1M ARR can be wildly different investments.
+
+**What investors check:**
+- **Concentration:** Top 5 customers as % of revenue. Anything > 50% raises hair.
+- **Contract length:** Month-to-month vs annual. Annual is worth 2–3x more.
+- **Net revenue retention:** Are existing customers growing or shrinking with you?
+- **Gross margin:** 80%+ for software, 60%+ for marketplaces, varies for hardware/services.
+- **Self-serve vs sales-led:** A self-serve business at $500K ARR is often more interesting than a sales-led business at $2M ARR.
+- **Pricing power:** Have you ever raised prices? What happened? If you've never tested it, that's a flag.
+
+A $2M ARR business with 70% top-customer concentration, monthly contracts, and 80% gross margin is a worse business than a $1M ARR business with diverse customers, annual contracts, and 90% margin.
+
+## 3. CAC Payback and the Path to Profitability
+
+Investors increasingly demand to see how the unit economics work *before* believing your growth story.
+
+**The questions they ask:**
+- What does it cost you to acquire a customer fully loaded (CAC including all salaries)?
+- How long until that customer's gross profit pays back CAC?
+- What's the LTV/CAC ratio?
+- At what scale do you reach profitability — and is the path believable?
+
+**The bar:** Healthy SaaS shows CAC payback under 18 months and LTV/CAC over 3. Consumer businesses need much faster payback (under 6 months for most).
+
+If your CAC payback is 24+ months and LTV/CAC is 1.5x, the entire business model is suspect. No amount of "but we'll scale into it" handwaving will fix this in diligence.
+
+## 4. The Cap Table
+
+This is the silent killer of many fundraises. Founders skip past it; investors stare at it.
+
+**What concerns them:**
+- **Founder ownership too low.** If you've already given up 60% to early investors and advisors, future rounds get hard. Founders should hold 60–80% pre-Series A.
+- **Strange ownership.** Family members with 10% who add nothing, ex-cofounders with vested-but-quit equity, freelancers who got 5% for "design work."
+- **Debt or convertible notes.** Unconverted SAFEs and notes with messy terms (uncapped, high interest, weird MFNs) can corrupt the next round.
+- **Vesting status.** All founders should be on 4-year vesting with a 1-year cliff. "We don't have vesting because we trust each other" is a red flag.
+- **Liquidation preferences.** A 2x participating preferred from a prior round means investors get massive premiums in any exit — making the equity less valuable for new money.
+
+Send the cap table early. If it has cleanup issues, address them before the term sheet stage.
+
+## 5. The Founders' Personal Financial Posture
+
+This one's almost never discussed openly but it's checked. Investors look for:
+
+- **Founder salaries.** Reasonable (typically $80–150K depending on stage and geography). $300K founder salaries pre-product-market-fit are a major red flag.
+- **Founder loans to/from the company.** Messy, almost always.
+- **Personal expenses run through the company.** Vehicles, travel, family, etc. Discoverable in diligence — better to clean up before.
+- **Other startups or side businesses.** Are you actually full-time?
+- **Significant outside income or wealth.** Doesn't disqualify but changes the risk dynamic — founders with no financial backstop sometimes make better decisions, sometimes worse.
+
+The principle: investors want to fund the business, not subsidize a lifestyle.
+
+## What to Bring to the Diligence Call
+
+Prepare these documents *before* you go fundraising. Having them ready signals you're serious:
+
+1. **Cap table** (Carta or Pulley export, or clean Google Sheet)
+2. **3-statement model** with monthly history and 24-month projection
+3. **Cohort analysis** showing customer retention by acquisition month
+4. **Unit economics summary** (CAC, LTV, payback, gross margin)
+5. **Customer list** (anonymized OK at first) with revenue, contract length, start date
+6. **Bank statements** (last 6 months) for proof of cash position
+7. **All prior round documents** (SAFEs, notes, term sheets, board consents)
+8. **Top 3 risks** you'd raise if you were the investor
+
+That last one is counterintuitive but powerful. Investors trust founders who can clearly articulate what could go wrong far more than founders who pretend everything is fine.
+
+## The Single Best Thing You Can Do
+
+**Build a clean monthly P&L going back at least 18 months.** Not a fancy projection — actual historical numbers, broken into recurring revenue, gross margin, sales/marketing, R&D, G&A, and net burn.
+
+A clean 18-month P&L shows the trajectory of your business in five minutes. It reveals whether your story matches reality. Investors who see this immediately know you have your house in order — which is rarer than you'd think and worth meaningful goodwill in negotiations.
+
+## How AI Helps
+
+Pulling together cohort analyses, monthly unit economics, and clean P&Ls historically required a fractional CFO and weeks of spreadsheet work. FinalyzeAI's Fin Predict module ingests your accounting exports (QuickBooks, Xero, NetSuite), automatically builds the cohort tables, calculates CAC/LTV/payback by acquisition month, and generates the investor-ready charts and tables in a few hours instead of weeks. The output isn't a black box — every calculation is auditable and exportable.
+
+## Conclusion
+
+Investors aren't looking for perfection. They're looking for founders who understand their own business deeply enough to discuss it honestly. The five things above — runway, revenue quality, unit economics, cap table, and founder posture — are the actual filter. Get these right, and the rest of the pitch becomes a formality. Get them wrong, and the best deck in the world won't save you.`,
+    category: "Strategy",
+    readTime: "14 min read",
+    date: "June 10, 2026",
+    icon: <TrendingUp className="w-6 h-6" />
   }
 ];
 
