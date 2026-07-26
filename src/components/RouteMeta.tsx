@@ -76,6 +76,21 @@ const pageCopy = (pathname: string) => {
         title: "Free Financial Calculators - DCF, ROI, Loan, Runway - FinalyzeAI",
         description: "Six free professional financial calculators: DCF valuation, ROI/CAGR, loan amortization, break-even, burn rate runway, and ratio analysis.",
       };
+    case "/glossary":
+      return {
+        title: "Finance Glossary - 60+ Terms Explained - FinalyzeAI",
+        description: "Plain-English definitions for 60+ finance and AI terms — from ARR and CAGR to WACC and DCF, cross-linked to worked examples and calculators.",
+      };
+    case "/faq":
+      return {
+        title: "FAQ - FinalyzeAI - Pricing, Security, AI Accuracy",
+        description: "30 answers to the questions users ask about FinalyzeAI — pricing plans, data security, AI model accuracy, supported formats, and workflows.",
+      };
+    case "/editorial-policy":
+      return {
+        title: "Editorial Policy - FinalyzeAI",
+        description: "Our editorial standards: who writes our finance content, how we source and fact-check, corrections, independence from advertisers, and disclosures.",
+      };
     default:
       return {
         title: "FinalyzeAI - AI Financial Analysis Platform",

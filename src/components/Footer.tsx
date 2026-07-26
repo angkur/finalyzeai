@@ -46,7 +46,17 @@ const Footer = () => {
               <li><Link to="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Blog</Link></li>
               <li><Link to="/user-guide" className="text-sm text-muted-foreground hover:text-foreground transition-colors">User Guide</Link></li>
               <li><Link to="/calculators" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Free Calculators</Link></li>
+              <li><Link to="/glossary" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Glossary</Link></li>
+              <li><Link to="/faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</Link></li>
             </ul>
+          </div>
+
+          {/* Company / Legal */}
+          <div>
+            <h3 className="text-sm font-semibold mb-3 text-foreground">Company</h3>
+            <ul className="space-y-2">
+              <li><Link to="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">About</Link></li>
+              <li><Link to="/editorial-policy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Editorial Policy</Link></li>
           </div>
 
           {/* Company / Legal */}
