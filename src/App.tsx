@@ -32,6 +32,9 @@ import Documents from "./pages/Documents";
 import NotFound from "./pages/NotFound";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import SubscriptionManagement from "./pages/SubscriptionManagement";
+import Glossary from "./pages/Glossary";
+import Faq from "./pages/Faq";
+import EditorialPolicy from "./pages/EditorialPolicy";
 
 const App = () => {
   const [queryClient] = useState(() => new QueryClient());
@@ -91,6 +94,9 @@ const App = () => {
               <Route path="/documents" element={<Documents />} />
               <Route path="/subscription-success" element={<SubscriptionSuccess />} />
               <Route path="/subscription" element={<SubscriptionManagement />} />
+              <Route path="/glossary" element={<Glossary />} />
+              <Route path="/faq" element={<Faq />} />
+              <Route path="/editorial-policy" element={<EditorialPolicy />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

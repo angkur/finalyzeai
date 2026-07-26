@@ -13,7 +13,7 @@ const Terms = () => {
             <span className="text-sm font-medium">Legal</span>
           </div>
           <h1 className="text-4xl sm:text-5xl font-display font-bold mb-4">Terms of Service</h1>
-          <p className="text-muted-foreground">Last updated: April 1, 2026</p>
+          <p className="text-muted-foreground">Last updated: July 26, 2026</p>
         </header>
 
         <div className="prose prose-invert max-w-none space-y-6 text-foreground/90">
