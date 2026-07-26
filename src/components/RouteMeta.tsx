@@ -14,6 +14,9 @@ const publicContentRoutes = [
   "/contact",
   "/ai-tools",
   "/calculators",
+  "/glossary",
+  "/faq",
+  "/editorial-policy",
 ];
 
 const isPublicContentRoute = (pathname: string) =>
