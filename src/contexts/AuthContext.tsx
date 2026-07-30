@@ -38,6 +38,12 @@ interface AuthContextType {
   refreshPlan: () => Promise<void>;
 }
 
+// Only allow same-origin relative paths as post-auth redirect targets.
+const safeRedirectPath = (path?: string | null): string => {
+  if (!path || !path.startsWith("/") || path.startsWith("//")) return "/";
+  return path;
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
