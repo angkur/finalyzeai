@@ -52,6 +52,11 @@ const Auth = () => {
   };
 
   // If user is already logged in, show options instead of auto-redirecting
+  if (user && !authLoading && nextPath !== "/") {
+    navigate(nextPath, { replace: true });
+    return null;
+  }
+
   if (user && !authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
