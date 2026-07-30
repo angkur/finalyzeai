@@ -154,10 +154,10 @@ const Auth = () => {
           }
         } else {
           toast.success("Welcome back!");
-          navigate("/");
+          navigate(nextPath);
         }
       } else {
-        const { error, needsEmailConfirmation } = await signUp(email, password, fullName);
+        const { error, needsEmailConfirmation } = await signUp(email, password, fullName, nextPath);
         if (error) {
           toast.error(getErrorMessage(error));
         } else if (needsEmailConfirmation) {
@@ -166,7 +166,7 @@ const Auth = () => {
           toast.success("Account created! Please check your email to verify.");
         } else {
           toast.success("Account created successfully!");
-          navigate("/");
+          navigate(nextPath);
         }
       }
     } finally {
@@ -177,7 +177,7 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
-      const { error } = await signInWithGoogle();
+      const { error } = await signInWithGoogle(nextPath);
       if (error) {
         toast.error(getErrorMessage(error));
       }
