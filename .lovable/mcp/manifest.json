@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "sdk_version": "0.25.1",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://ddbpzfchbihvzqsoybsx.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "finalyze-ai-navigator",
+      "version": "0.1.0",
+      "title": "Finance AI Navigator"
+    },
+    "tools": [
+      {
+        "name": "list_documents",
+        "title": "List documents",
+        "description": "List the signed-in user's uploaded financial documents in FinalyzeAI.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "description": "Max documents to return (default 20)."
+            },
+            "status": {
+              "type": "string",
+              "description": "Optional status filter, e.g. 'completed'."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_documents",
+        "title": "Search document content",
+        "description": "Keyword-search the text chunks of the signed-in user's uploaded documents in FinalyzeAI and return matching excerpts.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "minLength": 2,
+              "description": "Keyword or phrase to search for."
+            },
+            "document_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Optional document id to restrict the search."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20,
+              "description": "Max excerpts to return (default 8)."
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_analyses",
+        "title": "List AI analyses",
+        "description": "List the signed-in user's recent FinalyzeAI analyses (query, analysis type, rating and response excerpt).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30,
+              "description": "Max analyses to return (default 10)."
+            },
+            "analysis_type": {
+              "type": "string",
+              "description": "Optional analysis type filter."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_conversations",
+        "title": "List conversations",
+        "description": "List the signed-in user's FinalyzeAI chat conversations, optionally including the messages of one conversation.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "conversation_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "If provided, return the messages of this conversation instead of the list."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "description": "Max rows to return (default 20)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_account_summary",
+        "title": "Get account summary",
+        "description": "Get the signed-in user's FinalyzeAI plan, usage limits and document/analysis counts.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

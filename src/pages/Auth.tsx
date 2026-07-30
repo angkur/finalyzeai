@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,9 @@ const Auth = () => {
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const nextParam = searchParams.get("next");
+  const nextPath = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
   const { user, signIn, signUp, signInWithGoogle, signOut, resetPasswordForEmail, resendVerificationEmail, isLoading: authLoading } = useAuth();
 
   // Friendly error messages
@@ -49,6 +52,11 @@ const Auth = () => {
   };
 
   // If user is already logged in, show options instead of auto-redirecting
+  if (user && !authLoading && nextPath !== "/") {
+    navigate(nextPath, { replace: true });
+    return null;
+  }
+
   if (user && !authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
@@ -146,10 +154,10 @@ const Auth = () => {
           }
         } else {
           toast.success("Welcome back!");
-          navigate("/");
+          navigate(nextPath);
         }
       } else {
-        const { error, needsEmailConfirmation } = await signUp(email, password, fullName);
+        const { error, needsEmailConfirmation } = await signUp(email, password, fullName, nextPath);
         if (error) {
           toast.error(getErrorMessage(error));
         } else if (needsEmailConfirmation) {
@@ -158,7 +166,7 @@ const Auth = () => {
           toast.success("Account created! Please check your email to verify.");
         } else {
           toast.success("Account created successfully!");
-          navigate("/");
+          navigate(nextPath);
         }
       }
     } finally {
@@ -169,7 +177,7 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
-      const { error } = await signInWithGoogle();
+      const { error } = await signInWithGoogle(nextPath);
       if (error) {
         toast.error(getErrorMessage(error));
       }

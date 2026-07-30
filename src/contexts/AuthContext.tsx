@@ -27,9 +27,9 @@ interface AuthContextType {
   profile: Profile | null;
   userPlan: UserPlanData | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null; needsEmailConfirmation?: boolean }>;
+  signUp: (email: string, password: string, fullName?: string, redirectPath?: string) => Promise<{ error: Error | null; needsEmailConfirmation?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null; needsEmailConfirmation?: boolean }>;
-  signInWithGoogle: () => Promise<{ error: Error | null }>;
+  signInWithGoogle: (redirectPath?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
   resetPasswordForEmail: (email: string) => Promise<{ error: Error | null }>;
@@ -37,6 +37,12 @@ interface AuthContextType {
   resendVerificationEmail: (email: string) => Promise<{ error: Error | null }>;
   refreshPlan: () => Promise<void>;
 }
+
+// Only allow same-origin relative paths as post-auth redirect targets.
+const safeRedirectPath = (path?: string | null): string => {
+  if (!path || !path.startsWith("/") || path.startsWith("//")) return "/";
+  return path;
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -195,8 +201,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, [syncUserPlan]);
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+  const signUp = async (email: string, password: string, fullName?: string, redirectPath?: string) => {
+    const redirectUrl = `${window.location.origin}${safeRedirectPath(redirectPath)}`;
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -231,8 +237,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error: error as Error | null };
   };
 
-  const signInWithGoogle = async () => {
-    const redirectUrl = `${window.location.origin}/`;
+  const signInWithGoogle = async (redirectPath?: string) => {
+    const redirectUrl = `${window.location.origin}${safeRedirectPath(redirectPath)}`;
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',

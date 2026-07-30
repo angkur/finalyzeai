@@ -35,6 +35,7 @@ import SubscriptionManagement from "./pages/SubscriptionManagement";
 import Glossary from "./pages/Glossary";
 import Faq from "./pages/Faq";
 import EditorialPolicy from "./pages/EditorialPolicy";
+import OAuthConsent from "./pages/OAuthConsent";
 
 const App = () => {
   const [queryClient] = useState(() => new QueryClient());
@@ -97,6 +98,7 @@ const App = () => {
               <Route path="/glossary" element={<Glossary />} />
               <Route path="/faq" element={<Faq />} />
               <Route path="/editorial-policy" element={<EditorialPolicy />} />
+              <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
