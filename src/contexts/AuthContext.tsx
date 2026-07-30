@@ -195,8 +195,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, [syncUserPlan]);
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+  const signUp = async (email: string, password: string, fullName?: string, redirectPath?: string) => {
+    const redirectUrl = `${window.location.origin}${safeRedirectPath(redirectPath)}`;
     
     const { error } = await supabase.auth.signUp({
       email,
