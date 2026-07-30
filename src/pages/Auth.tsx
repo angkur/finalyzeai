@@ -23,6 +23,9 @@ const Auth = () => {
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const nextParam = searchParams.get("next");
+  const nextPath = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
   const { user, signIn, signUp, signInWithGoogle, signOut, resetPasswordForEmail, resendVerificationEmail, isLoading: authLoading } = useAuth();
 
   // Friendly error messages
