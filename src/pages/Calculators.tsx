@@ -69,7 +69,36 @@ const Calculators = () => {
             </Card>
           </Tabs>
 
-          {/* SEO-friendly content blocks */}
+          <section className="mt-12">
+            <h2 className="text-2xl font-display font-bold mb-4">Open a calculator on its own page</h2>
+            <p className="text-muted-foreground mb-5">
+              Each calculator has a dedicated page with worked explanations, formulas, benchmark
+              ranges, and FAQs.
+            </p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {calculators.map((c) => {
+                const Icon = c.icon;
+                return (
+                  <Link
+                    key={c.slug}
+                    to={`/calculators/${c.slug}`}
+                    className="group flex items-start gap-3 p-4 rounded-xl border border-border/50 bg-muted/20 hover:border-primary/50 transition-colors"
+                  >
+                    <Icon className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                    <div className="min-w-0">
+                      <div className="font-medium text-sm flex items-center gap-1">
+                        {c.name}
+                        <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                      <div className="text-xs text-muted-foreground line-clamp-2">{c.tagline}</div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+
+
           <section className="mt-12 prose prose-invert max-w-none">
             <h2 className="text-2xl font-display font-bold mb-4">How to use these calculators</h2>
             <p className="text-muted-foreground mb-3">
