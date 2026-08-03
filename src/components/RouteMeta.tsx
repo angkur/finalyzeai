@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { calculators } from "@/config/calculators";
 
 const SITE_URL = "https://finalyzeai.com";
 
@@ -20,9 +21,16 @@ const publicContentRoutes = [
 ];
 
 const isPublicContentRoute = (pathname: string) =>
-  publicContentRoutes.includes(pathname) || pathname.startsWith("/blog/");
+  publicContentRoutes.includes(pathname) ||
+  pathname.startsWith("/blog/") ||
+  calculators.some((c) => pathname === `/calculators/${c.slug}`);
 
 const pageCopy = (pathname: string) => {
+  const calc = calculators.find((c) => pathname === `/calculators/${c.slug}`);
+  if (calc) {
+    return { title: calc.metaTitle, description: calc.metaDescription };
+  }
+
   if (pathname.startsWith("/blog/")) {
     return {
       title: "Financial Analysis Guide - FinalyzeAI Blog",

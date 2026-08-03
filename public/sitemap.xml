@@ -267,4 +267,34 @@
   <url><loc>https://finalyzeai.com/glossary</loc><lastmod>2026-07-26</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://finalyzeai.com/faq</loc><lastmod>2026-07-26</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://finalyzeai.com/editorial-policy</loc><lastmod>2026-07-26</lastmod><changefreq>yearly</changefreq><priority>0.5</priority></url>
+  <url>
+    <loc>https://finalyzeai.com/calculators/dcf-calculator</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://finalyzeai.com/calculators/roi-calculator</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://finalyzeai.com/calculators/loan-calculator</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://finalyzeai.com/calculators/break-even-calculator</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://finalyzeai.com/calculators/burn-rate-runway-calculator</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://finalyzeai.com/calculators/financial-ratio-calculator</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
