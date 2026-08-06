@@ -30,6 +30,8 @@ import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
 import UsageTracker from "@/components/UsageTracker";
+import ToolLanding from "@/components/ToolLanding";
+import { aiPredictLanding } from "@/config/toolLandings";
 
 interface AttachedFile {
   id: string;
@@ -51,7 +53,7 @@ const suggestionChips = [
 ];
 
 const AiPredict = () => {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
   const {
     conversations,
@@ -511,6 +513,11 @@ const AiPredict = () => {
       </div>
     );
   };
+
+  // Public, indexable marketing page for signed-out visitors
+  if (!isAuthLoading && !user) {
+    return <ToolLanding {...aiPredictLanding} />;
+  }
 
   return (
     <div className="flex h-screen bg-background">
