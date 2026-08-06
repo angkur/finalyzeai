@@ -20,6 +20,8 @@ const publicContentRoutes = [
   "/editorial-policy",
   "/ai-predict",
   "/fin-predict",
+];
+
 
 const isPublicContentRoute = (pathname: string) =>
   publicContentRoutes.includes(pathname) ||
