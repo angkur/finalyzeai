@@ -51,7 +51,7 @@ const suggestionChips = [
 ];
 
 const AiPredict = () => {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
   const {
     conversations,
@@ -511,6 +511,11 @@ const AiPredict = () => {
       </div>
     );
   };
+
+  // Public, indexable marketing page for signed-out visitors
+  if (!isAuthLoading && !user) {
+    return <ToolLanding {...aiPredictLanding} />;
+  }
 
   return (
     <div className="flex h-screen bg-background">

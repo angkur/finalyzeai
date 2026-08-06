@@ -18,7 +18,8 @@ const publicContentRoutes = [
   "/glossary",
   "/faq",
   "/editorial-policy",
-];
+  "/ai-predict",
+  "/fin-predict",
 
 const isPublicContentRoute = (pathname: string) =>
   publicContentRoutes.includes(pathname) ||
@@ -99,6 +100,17 @@ const pageCopy = (pathname: string) => {
         title: "Editorial Policy - FinalyzeAI",
         description: "Our editorial standards: who writes our finance content, how we source and fact-check, corrections, independence from advertisers, and disclosures.",
       };
+    case "/ai-predict":
+      return {
+        title: "AI Predict - Ask Questions About Financial Documents - FinalyzeAI",
+        description: "Upload a P&L, balance sheet, or CSV and ask plain-English questions. AI Predict returns ratios, trends, fraud flags, and exportable charts in seconds.",
+      };
+    case "/fin-predict":
+      return {
+        title: "Fin Predict - Financial Statement Analysis & Forecasting - FinalyzeAI",
+        description: "Score any financial statement in 30 seconds: ratio scorecard, peer benchmarks, multi-year trends, what-if scenarios, and an exportable PDF report.",
+      };
+
     default:
       return {
         title: "FinalyzeAI - AI Financial Analysis Platform",
