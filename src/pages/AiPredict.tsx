@@ -30,6 +30,8 @@ import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
 import UsageTracker from "@/components/UsageTracker";
+import ToolLanding from "@/components/ToolLanding";
+import { aiPredictLanding } from "@/config/toolLandings";
 
 interface AttachedFile {
   id: string;
