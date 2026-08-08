@@ -1,5 +1,5 @@
 import { ComponentType } from "react";
-import { TrendingUp, DollarSign, Percent, BarChart3, Flame, PieChart, LucideIcon } from "lucide-react";
+import { TrendingUp, DollarSign, Percent, BarChart3, Flame, PieChart, Sparkles, Timer, Users, Gauge, Split, Award, Receipt, Wallet, LucideIcon } from "lucide-react";
 import {
   DCFCalc,
   ROICalc,
@@ -8,6 +8,16 @@ import {
   RunwayCalc,
   RatiosCalc,
 } from "@/components/calculators/CalcWidgets";
+import {
+  MagicNumberCalc,
+  CacPaybackCalc,
+  LtvCacCalc,
+  RuleOf40Calc,
+  DilutionCalc,
+  EsopValueCalc,
+  FactoringCostCalc,
+  WorkingCapitalCalc,
+} from "@/components/calculators/CalcWidgets2";
 
 export interface CalculatorDef {
   slug: string;
