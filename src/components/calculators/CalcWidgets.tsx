@@ -78,6 +78,10 @@ export const DCFCalc = () => {
           Note: Terminal value typically represents 60–80% of total enterprise value. If your
           WACC ≤ terminal growth, the formula breaks down — adjust assumptions.
         </p>
+        <ShareResult
+          type="dcf"
+          params={{ ev: Math.round(result.enterprise), fcf, g: growth, wacc, y: years }}
+        />
       </div>
     </div>
   );
@@ -232,6 +236,7 @@ export const BreakEvenCalc = () => {
           profit. If contribution margin is negative, you can't break even — re-price or
           re-engineer cost.
         </p>
+        <ShareResult type="break-even" params={{ fixed, price, var: variable }} />
       </div>
     </div>
   );
@@ -284,6 +289,10 @@ export const RunwayCalc = () => {
           Most VCs want 18–24 months of runway after a round closes. Below 6 months is the
           danger zone — start fundraising 9+ months before zero.
         </p>
+        <ShareResult
+          type="runway"
+          params={{ cash, rev: monthlyRevenue, exp: monthlyExpenses }}
+        />
       </div>
     </div>
   );
