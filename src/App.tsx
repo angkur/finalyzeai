@@ -20,6 +20,7 @@ import UserGuide from "./pages/UserGuide";
 import AiTools from "./pages/AiTools";
 import ContactPage from "./pages/Contact";
 import Calculators from "./pages/Calculators";
+import SharedResult from "./pages/SharedResult";
 import CalculatorDetail from "./pages/CalculatorDetail";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
@@ -86,6 +87,7 @@ const App = () => {
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/calculators" element={<Calculators />} />
               <Route path="/calculators/:slug" element={<CalculatorDetail />} />
+              <Route path="/r/:type" element={<SharedResult />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/about" element={<About />} />
