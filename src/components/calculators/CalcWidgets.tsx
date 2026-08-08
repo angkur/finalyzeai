@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import ShareResult from "@/components/calculators/ShareResult";
 
 const fmt = (n: number, d = 2) =>
   isFinite(n)
