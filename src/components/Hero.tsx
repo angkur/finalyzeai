@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Brain, Database, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
+import FounderHealthScore from "@/components/FounderHealthScore";
 
 const Hero = () => {
   return (
@@ -57,6 +58,10 @@ const Hero = () => {
                 Read Finance Guides
               </Link>
             </Button>
+          </div>
+
+          <div className="mt-8 sm:mt-10 animate-fade-in" style={{ animationDelay: '0.45s' }}>
+            <FounderHealthScore />
           </div>
 
           <div className="mt-10 sm:mt-12 grid gap-4 text-left md:grid-cols-3 animate-fade-in" style={{ animationDelay: '0.5s' }}>
