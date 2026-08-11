@@ -237,6 +237,17 @@ export const BreakEvenCalc = () => {
           re-engineer cost.
         </p>
         <ShareResult type="break-even" params={{ fixed, price, var: variable }} />
+        <PdfResultCapture
+          source="break-even"
+          title="Break-Even Analysis"
+          rows={[
+            { label: "Fixed costs", value: fmtMoney(fixed) },
+            { label: "Price per unit", value: fmtMoney(price) },
+            { label: "Variable cost per unit", value: fmtMoney(variable) },
+            { label: "Break-even units", value: fmt(units, 0) },
+            { label: "Break-even revenue", value: fmtMoney(revenue) },
+          ]}
+        />
       </div>
     </div>
   );
