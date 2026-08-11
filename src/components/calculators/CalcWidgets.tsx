@@ -82,6 +82,20 @@ export const DCFCalc = () => {
           type="dcf"
           params={{ ev: Math.round(result.enterprise), fcf, g: growth, wacc, y: years }}
         />
+        <PdfResultCapture
+          source="dcf"
+          title="DCF Valuation"
+          rows={[
+            { label: "Free cash flow (year 1)", value: fmtMoney(fcf) },
+            { label: "Growth rate", value: `${growth}%` },
+            { label: "WACC (discount rate)", value: `${wacc}%` },
+            { label: "Forecast period", value: `${years} years` },
+            { label: "PV of forecast period", value: fmtMoney(result.total) },
+            { label: "PV of terminal value", value: fmtMoney(result.pvTv) },
+            { label: "Enterprise value", value: fmtMoney(result.enterprise) },
+          ]}
+          note="Terminal value typically represents 60–80% of total enterprise value. If WACC is at or below terminal growth, the formula breaks down."
+        />
       </div>
     </div>
   );
