@@ -51,7 +51,8 @@ const FounderHealthScore = () => {
           Free Founder Health Score
         </h2>
         <p className="text-sm text-muted-foreground">
-          Four numbers, no signup. Runs entirely in your browser — nothing is sent or stored.
+          Four numbers, no signup. The math runs entirely in your browser — we only store your
+          email if you ask for the PDF report.
         </p>
       </div>
 
