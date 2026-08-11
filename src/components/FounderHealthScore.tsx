@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import ShareResult from "@/components/calculators/ShareResult";
+import PdfResultCapture from "@/components/calculators/PdfResultCapture";
 
 const fmt = (n: number, d = 1) =>
   Number.isFinite(n)
