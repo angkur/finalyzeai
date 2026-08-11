@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import ShareResult from "@/components/calculators/ShareResult";
+import PdfResultCapture from "@/components/calculators/PdfResultCapture";
 
 const fmt = (n: number, d = 2) =>
   isFinite(n)
@@ -81,6 +82,20 @@ export const DCFCalc = () => {
         <ShareResult
           type="dcf"
           params={{ ev: Math.round(result.enterprise), fcf, g: growth, wacc, y: years }}
+        />
+        <PdfResultCapture
+          source="dcf"
+          title="DCF Valuation"
+          rows={[
+            { label: "Free cash flow (year 1)", value: fmtMoney(fcf) },
+            { label: "Growth rate", value: `${growth}%` },
+            { label: "WACC (discount rate)", value: `${wacc}%` },
+            { label: "Forecast period", value: `${years} years` },
+            { label: "PV of forecast period", value: fmtMoney(result.total) },
+            { label: "PV of terminal value", value: fmtMoney(result.pvTv) },
+            { label: "Enterprise value", value: fmtMoney(result.enterprise) },
+          ]}
+          note="Terminal value typically represents 60–80% of total enterprise value. If WACC is at or below terminal growth, the formula breaks down."
         />
       </div>
     </div>
@@ -237,6 +252,17 @@ export const BreakEvenCalc = () => {
           re-engineer cost.
         </p>
         <ShareResult type="break-even" params={{ fixed, price, var: variable }} />
+        <PdfResultCapture
+          source="break-even"
+          title="Break-Even Analysis"
+          rows={[
+            { label: "Fixed costs", value: fmtMoney(fixed) },
+            { label: "Price per unit", value: fmtMoney(price) },
+            { label: "Variable cost per unit", value: fmtMoney(variable) },
+            { label: "Break-even units", value: fmt(units, 0) },
+            { label: "Break-even revenue", value: fmtMoney(revenue) },
+          ]}
+        />
       </div>
     </div>
   );
@@ -292,6 +318,21 @@ export const RunwayCalc = () => {
         <ShareResult
           type="runway"
           params={{ cash, rev: monthlyRevenue, exp: monthlyExpenses }}
+        />
+        <PdfResultCapture
+          source="runway"
+          title="Burn Rate & Runway"
+          rows={[
+            { label: "Cash on hand", value: fmtMoney(cash) },
+            { label: "Monthly revenue", value: fmtMoney(monthlyRevenue) },
+            { label: "Monthly expenses", value: fmtMoney(monthlyExpenses) },
+            { label: "Net monthly burn", value: fmtMoney(burn) },
+            {
+              label: "Runway",
+              value: isFinite(runwayMonths) ? `${fmt(runwayMonths, 1)} months` : "Cash flow positive",
+            },
+          ]}
+          note="Most investors want 18–24 months of runway after a round closes. Below 6 months, start fundraising immediately."
         />
       </div>
     </div>

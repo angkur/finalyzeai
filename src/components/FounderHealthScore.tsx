@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import ShareResult from "@/components/calculators/ShareResult";
+import PdfResultCapture from "@/components/calculators/PdfResultCapture";
 
 const fmt = (n: number, d = 1) =>
   Number.isFinite(n)
@@ -50,7 +51,8 @@ const FounderHealthScore = () => {
           Free Founder Health Score
         </h2>
         <p className="text-sm text-muted-foreground">
-          Four numbers, no signup. Runs entirely in your browser — nothing is sent or stored.
+          Four numbers, no signup. The math runs entirely in your browser — we only store your
+          email if you ask for the PDF report.
         </p>
       </div>
 
@@ -103,6 +105,27 @@ const FounderHealthScore = () => {
             type="health-score"
             params={{ rev: revenue, exp: expenses, cash, growth }}
             label="Share my score"
+          />
+          <PdfResultCapture
+            source="health-score"
+            title="Founder Health Score"
+            rows={[
+              { label: "Health score", value: `${result.score}/100` },
+              { label: "Monthly revenue", value: `$${fmt(revenue, 0)}` },
+              { label: "Monthly expenses", value: `$${fmt(expenses, 0)}` },
+              { label: "Cash on hand", value: `$${fmt(cash, 0)}` },
+              { label: "Monthly growth", value: `${fmt(growth)}%` },
+              {
+                label: "Runway",
+                value: Number.isFinite(result.runway) ? `${fmt(result.runway)} months` : "Unlimited",
+              },
+              {
+                label: "Net monthly burn",
+                value: `$${fmt(Math.abs(result.burn), 0)}${result.burn <= 0 ? " surplus" : ""}`,
+              },
+              { label: "Operating margin", value: `${fmt(result.margin)}%` },
+              { label: "Verdict", value: result.verdict },
+            ]}
           />
         </div>
       </div>

@@ -285,6 +285,33 @@ export type Database = {
         }
         Relationships: []
       }
+      email_leads: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          page_path: string | null
+          result_summary: Json
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          page_path?: string | null
+          result_summary?: Json
+          source: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          page_path?: string | null
+          result_summary?: Json
+          source?: string
+        }
+        Relationships: []
+      }
       few_shot_examples: {
         Row: {
           answer: string

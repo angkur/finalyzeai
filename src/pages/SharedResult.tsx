@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Share2 } from "lucide-react";
 import { buildSharedResult } from "@/lib/sharedResults";
+import PdfResultCapture from "@/components/calculators/PdfResultCapture";
 
 const SharedResult = () => {
   const { type } = useParams();
@@ -66,6 +67,18 @@ const SharedResult = () => {
                 </div>
               ))}
             </div>
+          </section>
+
+          <section className="mb-10">
+            <PdfResultCapture
+              source={`shared-${type}`}
+              title={view.h1}
+              rows={[
+                ...view.metrics.map((m) => ({ label: m.label, value: m.value })),
+                ...view.inputs.map((i) => ({ label: `Input — ${i.label}`, value: i.value })),
+              ]}
+              note={view.summary}
+            />
           </section>
 
           <div className="rounded-2xl border border-border p-8 text-center bg-card/60">
