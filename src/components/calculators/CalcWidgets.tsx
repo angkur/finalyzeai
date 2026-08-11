@@ -293,6 +293,21 @@ export const RunwayCalc = () => {
           type="runway"
           params={{ cash, rev: monthlyRevenue, exp: monthlyExpenses }}
         />
+        <PdfResultCapture
+          source="runway"
+          title="Burn Rate & Runway"
+          rows={[
+            { label: "Cash on hand", value: fmtMoney(cash) },
+            { label: "Monthly revenue", value: fmtMoney(monthlyRevenue) },
+            { label: "Monthly expenses", value: fmtMoney(monthlyExpenses) },
+            { label: "Net monthly burn", value: fmtMoney(burn) },
+            {
+              label: "Runway",
+              value: isFinite(runwayMonths) ? `${fmt(runwayMonths, 1)} months` : "Cash flow positive",
+            },
+          ]}
+          note="Most investors want 18–24 months of runway after a round closes. Below 6 months, start fundraising immediately."
+        />
       </div>
     </div>
   );
