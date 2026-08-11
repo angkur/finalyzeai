@@ -104,6 +104,27 @@ const FounderHealthScore = () => {
             params={{ rev: revenue, exp: expenses, cash, growth }}
             label="Share my score"
           />
+          <PdfResultCapture
+            source="health-score"
+            title="Founder Health Score"
+            rows={[
+              { label: "Health score", value: `${result.score}/100` },
+              { label: "Monthly revenue", value: `$${fmt(revenue, 0)}` },
+              { label: "Monthly expenses", value: `$${fmt(expenses, 0)}` },
+              { label: "Cash on hand", value: `$${fmt(cash, 0)}` },
+              { label: "Monthly growth", value: `${fmt(growth)}%` },
+              {
+                label: "Runway",
+                value: Number.isFinite(result.runway) ? `${fmt(result.runway)} months` : "Unlimited",
+              },
+              {
+                label: "Net monthly burn",
+                value: `$${fmt(Math.abs(result.burn), 0)}${result.burn <= 0 ? " surplus" : ""}`,
+              },
+              { label: "Operating margin", value: `${fmt(result.margin)}%` },
+              { label: "Verdict", value: result.verdict },
+            ]}
+          />
         </div>
       </div>
 
