@@ -68,6 +68,18 @@ const SharedResult = () => {
             </div>
           </section>
 
+          <section className="mb-10">
+            <PdfResultCapture
+              source={`shared-${type}`}
+              title={view.h1}
+              rows={[
+                ...view.metrics.map((m) => ({ label: m.label, value: m.value })),
+                ...view.inputs.map((i) => ({ label: `Input — ${i.label}`, value: i.value })),
+              ]}
+              note={view.summary}
+            />
+          </section>
+
           <div className="rounded-2xl border border-border p-8 text-center bg-card/60">
             <h2 className="font-display text-xl font-bold mb-2">Run this on your own numbers</h2>
             <p className="text-muted-foreground text-sm mb-5">
