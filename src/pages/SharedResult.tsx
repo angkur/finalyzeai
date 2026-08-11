@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Share2 } from "lucide-react";
 import { buildSharedResult } from "@/lib/sharedResults";
+import PdfResultCapture from "@/components/calculators/PdfResultCapture";
 
 const SharedResult = () => {
   const { type } = useParams();
