@@ -96,9 +96,9 @@ const PdfResultCapture = ({ source, title, rows, note }: PdfResultCaptureProps) 
       const { error } = await supabase.from("email_leads").insert({
         email: parsed.data.toLowerCase(),
         source,
-        result_summary: rows as unknown as Record<string, unknown>,
+        result_summary: rows as unknown as never,
         page_path: window.location.pathname,
-      });
+      } as never);
       if (error) throw error;
 
       const html = buildHtml(title, rows, note);
