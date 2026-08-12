@@ -84,7 +84,7 @@ const pageCopy = (pathname: string) => {
       };
     case "/calculators":
       return {
-        title: "Free Financial Calculators - DCF, ROI, Loan, Runway - FinalyzeAI",
+        title: "Free Financial Calculators - FinalyzeAI",
         description: "Six free professional financial calculators: DCF valuation, ROI/CAGR, loan amortization, break-even, burn rate runway, and ratio analysis.",
       };
     case "/glossary":
@@ -104,12 +104,12 @@ const pageCopy = (pathname: string) => {
       };
     case "/ai-predict":
       return {
-        title: "AI Predict - Ask Questions About Financial Documents - FinalyzeAI",
+        title: "AI Predict - Analyze Financial Documents - FinalyzeAI",
         description: "Upload a P&L, balance sheet, or CSV and ask plain-English questions. AI Predict returns ratios, trends, fraud flags, and exportable charts in seconds.",
       };
     case "/fin-predict":
       return {
-        title: "Fin Predict - Financial Statement Analysis & Forecasting - FinalyzeAI",
+        title: "Fin Predict - Financial Statement Analysis - FinalyzeAI",
         description: "Score any financial statement in 30 seconds: ratio scorecard, peer benchmarks, multi-year trends, what-if scenarios, and an exportable PDF report.",
       };
 
