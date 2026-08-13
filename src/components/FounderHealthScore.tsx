@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import ShareResult from "@/components/calculators/ShareResult";
 import PdfResultCapture from "@/components/calculators/PdfResultCapture";
+import UnlockGate from "@/components/calculators/UnlockGate";
 
 const fmt = (n: number, d = 1) =>
   Number.isFinite(n)
@@ -129,6 +130,45 @@ const FounderHealthScore = () => {
           />
         </div>
       </div>
+
+      <UnlockGate
+        source="health-score"
+        heading="Your full action plan"
+        context={{ revenue, expenses, cash, growth, score: result.score }}
+        insights={[
+          {
+            title: `Cash runway: ${Number.isFinite(result.runway) ? `${fmt(result.runway)} months` : "unlimited"}`,
+            detail: Number.isFinite(result.runway)
+              ? result.runway < 6
+                ? `Under 6 months is a raise-or-cut zone. To reach 12 months at today's burn you need about $${fmt(Math.max(0, result.burn * 12 - cash), 0)} more cash, or you must cut monthly spend to roughly $${fmt(revenue + cash / 12, 0)}.`
+                : `You have room to invest. Holding 9 months as a floor, you can deploy about $${fmt(Math.max(0, cash - result.burn * 9), 0)} into growth without touching your safety buffer.`
+              : "You are cash-flow positive. Shift the conversation from survival to reinvestment rate: how much of the surplus goes back into acquisition each month.",
+          },
+          {
+            title: `Operating margin: ${fmt(result.margin)}%`,
+            detail:
+              result.margin < 0
+                ? `You lose $${fmt(Math.abs(revenue - expenses), 0)} a month. Breakeven arrives at $${fmt(expenses, 0)} monthly revenue — at ${fmt(growth)}% growth that is roughly ${growth > 0 ? Math.ceil(Math.log(expenses / Math.max(revenue, 1)) / Math.log(1 + growth / 100)) : "∞"} months away if costs stay flat.`
+                : `You are profitable at the operating line. Protect it: cap fixed-cost growth below ${fmt(growth)}% per month so margin expands as revenue compounds.`,
+          },
+          {
+            title: `Growth rate: ${fmt(growth)}% monthly`,
+            detail: `That compounds to ${fmt((Math.pow(1 + growth / 100, 12) - 1) * 100, 0)}% a year — revenue near $${fmt(revenue * Math.pow(1 + growth / 100, 12), 0)}/mo in 12 months. ${growth < 5 ? "Below 5% monthly, growth is not outrunning burn; fix acquisition before hiring." : "This is healthy; make sure gross margin holds as volume rises."}`,
+          },
+          {
+            title: "Your next 30 days",
+            detail:
+              result.score >= 75
+                ? "Lock in a 12-month plan, formalise monthly reporting, and start tracking CAC payback so spend scales with confidence."
+                : result.score >= 50
+                  ? "Trim the three largest non-revenue expenses, set a runway floor of 9 months, and review pricing — a 10% price increase adds roughly $" +
+                    fmt(revenue * 0.1, 0) +
+                    "/mo at zero cost."
+                  : "Cut discretionary spend now, extend payment terms with vendors, and prioritise cash-collecting revenue over new product work.",
+          },
+        ]}
+      />
+
 
       <div className="mt-5 flex flex-col sm:flex-row gap-3">
         <Button asChild variant="hero" className="w-full sm:w-auto">
