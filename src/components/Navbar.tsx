@@ -70,6 +70,7 @@ const Navbar = () => {
     { href: "/blog", label: "Blog", icon: FileText },
     { href: "/user-guide", label: "User Guide", icon: BookOpen },
     { href: "/calculators", label: "Free Calculators", icon: Calculator },
+    { href: "/benchmarks", label: "2026 Benchmarks", icon: BarChart3 },
     { href: "/ai-tools", label: "AI Tools Directory", icon: Sparkles },
   ];
 

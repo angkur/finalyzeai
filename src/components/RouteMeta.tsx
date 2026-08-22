@@ -15,6 +15,7 @@ const publicContentRoutes = [
   "/contact",
   "/ai-tools",
   "/calculators",
+  "/benchmarks",
   "/glossary",
   "/faq",
   "/editorial-policy",
@@ -86,6 +87,11 @@ const pageCopy = (pathname: string) => {
       return {
         title: "Free Financial Calculators - FinalyzeAI",
         description: "Six free professional financial calculators: DCF valuation, ROI/CAGR, loan amortization, break-even, burn rate runway, and ratio analysis.",
+      };
+    case "/benchmarks":
+      return {
+        title: "2026 Startup Benchmarks Report - FinalyzeAI",
+        description: "Median SaaS growth, gross margin, NRR, Rule of 40, burn multiple, CAC ratio, and runway benchmarks — with sources. Compare your own numbers free.",
       };
     case "/glossary":
       return {
