@@ -87,7 +87,7 @@ const App = () => {
               <Route path="/ai-tools" element={<AiTools />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/calculators" element={<Calculators />} />
-              <Route path="/benchmarks" element={<Benchmarks />} />>
+              <Route path="/benchmarks" element={<Benchmarks />} />
               <Route path="/calculators/:slug" element={<CalculatorDetail />} />
               <Route path="/r/:type" element={<SharedResult />} />
               <Route path="/privacy" element={<Privacy />} />
