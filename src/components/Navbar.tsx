@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { User, LogOut, Shield, BookOpen, FileText, ChevronDown, CreditCard, Menu, FolderOpen, Sparkles, Calculator } from "lucide-react";
+import { User, LogOut, Shield, BookOpen, FileText, ChevronDown, CreditCard, Menu, FolderOpen, Sparkles, Calculator, BarChart3 } from "lucide-react";
 import logoImage from "@/assets/logo.png";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
