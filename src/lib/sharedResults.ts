@@ -32,6 +32,7 @@ export const sharedResultTypes = [
   "runway",
   "dcf",
   "break-even",
+  "benchmarks",
 ] as const;
 
 export type SharedResultType = (typeof sharedResultTypes)[number];
@@ -198,6 +199,62 @@ export const buildSharedResult = (
       ],
       ctaTo: "/calculators/break-even-calculator",
       ctaLabel: "Run your own break-even",
+    };
+  }
+  if (type === "benchmarks") {
+    const growth = num(params, "growth");
+    const margin = num(params, "margin");
+    const nrr = num(params, "nrr");
+    const profit = num(params, "profit");
+    const burn = num(params, "burn");
+    const rule40 = growth + profit;
+
+    const judge = (yours: number, median: number, higherIsBetter: boolean) => {
+      const diff = ((yours - median) / Math.abs(median)) * 100;
+      if (Math.abs(diff) < 5) return "At median";
+      return higherIsBetter
+        ? diff > 0
+          ? "Ahead of median"
+          : "Below median"
+        : diff > 0
+          ? "Below median"
+          : "Ahead of median";
+    };
+
+    const points = [
+      judge(growth, 27, true),
+      judge(margin, 79, true),
+      judge(nrr, 101, true),
+      judge(rule40, 34, true),
+      judge(burn, 0.8, false),
+    ].reduce((a, v) => a + (v === "Ahead of median" ? 20 : v === "At median" ? 12 : 4), 0);
+
+    return {
+      title: `Benchmark score: ${points}/100 - FinalyzeAI`,
+      h1: `Startup benchmark score: ${points}/100`,
+      metaDescription: `A startup growing ${fmt(growth, 0)}% with ${fmt(margin, 0)}% gross margin, ${fmt(nrr, 0)}% NRR and a ${fmt(burn, 2)}x burn multiple scores ${points}/100 against 2026 SaaS medians.`,
+      summary:
+        "Scored against published SaaS medians: 27% growth, 79% gross margin, 101% net revenue retention, a Rule of 40 of 34 for product-led companies, and a 0.80x burn multiple.",
+      inputs: [
+        { label: "Annual growth", value: `${fmt(growth, 0)}%` },
+        { label: "Gross margin", value: `${fmt(margin, 0)}%` },
+        { label: "Net revenue retention", value: `${fmt(nrr, 0)}%` },
+        { label: "Profit / FCF margin", value: `${fmt(profit, 0)}%` },
+        { label: "Burn multiple", value: `${fmt(burn, 2)}x` },
+      ],
+      metrics: [
+        { label: "Growth vs 27% median", value: judge(growth, 27, true) },
+        { label: "Gross margin vs 79% median", value: judge(margin, 79, true) },
+        { label: "NRR vs 101% median", value: judge(nrr, 101, true) },
+        {
+          label: `Rule of 40 (${fmt(rule40, 0)}) vs 34 median`,
+          value: judge(rule40, 34, true),
+        },
+        { label: "Burn multiple vs 0.80x median", value: judge(burn, 0.8, false) },
+        { label: "Benchmark score", value: `${points}/100`, emphasis: true },
+      ],
+      ctaTo: "/benchmarks",
+      ctaLabel: "Compare your own numbers",
     };
   }
 
