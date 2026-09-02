@@ -173,6 +173,11 @@ const BenchmarkComparer = () => {
                 })),
               ]}
             />
+            <ViralReport
+              variant="benchmarks"
+              source="benchmarks"
+              data={{ score, rows }}
+            />
           </div>
         </div>
       </div>
