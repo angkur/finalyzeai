@@ -7,6 +7,7 @@ import { ArrowRight } from "lucide-react";
 import ShareResult from "@/components/calculators/ShareResult";
 import PdfResultCapture from "@/components/calculators/PdfResultCapture";
 import UnlockGate from "@/components/calculators/UnlockGate";
+import ViralReport from "@/components/viral/ViralReport";
 
 const fmt = (n: number, d = 1) =>
   Number.isFinite(n)
@@ -128,6 +129,23 @@ const FounderHealthScore = () => {
               { label: "Verdict", value: result.verdict },
             ]}
           />
+          <div className="pt-2">
+            <ViralReport
+              variant="health-score"
+              source="health-score"
+              data={{
+                score: result.score,
+                runway: result.runway,
+                burn: result.burn,
+                margin: result.margin,
+                growth,
+                revenue,
+                expenses,
+                cash,
+                verdict: result.verdict,
+              }}
+            />
+          </div>
         </div>
       </div>
 
