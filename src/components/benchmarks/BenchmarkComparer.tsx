@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowRight, Trophy } from "lucide-react";
 import ShareResult from "@/components/calculators/ShareResult";
 import PdfResultCapture from "@/components/calculators/PdfResultCapture";
+import ViralReport from "@/components/viral/ViralReport";
 import { BENCHMARKS } from "@/config/benchmarks";
 
 const get = (id: string) => BENCHMARKS.find((b) => b.id === id)!;
