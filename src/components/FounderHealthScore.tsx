@@ -129,6 +129,23 @@ const FounderHealthScore = () => {
               { label: "Verdict", value: result.verdict },
             ]}
           />
+          <div className="pt-2">
+            <ViralReport
+              variant="health-score"
+              source="health-score"
+              data={{
+                score: result.score,
+                runway: result.runway,
+                burn: result.burn,
+                margin: result.margin,
+                growth,
+                revenue,
+                expenses,
+                cash,
+                verdict: result.verdict,
+              }}
+            />
+          </div>
         </div>
       </div>
 
