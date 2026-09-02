@@ -574,6 +574,237 @@ const buildBenchmarkReport = (data: BenchmarkData) => {
 </html>`;
 };
 
+const buildGenericReport = (data: GenericResultData) => {
+  const date = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const metricsHtml = data.metrics
+    .map(
+      (m) => `
+        <div class="metric-card">
+          <div class="metric-label">${escapeHtml(m.label)}</div>
+          <div class="metric-value ${m.emphasis ? "emphasis" : ""}">${escapeHtml(m.value)}</div>
+          ${m.note ? `<div class="metric-note">${escapeHtml(m.note)}</div>` : ""}
+        </div>
+      `,
+    )
+    .join("");
+
+  const inputsHtml = data.inputs
+    .map(
+      (i) => `
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid rgba(148,163,184,0.12);font-size:12px;color:#94a3b8;">${escapeHtml(i.label)}</td>
+          <td style="padding:10px 0;border-bottom:1px solid rgba(148,163,184,0.12);text-align:right;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#f8fafc;">${escapeHtml(i.value)}</td>
+        </tr>
+      `,
+    )
+    .join("");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinalyzeAI — ${escapeHtml(data.title)}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #0b0f1a;
+      color: #f8fafc;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 14mm;
+      margin: 0 auto;
+      background: radial-gradient(circle at 30% 20%, rgba(34, 211, 238, 0.08) 0%, transparent 40%),
+                  radial-gradient(circle at 80% 80%, rgba(250, 204, 21, 0.06) 0%, transparent 40%),
+                  linear-gradient(180deg, #0b0f1a 0%, #0f172a 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .grid {
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+      pointer-events: none;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14mm;
+    }
+    .logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%);
+      display: grid;
+      place-items: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      color: #0b0f1a;
+    }
+    .brand-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(34, 211, 238, 0.12);
+      border: 1px solid rgba(34, 211, 238, 0.25);
+      color: #22d3ee;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.1;
+      margin: 0 0 12px;
+      letter-spacing: -0.03em;
+    }
+    .summary {
+      color: #cbd5e1;
+      font-size: 14px;
+      line-height: 1.6;
+      max-width: 480px;
+      margin-bottom: 28px;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .metric-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .metric-label {
+      font-size: 11px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+    .metric-value {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+    .metric-value.emphasis {
+      color: #22d3ee;
+    }
+    .metric-note {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 28px;
+    }
+    .cta {
+      background: linear-gradient(135deg, rgba(34, 211, 238, 0.12) 0%, rgba(14, 165, 233, 0.08) 100%);
+      border: 1px solid rgba(34, 211, 238, 0.2);
+      border-radius: 16px;
+      padding: 22px;
+      text-align: center;
+    }
+    .cta-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 18px;
+      margin-bottom: 6px;
+    }
+    .cta-url {
+      font-size: 15px;
+      color: #22d3ee;
+      font-weight: 600;
+      word-break: break-all;
+    }
+    .footer {
+      position: absolute;
+      bottom: 14mm;
+      left: 14mm;
+      right: 14mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: #64748b;
+      border-top: 1px solid rgba(148, 163, 184, 0.1);
+      padding-top: 12px;
+    }
+    @media print {
+      body { background: #0b0f1a; }
+      .page { margin: 0; width: 100%; min-height: 100vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="grid"></div>
+    <div class="brand">
+      <div class="logo">F</div>
+      <div class="brand-name">FinalyzeAI</div>
+    </div>
+    <span class="badge">Free analysis result</span>
+    <h1>${escapeHtml(data.title)}</h1>
+    <p class="summary">${escapeHtml(data.summary)}</p>
+
+    <div class="metrics">
+      ${metricsHtml}
+    </div>
+
+    <table>
+      <tbody>
+        ${inputsHtml}
+      </tbody>
+    </table>
+
+    <div class="cta">
+      <div class="cta-title">Run this on your own numbers</div>
+      <div class="cta-url">finalyzeai.com</div>
+    </div>
+
+    <div class="footer">
+      <span>Generated ${date}</span>
+      <span>For informational purposes only — not financial advice.</span>
+    </div>
+  </div>
+  <script>window.onload = function() { setTimeout(function() { window.print(); }, 400); };</script>
+</body>
+</html>`;
+};
+
 const ViralReport = ({ variant, source, data }: ViralReportProps) => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
