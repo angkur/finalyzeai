@@ -31,10 +31,17 @@ export interface BenchmarkData {
   rows: BenchmarkRow[];
 }
 
+export interface GenericResultData {
+  title: string;
+  summary: string;
+  metrics: { label: string; value: string; note?: string; emphasis?: boolean }[];
+  inputs: { label: string; value: string }[];
+}
+
 interface ViralReportProps {
-  variant: "health-score" | "benchmarks";
+  variant: "health-score" | "benchmarks" | "shared";
   source: string;
-  data: HealthScoreData | BenchmarkData;
+  data: HealthScoreData | BenchmarkData | GenericResultData;
 }
 
 const emailSchema = z
