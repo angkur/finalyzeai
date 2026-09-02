@@ -668,7 +668,7 @@ const ViralReport = ({ variant, source, data }: ViralReportProps) => {
         We&apos;ll email you occasional founder finance tips. Unsubscribe anytime.
       </p>
     </form>
-  );;
+  );
 };
 
 export default ViralReport;
