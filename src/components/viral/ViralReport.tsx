@@ -838,7 +838,9 @@ const ViralReport = ({ variant, source, data }: ViralReportProps) => {
       const html =
         variant === "health-score"
           ? buildHealthScoreReport(data as HealthScoreData)
-          : buildBenchmarkReport(data as BenchmarkData);
+          : variant === "benchmarks"
+            ? buildBenchmarkReport(data as BenchmarkData)
+            : buildGenericReport(data as GenericResultData);
 
       const win = window.open("", "_blank");
       if (win) {
