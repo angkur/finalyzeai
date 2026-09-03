@@ -80,6 +80,18 @@ const SharedResult = () => {
               ]}
               note={view.summary}
             />
+            <div className="mt-4">
+              <ViralReport
+                variant="shared"
+                source={`shared-${type}`}
+                data={{
+                  title: view.h1,
+                  summary: view.summary,
+                  metrics: view.metrics,
+                  inputs: view.inputs,
+                } as GenericResultData}
+              />
+            </div>
           </section>
 
           <div className="rounded-2xl border border-border p-8 text-center bg-card/60">
