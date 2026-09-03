@@ -823,7 +823,9 @@ const ViralReport = ({ variant, source, data }: ViralReportProps) => {
       const summary =
         variant === "health-score"
           ? { score: (data as HealthScoreData).score, verdict: (data as HealthScoreData).verdict }
-          : { score: (data as BenchmarkData).score };
+          : variant === "benchmarks"
+            ? { score: (data as BenchmarkData).score }
+            : { title: (data as GenericResultData).title };
 
       const { error } = await supabase.from("email_leads").insert({
         email: parsed.data.toLowerCase(),
@@ -836,7 +838,9 @@ const ViralReport = ({ variant, source, data }: ViralReportProps) => {
       const html =
         variant === "health-score"
           ? buildHealthScoreReport(data as HealthScoreData)
-          : buildBenchmarkReport(data as BenchmarkData);
+          : variant === "benchmarks"
+            ? buildBenchmarkReport(data as BenchmarkData)
+            : buildGenericReport(data as GenericResultData);
 
       const win = window.open("", "_blank");
       if (win) {

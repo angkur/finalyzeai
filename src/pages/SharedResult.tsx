@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Share2 } from "lucide-react";
 import { buildSharedResult } from "@/lib/sharedResults";
 import PdfResultCapture from "@/components/calculators/PdfResultCapture";
+import ViralReport, { GenericResultData } from "@/components/viral/ViralReport";
 
 const SharedResult = () => {
   const { type } = useParams();
@@ -79,6 +80,18 @@ const SharedResult = () => {
               ]}
               note={view.summary}
             />
+            <div className="mt-4">
+              <ViralReport
+                variant="shared"
+                source={`shared-${type}`}
+                data={{
+                  title: view.h1,
+                  summary: view.summary,
+                  metrics: view.metrics,
+                  inputs: view.inputs,
+                } as GenericResultData}
+              />
+            </div>
           </section>
 
           <div className="rounded-2xl border border-border p-8 text-center bg-card/60">
