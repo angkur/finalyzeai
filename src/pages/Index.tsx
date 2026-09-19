@@ -6,6 +6,7 @@ import TechStack from "@/components/TechStack";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import ScrollSection from "@/components/ScrollSection";
+import HomepageResources from "@/components/HomepageResources";
 
 const Index = () => {
   return (
@@ -21,6 +22,7 @@ const Index = () => {
       <ScrollSection id="tech" animation="fade-up" delay={1}>
         <TechStack />
       </ScrollSection>
+      <HomepageResources />
       <ScrollSection id="contact" animation="fade-up" delay={1}>
         <Contact />
       </ScrollSection>
