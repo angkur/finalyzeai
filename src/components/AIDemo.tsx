@@ -560,6 +560,28 @@ const AIDemo = () => {
           )}
         </div>
 
+        {/* Recognition banner */}
+        {detectedDoc && (
+          <div className="max-w-6xl mx-auto mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
+            <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
+            <p className="text-sm text-foreground">
+              Recognised as <span className="font-medium">{kindLabel(detectedDoc.kind)}</span>
+              <span className="text-muted-foreground">
+                {' '}· {formatConfidence(detectedDoc.confidence)} sure ·{' '}
+                {analysisLabel(detectedDoc.analysis)} prompt ready
+              </span>
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto"
+              onClick={() => setDetectedDoc(null)}
+            >
+              Clear
+            </Button>
+          </div>
+        )}
+
         {/* Analysis Type Selector */}
         <div className="flex flex-wrap justify-center gap-3 mb-10">
           {analysisTypes.map((type) => (
@@ -879,7 +901,7 @@ Evaluate eligibility for a self-insured insurance program. Score all ratios and 
             <div className="mt-8 grid lg:grid-cols-2 gap-6">
               {/* Document Upload */}
               <div className="p-6 rounded-2xl bg-gradient-card border border-border/50">
-                <DocumentUpload />
+                <DocumentUpload onDetected={handleDetectedDocument} />
               </div>
               
               {/* RAG Chat with Memory */}
