@@ -249,6 +249,12 @@ export type Database = {
       documents: {
         Row: {
           created_at: string
+          detected_analysis: string | null
+          detected_at: string | null
+          detected_confidence: number | null
+          detected_is_financial: number | null
+          detected_kind: string | null
+          detected_usability: number | null
           error_message: string | null
           file_path: string
           file_size: number
@@ -261,6 +267,12 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          detected_analysis?: string | null
+          detected_at?: string | null
+          detected_confidence?: number | null
+          detected_is_financial?: number | null
+          detected_kind?: string | null
+          detected_usability?: number | null
           error_message?: string | null
           file_path: string
           file_size: number
@@ -273,6 +285,12 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          detected_analysis?: string | null
+          detected_at?: string | null
+          detected_confidence?: number | null
+          detected_is_financial?: number | null
+          detected_kind?: string | null
+          detected_usability?: number | null
           error_message?: string | null
           file_path?: string
           file_size?: number

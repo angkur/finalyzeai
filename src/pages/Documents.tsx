@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { formatConfidence, kindLabel } from "@/lib/documentDetection";
 
 interface Document {
   id: string;
@@ -52,6 +53,8 @@ interface Document {
   error_message: string | null;
   created_at: string;
   updated_at: string;
+  detected_kind: string | null;
+  detected_confidence: number | null;
 }
 
 const Documents = () => {
@@ -269,6 +272,7 @@ const Documents = () => {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Type</TableHead>
+                      <TableHead>Identified as</TableHead>
                       <TableHead>Size</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Uploaded</TableHead>
@@ -288,6 +292,22 @@ const Documents = () => {
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary">{doc.file_type}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          {doc.detected_kind ? (
+                            <div className="flex flex-col">
+                              <span className="text-sm text-foreground">
+                                {kindLabel(doc.detected_kind)}
+                              </span>
+                              {typeof doc.detected_confidence === "number" && (
+                                <span className="text-xs text-muted-foreground">
+                                  {formatConfidence(doc.detected_confidence)} sure
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">Not identified</span>
+                          )}
                         </TableCell>
                         <TableCell>{formatFileSize(doc.file_size)}</TableCell>
                         <TableCell>{getStatusBadge(doc.status)}</TableCell>

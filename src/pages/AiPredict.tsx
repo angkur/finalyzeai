@@ -32,6 +32,13 @@ import { supabase } from "@/integrations/supabase/client";
 import UsageTracker from "@/components/UsageTracker";
 import ToolLanding from "@/components/ToolLanding";
 import { aiPredictLanding } from "@/config/toolLandings";
+import {
+  buildDetectionExcerpt,
+  kindLabel,
+  promptFor,
+  shouldRecommend,
+  type DetectionResult,
+} from "@/lib/documentDetection";
 
 interface AttachedFile {
   id: string;
@@ -40,6 +47,10 @@ interface AttachedFile {
 }
 
 import { ShieldAlert } from "lucide-react";
+
+// PDF text is not extracted on this surface, so recognition only runs on
+// files whose text can be read directly in the browser.
+const DETECTABLE_EXTENSIONS = ['.txt', '.csv', '.json', '.md'];
 
 const suggestionChips = [
   { icon: TrendingUp, label: "Market Analysis", query: "Analyze current market trends and provide investment insights" },
@@ -390,6 +401,34 @@ const AiPredict = () => {
 
       if (docError) {
         throw new Error(`Document record creation failed: ${docError.message}`);
+      }
+
+      // Identify what the document actually is, then suggest the right question.
+      if (DETECTABLE_EXTENSIONS.includes(extension)) {
+        try {
+          const { data: detectionData } = await supabase.functions.invoke(
+            'detect-document-kind',
+            {
+              body: {
+                documentId: docData.id,
+                fileName: file.name,
+                excerpt: buildDetectionExcerpt(content),
+              },
+            },
+          );
+
+          const detected = detectionData as DetectionResult | undefined;
+          if (detected?.kind && shouldRecommend(detected)) {
+            const suggestion = promptFor(detected.kind);
+            setInput((prev) => (prev.trim() ? prev : suggestion));
+            toast.success(
+              `Identified as ${kindLabel(detected.kind)} — suggested question added below`,
+            );
+          }
+        } catch (detectError) {
+          // Recognition is a convenience. Never fail an upload because of it.
+          console.warn('Document recognition skipped:', detectError);
+        }
       }
 
       // Update status to processing

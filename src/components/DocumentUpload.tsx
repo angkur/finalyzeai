@@ -14,6 +14,8 @@ import {
   FileSpreadsheet,
   FileJson,
   FileType,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +23,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min?url";
+import {
+  buildDetectionExcerpt,
+  formatConfidence,
+  kindLabel,
+  kindPlan,
+  shouldRecommend,
+  analysisLabel,
+  type DetectionResult,
+} from "@/lib/documentDetection";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -34,6 +45,9 @@ interface Document {
   error_message: string | null;
   created_at: string;
   updated_at: string;
+  detected_kind: string | null;
+  detected_confidence: number | null;
+  detected_analysis: string | null;
 }
 
 // Get file type icon
@@ -106,13 +120,19 @@ async function extractPdfText(file: File): Promise<string> {
   return text.trim();
 }
 
-const DocumentUpload = () => {
+interface DocumentUploadProps {
+  onDetected?: (result: DetectionResult) => void;
+}
+
+const DocumentUpload = ({ onDetected }: DocumentUploadProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [userPlan, setUserPlan] = useState<UserPlan>(DEFAULT_PLAN);
+  const [detection, setDetection] = useState<DetectionResult | null>(null);
+  const [isDetecting, setIsDetecting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch user plan and documents on mount
@@ -229,6 +249,38 @@ const DocumentUpload = () => {
       if (docError) {
         throw new Error(`Document record creation failed: ${docError.message}`);
       }
+      setUploadProgress(65);
+
+      // Identify what this document actually is before anything else, so the
+      // recommendation is ready while the slower processing runs.
+      setDetection(null);
+      setIsDetecting(true);
+      let detected: DetectionResult | null = null;
+      try {
+        const { data: detectionData, error: detectionError } = await supabase.functions.invoke(
+          'detect-document-kind',
+          {
+            body: {
+              documentId: docData.id,
+              fileName: file.name,
+              excerpt: buildDetectionExcerpt(content),
+            },
+          },
+        );
+
+        if (detectionError) throw detectionError;
+
+        const result = detectionData as DetectionResult;
+        if (result?.kind) {
+          detected = result;
+          setDetection(result);
+        }
+      } catch (detectionError) {
+        // Recognition is a convenience. Never fail an upload because of it.
+        console.warn('Document recognition skipped:', detectionError);
+      } finally {
+        setIsDetecting(false);
+      }
       setUploadProgress(70);
 
       // Trigger processing with user_id
@@ -258,6 +310,12 @@ const DocumentUpload = () => {
 
       // Start polling for status updates
       pollDocumentStatus(docData.id);
+
+      // Hand the recommendation over last: applying it can swap this panel out,
+      // so by now every upload step above has already finished.
+      if (detected && shouldRecommend(detected)) {
+        onDetected?.(detected);
+      }
 
     } catch (error) {
       console.error('Upload error:', error);
@@ -421,6 +479,58 @@ const DocumentUpload = () => {
         </label>
       </div>
 
+      {/* Recognition result */}
+      {isDetecting && (
+        <div className="flex items-center gap-2 p-3 rounded-xl border border-border/40 bg-secondary/20">
+          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          <span className="text-xs text-muted-foreground">
+            Working out what this document is…
+          </span>
+        </div>
+      )}
+
+      {detection && !isDetecting && (
+        <div
+          className={`rounded-xl border p-4 space-y-3 ${
+            shouldRecommend(detection)
+              ? 'border-primary/30 bg-primary/5'
+              : 'border-border/40 bg-secondary/20'
+          }`}
+        >
+          <div className="flex items-start gap-2">
+            <Sparkles className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-foreground">
+                {shouldRecommend(detection)
+                  ? `Recognised as ${kindLabel(detection.kind)}`
+                  : `Too unclear to identify (${formatConfidence(detection.confidence)})`}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {shouldRecommend(detection)
+                  ? kindPlan(detection.kind)
+                  : 'Pick an analysis mode yourself and the tool will work from the document text.'}
+              </p>
+            </div>
+            {typeof detection.confidence === "number" && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex-shrink-0">
+                {formatConfidence(detection.confidence)}
+              </Badge>
+            )}
+          </div>
+          {shouldRecommend(detection) && (
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="hero" onClick={() => onDetected?.(detection)}>
+                Run {analysisLabel(detection.analysis)}
+                <ArrowRight className="w-3.5 h-3.5 ml-1" />
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setDetection(null)}>
+                Not now
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Documents List */}
       {documents.length > 0 && (
         <div className="space-y-2">
@@ -438,6 +548,14 @@ const DocumentUpload = () => {
                       <p className="text-sm font-medium text-foreground truncate">{doc.name}</p>
                       {getFileTypeBadge(doc.file_type)}
                     </div>
+                    {doc.detected_kind && (
+                      <p className="text-[11px] text-primary/90 truncate">
+                        {kindLabel(doc.detected_kind)}
+                        {typeof doc.detected_confidence === 'number'
+                          ? ` • ${formatConfidence(doc.detected_confidence)} sure`
+                          : ''}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       {formatFileSize(doc.file_size)} • {doc.status}
                       {doc.error_message && ` • ${doc.error_message}`}

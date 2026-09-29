@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.generate-doc-questions]
 verify_jwt = false
+
+[functions.detect-document-kind]
+verify_jwt = false
