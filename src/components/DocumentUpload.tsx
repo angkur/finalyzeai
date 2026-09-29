@@ -120,13 +120,19 @@ async function extractPdfText(file: File): Promise<string> {
   return text.trim();
 }
 
-const DocumentUpload = () => {
+interface DocumentUploadProps {
+  onDetected?: (result: DetectionResult) => void;
+}
+
+const DocumentUpload = ({ onDetected }: DocumentUploadProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [userPlan, setUserPlan] = useState<UserPlan>(DEFAULT_PLAN);
+  const [detection, setDetection] = useState<DetectionResult | null>(null);
+  const [isDetecting, setIsDetecting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch user plan and documents on mount
@@ -243,6 +249,38 @@ const DocumentUpload = () => {
       if (docError) {
         throw new Error(`Document record creation failed: ${docError.message}`);
       }
+      setUploadProgress(65);
+
+      // Identify what this document actually is before anything else, so the
+      // recommendation is ready while the slower processing runs.
+      setDetection(null);
+      setIsDetecting(true);
+      let detected: DetectionResult | null = null;
+      try {
+        const { data: detectionData, error: detectionError } = await supabase.functions.invoke(
+          'detect-document-kind',
+          {
+            body: {
+              documentId: docData.id,
+              fileName: file.name,
+              excerpt: buildDetectionExcerpt(content),
+            },
+          },
+        );
+
+        if (detectionError) throw detectionError;
+
+        const result = detectionData as DetectionResult;
+        if (result?.kind) {
+          detected = result;
+          setDetection(result);
+        }
+      } catch (detectionError) {
+        // Recognition is a convenience. Never fail an upload because of it.
+        console.warn('Document recognition skipped:', detectionError);
+      } finally {
+        setIsDetecting(false);
+      }
       setUploadProgress(70);
 
       // Trigger processing with user_id
@@ -272,6 +310,12 @@ const DocumentUpload = () => {
 
       // Start polling for status updates
       pollDocumentStatus(docData.id);
+
+      // Hand the recommendation over last: applying it can swap this panel out,
+      // so by now every upload step above has already finished.
+      if (detected && shouldRecommend(detected)) {
+        onDetected?.(detected);
+      }
 
     } catch (error) {
       console.error('Upload error:', error);
