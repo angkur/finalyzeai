@@ -14,6 +14,8 @@ import {
   FileSpreadsheet,
   FileJson,
   FileType,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +23,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min?url";
+import {
+  buildDetectionExcerpt,
+  formatConfidence,
+  kindLabel,
+  kindPlan,
+  shouldRecommend,
+  ANALYSIS_LABELS,
+  type DetectionResult,
+} from "@/lib/documentDetection";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -34,6 +45,9 @@ interface Document {
   error_message: string | null;
   created_at: string;
   updated_at: string;
+  detected_kind: string | null;
+  detected_confidence: number | null;
+  detected_analysis: string | null;
 }
 
 // Get file type icon
