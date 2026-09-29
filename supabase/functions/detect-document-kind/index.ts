@@ -86,17 +86,19 @@ function safeMessage(payload: unknown, fallback: string): string {
   return fallback;
 }
 
-async function authenticate(url: string, anonKey: string, req: Request) {
+async function authenticate(url: string, serviceKey: string, req: Request) {
   const header = req.headers.get("Authorization") ?? "";
   const token = header.replace(/^Bearer\s+/i, "").trim();
   if (!token) return null;
 
-  const userClient = createClient(url, anonKey, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
+  // Verify the caller's own token against the auth service. The project's
+  // legacy anon key no longer validates, so the service key is used as apikey.
+  const res = await fetch(`${url}/auth/v1/user`, {
+    headers: { apikey: serviceKey, Authorization: `Bearer ${token}` },
   });
-  const { data, error } = await userClient.auth.getUser();
-  if (error || !data?.user) return null;
-  return data.user;
+  if (!res.ok) return null;
+  const user = await res.json().catch(() => null);
+  return user && typeof user.id === "string" ? user : null;
 }
 
 async function callJev(apiKey: string, state: unknown, questions: unknown): Promise<JevResponse> {
@@ -163,11 +165,10 @@ serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
 
-  if (!supabaseUrl || !anonKey || !serviceKey) {
+  if (!supabaseUrl || !serviceKey) {
     return jsonResponse({ error: "Backend is not configured" }, 500);
   }
   if (!apiKey) {
@@ -185,7 +186,7 @@ serve(async (req) => {
     return jsonResponse({ error: "Invalid request body" }, 400);
   }
 
-  const user = await authenticate(supabaseUrl, anonKey, req);
+  const user = await authenticate(supabaseUrl, serviceKey, req);
   if (!user) {
     return jsonResponse({ error: "Sign in required" }, 401);
   }
