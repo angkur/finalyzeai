@@ -78,7 +78,23 @@ export const KIND_PLANS: Record<DocumentKind, string> = {
   other: "Pick an analysis mode and the tool will work from the document text.",
 };
 
+export const ANALYSIS_LABELS: Record<string, string> = {
+  "financial-statement": "Statement Analysis",
+  "data-analysis": "Data Analysis",
+  "data-visualization": "Data Visualization",
+  "predictive-modeling": "Predictive Modeling",
+  "report-generation": "Report Generation",
+  "fraud-analysis": "Fraud Analysis",
+  "credit-scoring": "Credit Scoring",
+  "rag-query": "Knowledge Query",
+};
+
 export const MIN_CONFIDENCE_TO_RECOMMEND = 0.35;
+
+export function analysisLabel(id: string | null | undefined): string {
+  if (!id) return "analysis";
+  return ANALYSIS_LABELS[id] ?? "analysis";
+}
 
 export const PROMPT_TEMPLATES: Record<DocumentKind, string> = {
   profit_loss:
