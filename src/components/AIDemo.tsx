@@ -17,6 +17,13 @@ import ReportExport from "./ReportExport";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  analysisLabel,
+  formatConfidence,
+  kindLabel,
+  promptFor,
+  type DetectionResult,
+} from "@/lib/documentDetection";
 
 type AnalysisType = 'data-analysis' | 'report-generation' | 'predictive-modeling' | 'rag-query' | 'credit-scoring' | 'data-visualization' | 'fraud-analysis' | 'financial-statement';
 
@@ -109,6 +116,7 @@ const AIDemo = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [usageLimitMessage, setUsageLimitMessage] = useState<string | null>(null);
   const [usageStats, setUsageStats] = useState<{ used: number; limit: number } | null>(null);
+  const [detectedDoc, setDetectedDoc] = useState<DetectionResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Check if user is blocked or has exceeded usage limits
@@ -190,7 +198,24 @@ const AIDemo = () => {
     setChartData(null);
     setFraudResult(null);
     setInteractionId(null);
+    setDetectedDoc(null);
     setActiveTab(type === 'data-visualization' ? 'visualization' : 'analysis');
+  };
+
+  // A document upload was just identified: switch to the mode that suits it and
+  // stage a prompt written for that document kind, so nothing has to be chosen.
+  const handleDetectedDocument = (result: DetectionResult) => {
+    const target = analysisTypes.find((type) => type.id === result.analysis);
+    if (target) setSelectedType(target.id);
+    setInput(promptFor(result.kind));
+    setResponse('');
+    setUploadedFile(null);
+    setChartData(null);
+    setFraudResult(null);
+    setInteractionId(null);
+    setDetectedDoc(result);
+    setActiveTab(target?.id === 'data-visualization' ? 'visualization' : 'analysis');
+    toast.success(`Recognised as ${kindLabel(result.kind)} — ready to run`);
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
