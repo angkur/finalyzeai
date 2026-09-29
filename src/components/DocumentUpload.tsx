@@ -29,7 +29,7 @@ import {
   kindLabel,
   kindPlan,
   shouldRecommend,
-  ANALYSIS_LABELS,
+  analysisLabel,
   type DetectionResult,
 } from "@/lib/documentDetection";
 
@@ -479,6 +479,58 @@ const DocumentUpload = ({ onDetected }: DocumentUploadProps) => {
         </label>
       </div>
 
+      {/* Recognition result */}
+      {isDetecting && (
+        <div className="flex items-center gap-2 p-3 rounded-xl border border-border/40 bg-secondary/20">
+          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          <span className="text-xs text-muted-foreground">
+            Working out what this document is…
+          </span>
+        </div>
+      )}
+
+      {detection && !isDetecting && (
+        <div
+          className={`rounded-xl border p-4 space-y-3 ${
+            shouldRecommend(detection)
+              ? 'border-primary/30 bg-primary/5'
+              : 'border-border/40 bg-secondary/20'
+          }`}
+        >
+          <div className="flex items-start gap-2">
+            <Sparkles className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-foreground">
+                {shouldRecommend(detection)
+                  ? `Recognised as ${kindLabel(detection.kind)}`
+                  : `Too unclear to identify (${formatConfidence(detection.confidence)})`}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {shouldRecommend(detection)
+                  ? kindPlan(detection.kind)
+                  : 'Pick an analysis mode yourself and the tool will work from the document text.'}
+              </p>
+            </div>
+            {typeof detection.confidence === "number" && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex-shrink-0">
+                {formatConfidence(detection.confidence)}
+              </Badge>
+            )}
+          </div>
+          {shouldRecommend(detection) && (
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="hero" onClick={() => onDetected?.(detection)}>
+                Run {analysisLabel(detection.analysis)}
+                <ArrowRight className="w-3.5 h-3.5 ml-1" />
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setDetection(null)}>
+                Not now
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Documents List */}
       {documents.length > 0 && (
         <div className="space-y-2">
@@ -496,6 +548,14 @@ const DocumentUpload = ({ onDetected }: DocumentUploadProps) => {
                       <p className="text-sm font-medium text-foreground truncate">{doc.name}</p>
                       {getFileTypeBadge(doc.file_type)}
                     </div>
+                    {doc.detected_kind && (
+                      <p className="text-[11px] text-primary/90 truncate">
+                        {kindLabel(doc.detected_kind)}
+                        {typeof doc.detected_confidence === 'number'
+                          ? ` • ${formatConfidence(doc.detected_confidence)} sure`
+                          : ''}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       {formatFileSize(doc.file_size)} • {doc.status}
                       {doc.error_message && ` • ${doc.error_message}`}
